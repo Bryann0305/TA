@@ -31,10 +31,16 @@
 
         <input type="hidden" name="user_Id_User" value="{{ auth()->user()->Id_User }}">
 
-        <div class="mb-3">
-            <label for="Status" class="form-label">Status</label>
-            <input type="text" name="Status" id="Status" class="form-control" value="{{ old('Status') }}" required>
+                <div class="mb-3">
+            <label for="Status" class="form-label">Status Pesanan</label>
+            <select name="Status" id="Status" class="form-select" required>
+                <option value="">-- Select Status --</option>
+                <option value="Pending" {{ old('Status') == 'Pending' ? 'selected' : '' }}>Pending</option>
+                <option value="Approved" {{ old('Status') == 'Approved' ? 'selected' : '' }}>Approved</option>
+                <option value="Completed" {{ old('Status') == 'Completed' ? 'selected' : '' }}>Completed</option>
+            </select>
         </div>
+
 
         <div class="mb-3">
             <label for="Tanggal_Pemesanan" class="form-label">Tanggal Pemesanan</label>
@@ -61,7 +67,8 @@
             <input type="number" name="Total_Biaya" id="Total_Biaya" class="form-control" value="{{ old('Total_Biaya') }}" required>
         </div>
 
-        <button type="submit" class="btn btn-primary">Create</button>
+        <button type="submit" class="btn btn-success">Save</button>
+        <a href="{{ route('procurement.index') }}" class="btn btn-secondary">Back</a>
     </form>
 </div>
 @endsection

@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Barang;
 use App\Models\BillOfMaterial;
-use App\Models\Produksi;
+use App\Models\BarangHasBillOfMaterial;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -11,141 +12,49 @@ class BillOfMaterialController extends Controller
 {
     public function index()
     {
-        $boms = BillOfMaterial::with('produksi')->latest()->get();
+        $boms = BillOfMaterial::with('barangHasBill')->get(); // agar bisa hitung jumlah bahan
         return view('bill-of-materials.index', compact('boms'));
     }
 
     public function create()
     {
-        return view('bill-of-materials.create');
+        $barangs = Barang::where('Jenis', 'Bahan_Baku')->get(); // hanya bahan baku
+        return view('bill-of-materials.create', compact('barangs'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'Nama_bill_of_material' => 'required|string|max:255',
-            'Status' => 'required|in:draft,approved,rejected'
+            'Nama_bill_of_material' => 'required|string',
+            'Status' => 'required|string',
+            'bahan_baku' => 'required|array',
+            'bahan_baku.*.jumlah' => 'required|numeric|min:1',
         ]);
 
+        DB::beginTransaction();
         try {
-            DB::beginTransaction();
-
-            // Create BOM
+            // Simpan BOM
             $bom = BillOfMaterial::create([
                 'Nama_bill_of_material' => $request->Nama_bill_of_material,
-                'Status' => $request->Status
+                'Status' => $request->Status,
             ]);
 
-            DB::commit();
-            return redirect()->route('bill-of-materials.index')
-                ->with('success', 'Bill of Materials berhasil dibuat');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()
-                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage())
-                ->withInput();
-        }
-    }
-
-    public function show($id)
-    {
-        $bom = BillOfMaterial::with('produksi')->findOrFail($id);
-        return response()->json($bom);
-    }
-
-    public function edit($id)
-    {
-        $bom = BillOfMaterial::findOrFail($id);
-        return view('bill-of-materials.edit', compact('bom'));
-    }
-
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'Nama_bill_of_material' => 'required|string|max:255',
-            'Status' => 'required|in:draft,approved,rejected'
-        ]);
-
-        try {
-            DB::beginTransaction();
-
-            $bom = BillOfMaterial::findOrFail($id);
-            
-            // Check if BOM is used in production
-            if ($bom->produksi()->exists()) {
-                return redirect()->back()
-                    ->with('error', 'BOM tidak dapat diubah karena sudah digunakan dalam produksi')
-                    ->withInput();
-            }
-            
-            // Update BOM
-            $bom->update([
-                'Nama_bill_of_material' => $request->Nama_bill_of_material,
-                'Status' => $request->Status
-            ]);
-
-            DB::commit();
-            return redirect()->route('bill-of-materials.index')
-                ->with('success', 'Bill of Materials berhasil diperbarui');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()
-                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage())
-                ->withInput();
-        }
-    }
-
-    public function destroy($id)
-    {
-        try {
-            DB::beginTransaction();
-
-            $bom = BillOfMaterial::findOrFail($id);
-
-            // Check if BOM is used in production
-            if ($bom->produksi()->exists()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'BOM tidak dapat dihapus karena sudah digunakan dalam produksi'
-                ]);
+            // Simpan bahan-baku ke pivot
+            foreach ($request->bahan_baku as $idBahan => $data) {
+                if (isset($data['selected']) && $data['selected'] == 1) {
+                    BarangHasBillOfMaterial::create([
+                        'barang_Id_Bahan' => $idBahan,
+                        'bill_of_material_Id_bill_of_material' => $bom->Id_bill_of_material,
+                        'jumlah' => $data['jumlah']
+                    ]);
+                }
             }
 
-            // Delete BOM
-            $bom->delete();
-
             DB::commit();
-            return response()->json(['success' => true]);
+            return redirect()->route('bill-of-materials.index')->with('success', 'BOM successfully saved!');
         } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-            ]);
+            DB::rollback();
+            return back()->with('error', 'Failed to save: ' . $e->getMessage());
         }
     }
-
-    public function updateStatus(Request $request, $id)
-    {
-        $request->validate([
-            'Status' => 'required|in:draft,approved,rejected'
-        ]);
-
-        try {
-            $bom = BillOfMaterial::findOrFail($id);
-
-            // Check if BOM is used in production
-            if ($bom->produksi()->exists() && $request->Status === 'draft') {
-                return redirect()->back()
-                    ->with('error', 'BOM tidak dapat diubah ke status draft karena sudah digunakan dalam produksi');
-            }
-
-            $bom->update(['Status' => $request->Status]);
-            
-            return redirect()->route('bill-of-materials.index')
-                ->with('success', 'Status Bill of Materials berhasil diperbarui');
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
-        }
-    }
-} 
+}

@@ -6,44 +6,56 @@
 
     <form action="{{ route('inventory.store') }}" method="POST">
         @csrf
-
         <div class="mb-3">
-            <label for="Nama_Bahan" class="form-label">Item Name</label>
+            <label>Item Name</label>
             <input type="text" name="Nama_Bahan" class="form-control" required>
         </div>
 
         <div class="mb-3">
-            <label for="Stok" class="form-label">Stock Quantity</label>
-            <input type="number" name="Stok" class="form-control" required>
-        </div>
-
-        <div class="mb-3">
-            <label for="Jenis" class="form-label">Type</label>
-            <select name="Jenis" class="form-select" required>
-            <option value="">-- Select Type --</option>
-            <option value="Bahan_Baku">Bahan Baku</option>
-            <option value="Produk">Produk</option>
-        </select>
-
-        </div>
-
-        <div class="mb-3">
-            <label for="Status" class="form-label">Status</label>
-            <input type="text" name="Status" class="form-control" required>
-        </div>
-
-        <div class="mb-3">
-            <label for="kategori_Id_Kategori" class="form-label">Category</label>
+            <label>Category</label>
             <select name="kategori_Id_Kategori" class="form-select" required>
                 <option value="">-- Select Category --</option>
-                @foreach(App\Models\Kategori::all() as $kategori)
-                    <option value="{{ $kategori->Id_Kategori }}">{{ $kategori->Nama_Kategori }}</option>
+                @foreach($kategori as $kat)
+                    <option value="{{ $kat->Id_Kategori }}">{{ $kat->Nama_Kategori }}</option>
                 @endforeach
             </select>
         </div>
 
-        <button type="submit" class="btn btn-success">💾 Save Item</button>
-        <a href="{{ route('inventory.index') }}" class="btn btn-secondary">← Back</a>
+        <div class="mb-3">
+            <label>Type</label>
+            <select name="Jenis" class="form-select" required>
+                <option value="">-- Select Jenis --</option>
+                <option value="Bahan_Baku">Bahan Baku</option>
+                <option value="Produk">Produk</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label>Status</label>
+            <select name="Status" class="form-select" required>
+                <option value="">-- Select Status --</option>
+                <option value="Aktif">Aktif</option>
+                <option value="Tidak Aktif">Tidak Aktif</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label>Stock</label>
+            <input type="number" name="Stok" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label>Reorder Point</label>
+            <input type="number" name="Reorder_Point" class="form-control">
+        </div>
+
+        <div class="mb-3">
+            <label>EOQ</label>
+            <input type="number" name="EOQ" class="form-control">
+        </div>
+
+        <button type="submit" class="btn btn-success">Save</button>
+        <a href="{{ route('inventory.index') }}" class="btn btn-secondary">Back</a>
     </form>
 </div>
 @endsection

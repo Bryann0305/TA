@@ -53,8 +53,8 @@
             </select>
         </div>
 
-        <button type="submit" class="btn btn-success">💾 Save Item</button>
-        <a href="{{ route('procurement.supplier') }}" class="btn btn-secondary">← Back</a>
+        <button type="submit" class="btn btn-success">Save</button>
+        <a href="{{ route('procurement.supplier') }}" class="btn btn-secondary">Back</a>
     </form>
 </div>
 @endsection

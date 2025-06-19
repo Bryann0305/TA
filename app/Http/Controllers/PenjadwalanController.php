@@ -2,41 +2,39 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Penjadwalan;
 use Illuminate\Http\Request;
+use App\Models\Penjadwalan;
+use App\Models\PesananProduksi;
 
 class PenjadwalanController extends Controller
 {
-    public function index()
+    public function create()
     {
-        return Penjadwalan::all();
-    }
-
-    public function show($id)
-    {
-        return Penjadwalan::findOrFail($id);
+        // Ambil daftar pesanan produksi yang belum dijadwalkan
+        $pesananList = PesananProduksi::whereNull('Surat_Perintah_Produksi')->get();
+        return view('penjadwalan.create', compact('pesananList'));
     }
 
     public function store(Request $request)
     {
-        $data = $request->validate([
+        $request->validate([
             'Tanggal_Mulai' => 'required|date',
-            'Tanggal_Selesai' => 'required|date',
-            'Status' => 'required',
+            'Tanggal_Selesai' => 'required|date|after_or_equal:Tanggal_Mulai',
+            'Status' => 'required|string',
+            'pesanan_produksi_Id_Pesanan' => 'required|exists:pesanan_produksi,Id_Pesanan',
         ]);
-        return Penjadwalan::create($data);
-    }
 
-    public function update(Request $request, $id)
-    {
-        $jadwal = Penjadwalan::findOrFail($id);
-        $jadwal->update($request->all());
-        return $jadwal;
-    }
+        $jadwal = Penjadwalan::create([
+            'Tanggal_Mulai' => $request->Tanggal_Mulai,
+            'Tanggal_Selesai' => $request->Tanggal_Selesai,
+            'Status' => $request->Status,
+        ]);
 
-    public function destroy($id)
-    {
-        Penjadwalan::destroy($id);
-        return response()->noContent();
+        // Update pesanan produksi terkait
+        $pesanan = PesananProduksi::findOrFail($request->pesanan_produksi_Id_Pesanan);
+        $pesanan->Surat_Perintah_Produksi = 'Jadwal ID #' . $jadwal->Id_Jadwal;
+        $pesanan->save();
+
+        return redirect()->route('production.index')->with('success', 'Jadwal berhasil dibuat.');
     }
-} 
+}

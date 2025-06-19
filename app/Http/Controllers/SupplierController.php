@@ -46,7 +46,7 @@ class SupplierController extends Controller
     public function show($id)
     {
         $supplier = Supplier::findOrFail($id);
-        return view('procurement.show', compact('supplier'));
+    return view('procurement.show_supplier', compact('supplier'));
     }
 
     public function edit($id)

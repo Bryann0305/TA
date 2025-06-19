@@ -47,11 +47,11 @@
     <thead>
         <tr>
             <th>ID Supplier</th>
-            <th>Nama Supplier</th>
-            <th>Nama Pegawai</th>
+            <th>Supplier Name</th>
+            <th>Employee Name</th>
             <th>Email</th>
-            <th>Kontak</th>
-            <th>Alamat</th>
+            <th>Contact</th>
+            <th>Address</th>
             <th>Status</th>
             <th style="width: 140px;">Actions</th>
         </tr>
@@ -71,7 +71,7 @@
                 </span>
             </td>
             <td>
-                <a href="{{ route('procurement.show', ['id' => $supplier->Id_Supplier]) }}" 
+                <a href="{{ route('procurement.show_supplier', ['id' => $supplier->Id_Supplier]) }}" 
                    class="btn btn-info btn-sm" title="Show">
                     <i class="fas fa-eye"></i>
                 </a>
