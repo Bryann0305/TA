@@ -44,6 +44,8 @@
         </li>
     </ul>
 
+    <a href="{{ route('procurement.create_purchaseOrder') }}" class="btn btn-primary mb-3">New Purchase Order</a>
+
     <table class="table table-bordered table-striped">
         <thead>
             <tr>
@@ -53,6 +55,7 @@
                 <th>Tgl Pemesanan</th>
                 <th>Tgl Kedatangan</th>
                 <th>Status Pembayaran</th>
+                <th>Nama Barang</th>
                 <th>User</th>
                 <th>Supplier</th>
                 <th style="width: 140px;">Actions</th>
@@ -89,6 +92,7 @@
                     @endphp
                     <span class="badge bg-{{ $badgePayment }}">{{ $order->Status_Pembayaran }}</span>
                 </td>
+                <td>{{ $order->nama_barang ?? '-' }}</td>
                 <td>{{ $order->user->name ?? 'Unknown' }}</td>
                 <td>{{ $order->supplier->Nama_Supplier ?? 'Unknown' }}</td>
                 <td>
@@ -118,7 +122,5 @@
             @endforelse
         </tbody>
     </table>
-
-    <a href="{{ route('procurement.create_purchaseOrder') }}" class="btn btn-primary mt-3">New Purchase Order</a>
 </div>
 @endsection

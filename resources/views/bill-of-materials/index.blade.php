@@ -25,8 +25,8 @@
                 <div class="col-12 col-md-3">
                     <select name="status" class="form-select">
                         <option value="">All Statuses</option>
-                        <option value="Approved" {{ request('status') == 'Approved' ? 'selected' : '' }}>Approved</option>
-                        <option value="Draft" {{ request('status') == 'Draft' ? 'selected' : '' }}>Draft</option>
+                        <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Approved</option>
+                        <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>Draft</option>
                     </select>
                 </div>
 
@@ -55,8 +55,8 @@
                     <tr>
                         <td><strong>{{ $bom->Nama_bill_of_material }}</strong></td>
                         <td>
-                            <span class="badge bg-{{ $bom->Status == 'Approved' ? 'success' : 'secondary' }}">
-                                {{ $bom->Status }}
+                            <span class="badge bg-{{ $bom->Status == 'approved' ? 'success' : 'secondary' }}">
+                                {{ ucfirst($bom->Status) }}
                             </span>
                         </td>
                         <td>{{ $bom->barangHasBill->count() }} materials</td>

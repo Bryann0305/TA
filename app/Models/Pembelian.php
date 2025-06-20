@@ -17,7 +17,8 @@ class Pembelian extends Model
         'Tanggal_Kedatangan',
         'Status_Pembayaran',
         'user_Id_User',
-        'supplier_Id_Supplier'
+        'supplier_Id_Supplier',
+        'nama_barang',
     ];
 
     protected $casts = [

@@ -28,7 +28,6 @@ class BillOfMaterialController extends Controller
             'Nama_bill_of_material' => 'required|string',
             'Status' => 'required|string',
             'bahan_baku' => 'required|array',
-            'bahan_baku.*.jumlah' => 'required|numeric|min:1',
         ]);
 
         DB::beginTransaction();
@@ -42,10 +41,9 @@ class BillOfMaterialController extends Controller
             // Simpan bahan-baku ke pivot
             foreach ($request->bahan_baku as $idBahan => $data) {
                 if (isset($data['selected']) && $data['selected'] == 1) {
-                    BarangHasBillOfMaterial::create([
-                        'barang_Id_Bahan' => $idBahan,
-                        'bill_of_material_Id_bill_of_material' => $bom->Id_bill_of_material,
-                        'jumlah' => $data['jumlah']
+                    \App\Models\BarangHasBillOfMaterial::create([
+                        'barang_id' => $idBahan,
+                        'bill_of_material_id' => $bom->Id_bill_of_material,
                     ]);
                 }
             }

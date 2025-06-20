@@ -29,9 +29,19 @@ class BillOfMaterial extends Model
         );
     }
 
+    public function barang()
+    {
+        return $this->barangs();
+    }
+
     public function produksi()
     {
         return $this->hasMany(Produksi::class, 'bill_of_material_Id_bill_of_material', 'Id_bill_of_material');
+    }
+
+    public function barangHasBill()
+    {
+        return $this->hasMany(\App\Models\BarangHasBillOfMaterial::class, 'bill_of_material_id', 'Id_bill_of_material');
     }
 // ... existing code ...
 }

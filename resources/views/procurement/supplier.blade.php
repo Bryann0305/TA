@@ -43,6 +43,8 @@
         </li>
     </ul>
 
+    <a href="{{ route('procurement.create_supplier') }}" class="btn btn-primary mb-3">New Supplier</a>
+
     <table class="table table-bordered table-striped">
     <thead>
         <tr>
@@ -97,7 +99,5 @@
         @endforelse
     </tbody>
 </table>
-
-    <a href="{{ route('procurement.create_supplier') }}" class="btn btn-primary mt-3">New Supplier</a>
 </div>
 @endsection

@@ -12,7 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('detail_pembelian', function (Blueprint $table) {
-            $table->id();
+            $table->id('Id_Detail_Pembelian');
+            $table->foreignId('pembelian_Id_Pembelian')->constrained('pembelian')->onDelete('cascade');
+            $table->foreignId('barang_Id_Barang')->constrained('barang')->onDelete('cascade');
+            $table->integer('Jumlah');
+            $table->decimal('Harga_Satuan', 10, 2);
+            $table->decimal('Subtotal', 10, 2);
             $table->timestamps();
         });
     }

@@ -1,29 +1,51 @@
 @extends('layouts.sidebar')
 
 @section('content')
-<form action="{{ route('production.store') }}" method="POST">
-    @csrf
-    <label>Nama Produksi:</label>
-    <input type="text" name="Nama_Produksi" required>
-
-    <label>Jumlah Produksi:</label>
-    <input type="number" name="Jumlah_Produksi" required>
-
-    <label>Status:</label>
-    <select name="Status">
-        <option value="Planning">Planning</option>
-        <option value="In Progress">In Progress</option>
-        <option value="Selesai">Selesai</option>
-    </select>
-
-    <label>Pilih BOM:</label>
-    <select name="bill_of_material_Id_bill_of_material" required>
-        @foreach ($boms as $bom)
-            <option value="{{ $bom->Id_bill_of_material }}">{{ $bom->Nama_BOM }}</option>
-        @endforeach
-    </select>
-
-    <button type="submit">Simpan</button>
-</form>
-
+<div class="container">
+    <h2 class="mb-4">Create New Production Order</h2>
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+    <form method="POST" action="{{ route('production.store') }}">
+        @csrf
+        <div class="mb-3">
+            <label for="Nama_Produksi" class="form-label">Nama Produksi</label>
+            <input type="text" name="Nama_Produksi" id="Nama_Produksi" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label for="Jumlah_Produksi" class="form-label">Jumlah Produksi</label>
+            <input type="number" name="Jumlah_Produksi" id="Jumlah_Produksi" class="form-control" min="1" required>
+        </div>
+        <div class="mb-3">
+            <label for="Tanggal_Produksi" class="form-label">Tanggal Produksi</label>
+            <input type="date" name="Tanggal_Produksi" id="Tanggal_Produksi" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label for="Status" class="form-label">Status</label>
+            <select name="Status" id="Status" class="form-select" required>
+                <option value="planned">Planned</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="bill_of_material_Id_bill_of_material" class="form-label">Bill of Material</label>
+            <select name="bill_of_material_Id_bill_of_material" id="bill_of_material_Id_bill_of_material" class="form-select" required>
+                <option value="">-- Pilih BOM --</option>
+                @foreach($boms as $bom)
+                    <option value="{{ $bom->Id_bill_of_material }}">{{ $bom->Nama_bill_of_material }}</option>
+                @endforeach
+            </select>
+        </div>
+        <button type="submit" class="btn btn-success">Simpan</button>
+        <a href="{{ route('production.index') }}" class="btn btn-secondary">Kembali</a>
+    </form>
+</div>
 @endsection

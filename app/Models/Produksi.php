@@ -8,7 +8,7 @@ class Produksi extends Model
 {
     protected $table = 'produksi';
     protected $primaryKey = 'Id_Produksi';
-    public $timestamps = true;
+    public $timestamps = false;
 
     protected $fillable = [
         'Hasil_Produksi',

@@ -20,8 +20,8 @@
             <label>Status</label>
             <select name="Status" class="form-select" required>
                 <option value="">-- Select Status --</option>
-                <option value="Approved">Approved</option>
-                <option value="Draft">Draft</option>
+                <option value="approved">Approved</option>
+                <option value="draft">Draft</option>
             </select>
         </div>
 
@@ -34,7 +34,6 @@
                     <tr>
                         <th style="width: 5%">✔</th>
                         <th>Material Name</th>
-                        <th style="width: 20%">Quantity</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -44,9 +43,6 @@
                             <input type="checkbox" name="bahan_baku[{{ $barang->Id_Bahan }}][selected]" value="1">
                         </td>
 <td>{{ $barang->Nama_Bahan }}</td>
-                        <td>
-                            <input type="number" name="bahan_baku[{{ $barang->Id_Bahan }}][jumlah]" class="form-control" min="1" value="1">
-                        </td>
                     </tr>
                     @endforeach
                 </tbody>
