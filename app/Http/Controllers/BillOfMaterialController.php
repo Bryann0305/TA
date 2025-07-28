@@ -41,9 +41,9 @@ class BillOfMaterialController extends Controller
             // Simpan bahan-baku ke pivot
             foreach ($request->bahan_baku as $idBahan => $data) {
                 if (isset($data['selected']) && $data['selected'] == 1) {
-                    \App\Models\BarangHasBillOfMaterial::create([
-                        'barang_id' => $idBahan,
-                        'bill_of_material_id' => $bom->Id_bill_of_material,
+                    BarangHasBillOfMaterial::create([
+                        'barang_Id_Bahan' => $idBahan,
+                        'bill_of_material_Id_bill_of_material' => $bom->Id_bill_of_material,
                     ]);
                 }
             }

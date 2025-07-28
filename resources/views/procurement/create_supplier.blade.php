@@ -44,15 +44,6 @@
             <textarea name="alamat" id="alamat" class="form-control" rows="3" required>{{ old('alamat') }}</textarea>
         </div>
 
-        <div class="mb-3">
-            <label for="status" class="form-label">Status</label>
-            <select name="status" id="status" class="form-control" required>
-                <option value="">-- Pilih Status --</option>
-                <option value="Active" {{ old('status') == 'Active' ? 'selected' : '' }}>Active</option>
-                <option value="Inactive" {{ old('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
-            </select>
-        </div>
-
         <button type="submit" class="btn btn-success">Save</button>
         <a href="{{ route('procurement.supplier') }}" class="btn btn-secondary">Back</a>
     </form>

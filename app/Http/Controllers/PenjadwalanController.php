@@ -10,7 +10,6 @@ class PenjadwalanController extends Controller
 {
     public function create()
     {
-        // Ambil daftar pesanan produksi yang belum dijadwalkan
         $pesananList = PesananProduksi::whereNull('Surat_Perintah_Produksi')->get();
         return view('penjadwalan.create', compact('pesananList'));
     }
@@ -20,7 +19,7 @@ class PenjadwalanController extends Controller
         $request->validate([
             'Tanggal_Mulai' => 'required|date',
             'Tanggal_Selesai' => 'required|date|after_or_equal:Tanggal_Mulai',
-            'Status' => 'required|string',
+            'Status' => 'required|in:Menunggu,Berjalan,Selesai',
             'pesanan_produksi_Id_Pesanan' => 'required|exists:pesanan_produksi,Id_Pesanan',
         ]);
 
@@ -28,13 +27,14 @@ class PenjadwalanController extends Controller
             'Tanggal_Mulai' => $request->Tanggal_Mulai,
             'Tanggal_Selesai' => $request->Tanggal_Selesai,
             'Status' => $request->Status,
+            'pesanan_produksi_Id_Pesanan' => $request->pesanan_produksi_Id_Pesanan,
         ]);
 
-        // Update pesanan produksi terkait
+        // Update pesanan produksi
         $pesanan = PesananProduksi::findOrFail($request->pesanan_produksi_Id_Pesanan);
         $pesanan->Surat_Perintah_Produksi = 'Jadwal ID #' . $jadwal->Id_Jadwal;
         $pesanan->save();
 
-        return redirect()->route('production.index')->with('success', 'Jadwal berhasil dibuat.');
+        return redirect()->route('production.index')->with('success', 'Penjadwalan berhasil ditambahkan.');
     }
 }

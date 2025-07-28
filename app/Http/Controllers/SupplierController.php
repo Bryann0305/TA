@@ -87,4 +87,12 @@ class SupplierController extends Controller
         Supplier::destroy($id);
         return redirect()->route('procurement.supplier')->with('success', 'Supplier berhasil dihapus.');
     }
+
+    public function toggleStatus($id)
+    {
+        $supplier = Supplier::findOrFail($id);
+        $supplier->Status = $supplier->Status === 'Active' ? 'Inactive' : 'Active';
+        $supplier->save();
+        return redirect()->route('procurement.supplier')->with('success', 'Status supplier berhasil diubah.');
+    }
 }

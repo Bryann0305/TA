@@ -11,94 +11,88 @@
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
-    <ul class="nav nav-tabs mb-3">
+    {{-- Tab Navigation --}}
+    <ul class="nav nav-tabs mb-3" id="productionTabs" role="tablist">
         <li class="nav-item">
-            <a class="nav-link active" href="#">Current Production</a>
+            <a class="nav-link active" id="current-tab" data-bs-toggle="tab" href="#current" role="tab">Current</a>
         </li>
-        <li class="nav-item"><a class="nav-link disabled">Planned Orders</a></li>
-        <li class="nav-item"><a class="nav-link disabled">Completed Orders</a></li>
+        <li class="nav-item">
+            <a class="nav-link" id="planned-tab" data-bs-toggle="tab" href="#planned" role="tab">Planned</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="completed-tab" data-bs-toggle="tab" href="#completed" role="tab">Completed</a>
+        </li>
     </ul>
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <span class="fw-semibold">Currently Running Production Orders</span>
-        <a href="{{ route('production.create') }}" class="btn btn-primary">New Production Order</a>
-    </div>
-
-    @foreach($produksi as $order)
-    <div class="card mb-3">
-        <div class="card-body">
-            <h5 class="card-title">{{ $order->Nama_Produksi }}</h5>
-            <p class="card-text mb-1">
-                <i class="bi bi-calendar"></i> {{ \Carbon\Carbon::parse($order->Tanggal_Produksi)->format('M d, Y') }}
-                &nbsp; • &nbsp; Batch: {{ $order->Id_Produksi }}
-                &nbsp; • &nbsp; {{ $order->Jumlah_Produksi }} L
-            </p>
-            <p class="card-text text-muted"><i class="bi bi-clock"></i> Status: {{ ucfirst($order->Status) }}</p>
-
-            <span class="badge bg-light text-primary border border-primary">{{ ucfirst($order->Status) }}</span>
-
-            <div class="progress mt-2" style="height: 6px;">
-                @php
-                    $progress = $order->Jumlah_Produksi > 0 ? ($order->Jumlah_Berhasil / $order->Jumlah_Produksi) * 100 : 0;
-                @endphp
-                <div class="progress-bar bg-primary" role="progressbar" data-width="{{ $progress }}" aria-valuenow="{{ $order->Jumlah_Berhasil }}" aria-valuemin="0" aria-valuemax="{{ $order->Jumlah_Produksi }}"></div>
-                <script>
-                    document.querySelector('[data-width="{{ $progress }}"]').style.width = '{{ $progress }}%';
-                </script>
+    {{-- Tab Content --}}
+    <div class="tab-content" id="productionTabsContent">
+        {{-- CURRENT --}}
+        <div class="tab-pane fade show active" id="current" role="tabpanel" aria-labelledby="current-tab">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="fw-semibold">Currently Running Production Orders</span>
+                                <a href="{{ route('production.create') }}" class="btn btn-primary">New Production Order</a>
             </div>
-            <small class="text-muted">{{ round($progress) }}% Complete</small>
+            @include('production.partials.list', ['produksi' => $produksiBerjalan])
+        </div>
 
-            <div class="mt-3 d-flex gap-2">
-                <a href="{{ route('production.edit', $order->Id_Produksi) }}" class="btn btn-outline-secondary btn-sm">Edit</a>
-                <form method="POST" action="{{ route('production.update-status', $order->Id_Produksi) }}">
-                    @csrf
-                    @method('PUT')
-                    <input type="hidden" name="Status" value="completed">
-                    <button class="btn btn-success btn-sm" {{ $order->Status === 'completed' ? 'disabled' : '' }}>
-                        <i class="bi bi-check-circle"></i> Mark Complete
-                    </button>
-                </form>
-                <a href="{{ route('production.show', $order->Id_Produksi) }}" class="btn btn-link btn-sm">View Details</a>
+        {{-- PLANNED --}}
+        <div class="tab-pane fade" id="planned" role="tabpanel" aria-labelledby="planned-tab">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="fw-semibold">Planned Production Orders</span>
+                <a href="{{ route('production.create') }}" class="btn btn-primary">New Production Order</a>
             </div>
+            @include('production.partials.list', ['produksi' => $produksiDirencanakan])
+        </div>
+
+        {{-- COMPLETED --}}
+        <div class="tab-pane fade" id="completed" role="tabpanel" aria-labelledby="completed-tab">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="fw-semibold">Completed Production Orders</span>
+            </div>
+            @include('production.partials.list', ['produksi' => $produksiSelesai])
         </div>
     </div>
-    @endforeach
 
-    @foreach($boms as $bom)
-    <div class="card mb-3">
-        <div class="card-body">
-            <h5 class="card-title">{{ $bom->Nama_BOM ?? '-' }}</h5>
-            <p class="card-text text-muted">
-                Status: 
-                <span class="badge bg-{{ 
-                    $bom->Status == 'approved' ? 'success' : 
-                    ($bom->Status == 'draft' ? 'warning' : 'danger') 
-                }}">
-                    {{ ucfirst($bom->Status ?? '-') }}
-                </span>
-            </p>
+    <hr>
 
-            {{-- Tampilkan daftar bahan dan jumlahnya --}}
-            @if($bom->barang->isEmpty())
-                <p class="text-muted">Tidak ada bahan baku yang terhubung.</p>
-            @else
-                <ul class="list-group list-group-flush mt-2">
-                    @foreach($bom->barang as $barang)
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            {{ $barang->Nama_Barang }}
-                            <span class="badge bg-primary rounded-pill">
-                                {{ $barang->pivot->Jumlah ?? 0 }}
-                            </span>
-                        </li>
-                    @endforeach
-                </ul>
-            @endif
+    {{-- BOM List --}}
+    <h4 class="mt-4">Daftar BOM</h4>
+    @forelse($boms as $bom)
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">{{ $bom->Nama_bill_of_material ?? 'BOM #' . $bom->Id_bill_of_material }}</h5>
+                <p class="card-text text-muted">
+                    Status:
+                    <span class="badge bg-{{ 
+                        $bom->Status == 'approved' ? 'success' : 
+                        ($bom->Status == 'draft' ? 'warning' : 'danger') 
+                    }}">
+                        {{ ucfirst($bom->Status ?? '-') }}
+                    </span>
+                </p>
 
-            <a href="{{ route('bill-of-materials.show', $bom->Id_bill_of_material) }}" class="btn btn-outline-primary btn-sm mt-3">
-                Lihat Detail BOM
-            </a>
+                @if($bom->barang->isEmpty())
+                    <p class="text-muted">Tidak ada bahan baku yang terhubung.</p>
+                @else
+                    <ul class="list-group list-group-flush mt-2">
+                        @foreach($bom->barang as $barang)
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ $barang->Nama_Bahan }}
+                                <span class="badge bg-primary rounded-pill">
+                                    {{ $barang->pivot->Jumlah ?? 0 }}
+                                </span>
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
+
+                <a href="{{ route('bill-of-materials.show', $bom->Id_bill_of_material) }}" class="btn btn-outline-primary btn-sm mt-3">
+                    Lihat Detail BOM
+                </a>
+            </div>
         </div>
-    </div>
-@endforeach
+    @empty
+        <p class="text-muted">Belum ada data BOM.</p>
+    @endforelse
 </div>
 @endsection

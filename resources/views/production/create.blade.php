@@ -1,51 +1,116 @@
 @extends('layouts.sidebar')
 
 @section('content')
-<div class="container">
-    <h2 class="mb-4">Create New Production Order</h2>
+<div class="container mt-4">
+    <h2><strong>Tambah Produksi</strong></h2>
+    <p>Input pesanan, jadwal, dan produksi dalam satu halaman</p>
+
     @if ($errors->any())
         <div class="alert alert-danger">
-            <ul>
+            <ul class="mb-0">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
         </div>
     @endif
-    <form method="POST" action="{{ route('production.store') }}">
+
+    <form action="{{ route('production.store') }}" method="POST">
         @csrf
-        <div class="mb-3">
-            <label for="Nama_Produksi" class="form-label">Nama Produksi</label>
-            <input type="text" name="Nama_Produksi" id="Nama_Produksi" class="form-control" required>
+
+        {{-- Tabs --}}
+        <ul class="nav nav-tabs mb-3" id="productionFormTabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="pesanan-tab" data-bs-toggle="tab" href="#pesanan" role="tab">Pesanan</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="jadwal-tab" data-bs-toggle="tab" href="#jadwal" role="tab">Jadwal</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="produksi-tab" data-bs-toggle="tab" href="#produksi" role="tab">Produksi</a>
+            </li>
+        </ul>
+
+        {{-- Tab Content --}}
+        <div class="tab-content" id="productionFormTabsContent">
+            {{-- Tab Pesanan --}}
+            <div class="tab-pane fade show active" id="pesanan" role="tabpanel">
+                <div class="mb-3">
+                    <label>Jumlah Pesanan</label>
+                    <input type="number" name="Jumlah_Pesanan" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label>Tanggal Pesanan</label>
+                    <input type="date" name="Tanggal_Pesanan" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label>Surat Perintah Produksi</label>
+                    <input type="text" name="Surat_Perintah_Produksi" class="form-control">
+                </div>
+            </div>
+
+            {{-- Tab Jadwal --}}
+            <div class="tab-pane fade" id="jadwal" role="tabpanel">
+                <div class="mb-3">
+                    <label>Tanggal Mulai</label>
+                    <input type="date" name="Tanggal_Mulai" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label>Tanggal Selesai</label>
+                    <input type="date" name="Tanggal_Selesai" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label>Status Jadwal</label>
+                    <select name="Status_Jadwal" class="form-control">
+                        <option value="Direncanakan">Direncanakan</option>
+                        <option value="Berjalan">Berjalan</option>
+                        <option value="Tertunda">Tertunda</option>
+                    </select>
+                </div>
+            </div>
+
+            {{-- Tab Produksi --}}
+            <div class="tab-pane fade" id="produksi" role="tabpanel">
+                <div class="mb-3">
+                    <label>Hasil Produksi</label>
+                    <input type="text" name="Hasil_Produksi" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label>Status Produksi</label>
+                    <select name="Status" class="form-control" required>
+                        <option value="Menunggu">Menunggu</option>
+                        <option value="Berjalan">Berjalan</option>
+                        <option value="Selesai">Selesai</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label>Keterangan</label>
+                    <textarea name="Keterangan" class="form-control" rows="2"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label>Bill of Material</label>
+                    <select name="bill_of_material_Id_bill_of_material" class="form-control" required>
+                        @foreach($boms as $bom)
+                            <option value="{{ $bom->Id_bill_of_material }}">{{ $bom->Nama_bill_of_material }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label>Bahan Baku</label>
+                    <select name="bahan_baku_Id_Bahan" class="form-control">
+                        @foreach($barang as $b)
+                            <option value="{{ $b->Id_Bahan }}">{{ $b->Nama_Bahan }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
         </div>
-        <div class="mb-3">
-            <label for="Jumlah_Produksi" class="form-label">Jumlah Produksi</label>
-            <input type="number" name="Jumlah_Produksi" id="Jumlah_Produksi" class="form-control" min="1" required>
+
+        {{-- Submit --}}
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">Simpan Produksi</button>
+            <a href="{{ route('production.index') }}" class="btn btn-secondary">Batal</a>
         </div>
-        <div class="mb-3">
-            <label for="Tanggal_Produksi" class="form-label">Tanggal Produksi</label>
-            <input type="date" name="Tanggal_Produksi" id="Tanggal_Produksi" class="form-control" required>
-        </div>
-        <div class="mb-3">
-            <label for="Status" class="form-label">Status</label>
-            <select name="Status" id="Status" class="form-select" required>
-                <option value="planned">Planned</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label for="bill_of_material_Id_bill_of_material" class="form-label">Bill of Material</label>
-            <select name="bill_of_material_Id_bill_of_material" id="bill_of_material_Id_bill_of_material" class="form-select" required>
-                <option value="">-- Pilih BOM --</option>
-                @foreach($boms as $bom)
-                    <option value="{{ $bom->Id_bill_of_material }}">{{ $bom->Nama_bill_of_material }}</option>
-                @endforeach
-            </select>
-        </div>
-        <button type="submit" class="btn btn-success">Simpan</button>
-        <a href="{{ route('production.index') }}" class="btn btn-secondary">Kembali</a>
     </form>
 </div>
 @endsection

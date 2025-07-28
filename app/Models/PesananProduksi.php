@@ -11,7 +11,12 @@ class PesananProduksi extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'Jumlah_Pesanan', 'Status', 'Tanggal_Pesanan', 'user_Id_User', 'pelanggan_Id_Pelanggan', 'Surat_Perintah_Produksi'
+        'Jumlah_Pesanan',
+        'Status',
+        'Tanggal_Pesanan',
+        'user_Id_User',
+        'pelanggan_Id_Pelanggan',
+        'Surat_Perintah_Produksi'
     ];
 
     public function user()

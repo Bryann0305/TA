@@ -16,7 +16,7 @@ use App\Http\Controllers\GagalProduksiController;
 
 /*
 |--------------------------------------------------------------------------
-| Guest Routes (Login & Register)
+| Guest Routes
 |--------------------------------------------------------------------------
 */
 Route::middleware('guest')->group(function () {
@@ -33,105 +33,100 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
-    
 
-    // Inventory Section (Roles: inventory, admin)
+    // Inventory Section (Roles: admin, gudang)
     Route::middleware('Role:admin,gudang')->group(function () {
-        Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
-        Route::get('/inventory/create', [InventoryController::class, 'create'])->name('inventory.create');
-        Route::post('/inventory', [InventoryController::class, 'store'])->name('inventory.store');
+        Route::resource('inventory', InventoryController::class)->names([
+            'index' => 'inventory.index',
+            'create' => 'inventory.create',
+            'store' => 'inventory.store',
+            'show' => 'inventory.show',
+            'edit' => 'inventory.edit',
+            'update' => 'inventory.update',
+            'destroy' => 'inventory.destroy',
+        ]);
         Route::get('/inventory/export-pdf', [InventoryController::class, 'exportPdf'])->name('inventory.exportPdf');
-        Route::get('/inventory/{id}', [InventoryController::class, 'show'])->name('inventory.show');
-        Route::get('/inventory/{id}/edit', [InventoryController::class, 'edit'])->name('inventory.edit');
-        Route::put('/inventory/{id}', [InventoryController::class, 'update'])->name('inventory.update');
-        Route::delete('/inventory/{id}', [InventoryController::class, 'destroy'])->name('inventory.destroy');
     });
 
-
-    // Production Section (Roles: production, admin)
-        Route::middleware('Role:admin,pembelian')->group(function () {
-        Route::get('/production', [ProductionController::class, 'index'])->name('production.index');
-    });
-
-    
-    Route::middleware('Role:admin,manajer_produksi')->group(function () {
-        // Procurement main routes - supplier 
-        Route::get('/procurement/supplier', [SupplierController::class, 'index'])->name('procurement.supplier');
-        Route::get('/procurement/supplier/create', [SupplierController::class, 'create'])->name('procurement.create_supplier');
-        Route::post('/procurement/supplier', [SupplierController::class, 'store'])->name('procurement.store_supplier');
-        Route::get('/procurement/supplier/{id}/edit', [SupplierController::class, 'edit'])->name('procurement.edit_supplier');
-        Route::put('/procurement/supplier/{id}', [SupplierController::class, 'update'])->name('procurement.update_supplier');
-        Route::delete('/procurement/supplier/{id}', [SupplierController::class, 'destroy'])->name('procurement.destroy_supplier');
-        Route::get('/procurement/supplier/{id}', [SupplierController::class, 'show'])->name('procurement.show_supplier');
-
-    
-        // PO routes - lengkap CRUD
-        Route::get('/procurement', [ProcurementController::class, 'index'])->name('procurement.index');
-        Route::get('/procurement/create', [ProcurementController::class, 'create'])->name('procurement.create_purchaseOrder');
-        Route::post('/procurement', [ProcurementController::class, 'store'])->name('procurement.store');
-        Route::get('/procurement/{id}', [ProcurementController::class, 'show'])->name('procurement.show_po');
-        Route::get('/procurement/{id}/edit', [ProcurementController::class, 'edit'])->name('procurement.edit_purchaseOrder');
-        Route::put('/procurement/{id}', [ProcurementController::class, 'update'])->name('procurement.update_purchaseOrder');
-        Route::delete('/procurement/{id}', [ProcurementController::class, 'destroy'])->name('procurement.destroy_purchaseOrder');
-
-        //Pesanan Produksi Routes
-    Route::prefix('pesanan-produksi')->name('pesanan-produksi.')->group(function () {
-        Route::get('/', [PesananProduksiController::class, 'index'])->name('index');
-        Route::get('/create', [PesananProduksiController::class, 'create'])->name('create');
-        Route::post('/', [PesananProduksiController::class, 'store'])->name('store');
-        Route::get('/{id}', [PesananProduksiController::class, 'show'])->name('show');
-        Route::get('/{id}/edit', [PesananProduksiController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [PesananProduksiController::class, 'update'])->name('update');
-        Route::delete('/{id}', [PesananProduksiController::class, 'destroy'])->name('destroy');
-    });
-
-    //Penjadwalan Produksi Routes
-    Route::prefix('penjadwalan')->name('penjadwalan.')->group(function () {
-        Route::get('/', [PenjadwalanController::class, 'index'])->name('index');
-        Route::get('/create', [PenjadwalanController::class, 'create'])->name('create');
-        Route::post('/', [PenjadwalanController::class, 'store'])->name('store');
-        Route::get('/{id}', [PenjadwalanController::class, 'show'])->name('show');
-        Route::get('/{id}/edit', [PenjadwalanController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [PenjadwalanController::class, 'update'])->name('update');
-        Route::delete('/{id}', [PenjadwalanController::class, 'destroy'])->name('destroy');
-    });
-
-
-    // Produksi Routes
-    Route::prefix('production')->group(function () {
-        Route::get('/', [ProductionController::class, 'index'])->name('production.index');
-        Route::get('/create', [ProductionController::class, 'create'])->name('production.create');
-        Route::post('/', [ProductionController::class, 'store'])->name('production.store');
-        Route::get('/{id}/edit', [ProductionController::class, 'edit'])->name('production.edit');
-        Route::put('/{id}', [ProductionController::class, 'update'])->name('production.update');
-        Route::put('/{id}/status', [ProductionController::class, 'updateStatus'])->name('production.update-status');
-        Route::get('/{id}', [ProductionController::class, 'show'])->name('production.show');
+    // Produksi Section (Roles: admin, pembelian)
+    Route::middleware('Role:admin,pembelian')->prefix('production')->name('production.')->group(function () {
+        Route::get('/', [ProductionController::class, 'index'])->name('index');
+        Route::get('/create', [ProductionController::class, 'create'])->name('create');
+        Route::post('/', [ProductionController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [ProductionController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [ProductionController::class, 'update'])->name('update');
+        Route::put('/{id}/status', [ProductionController::class, 'updateStatus'])->name('update-status');
+        Route::get('/{id}', [ProductionController::class, 'show'])->name('show');
         Route::get('/bill-of-materials/{id}', [BillOfMaterialController::class, 'show'])->name('bill-of-materials.show');
     });
 
-    Route::resource('bill-of-materials', BillOfMaterialController::class);
-
-        Route::prefix('produksi-gagal')->name('produksi-gagal.')->group(function () {
+    // Produksi Gagal Routes
+    Route::middleware('Role:admin,pembelian')->prefix('produksi-gagal')->name('produksi-gagal.')->group(function () {
         Route::get('/', [GagalProduksiController::class, 'index'])->name('index');
         Route::post('/', [GagalProduksiController::class, 'store'])->name('store');
+    });
+
+    // Procurement Section (Roles: admin, manajer_produksi)
+    Route::middleware('Role:admin,manajer_produksi')->group(function () {
+        // Supplier routes
+        Route::resource('procurement/supplier', SupplierController::class)->parameters([
+            'supplier' => 'id',
+        ])->names([
+            'index' => 'procurement.supplier',
+            'create' => 'procurement.create_supplier',
+            'store' => 'procurement.store_supplier',
+            'edit' => 'procurement.edit_supplier',
+            'update' => 'procurement.update_supplier',
+            'destroy' => 'procurement.destroy_supplier',
+            'show' => 'procurement.show_supplier',
+        ]);
+        // Tambahkan route toggle status supplier
+        Route::patch('procurement/supplier/{id}/toggle-status', [SupplierController::class, 'toggleStatus'])->name('procurement.toggle_status_supplier');
+
+        // PO routes
+        Route::resource('procurement', ProcurementController::class)->names([
+            'index' => 'procurement.index',
+            'create' => 'procurement.create_purchaseOrder',
+            'store' => 'procurement.store',
+            'show' => 'procurement.show_po',
+            'edit' => 'procurement.edit_purchaseOrder',
+            'update' => 'procurement.update_purchaseOrder',
+            'destroy' => 'procurement.destroy_purchaseOrder',
+        ]);
+        // Tambahkan route PATCH untuk toggle status dan pembayaran
+        Route::patch('procurement/{id}/toggle-status', [ProcurementController::class, 'toggleStatus'])->name('procurement.toggle_status');
+        Route::patch('procurement/{id}/toggle-payment', [ProcurementController::class, 'togglePayment'])->name('procurement.toggle_payment');
+
+        // Pesanan Produksi
+        Route::prefix('pesanan-produksi')->name('pesanan-produksi.')->group(function () {
+            Route::get('/', [PesananProduksiController::class, 'index'])->name('index');
+            Route::get('/create', [PesananProduksiController::class, 'create'])->name('create');
+            Route::post('/', [PesananProduksiController::class, 'store'])->name('store');
+            Route::get('/{id}', [PesananProduksiController::class, 'show'])->name('show');
+            Route::get('/{id}/edit', [PesananProduksiController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [PesananProduksiController::class, 'update'])->name('update');
+            Route::delete('/{id}', [PesananProduksiController::class, 'destroy'])->name('destroy');
+            // Tambahkan route PATCH untuk toggle status
+            Route::patch('/{id}/toggle-status', [PesananProduksiController::class, 'toggleStatus'])->name('toggle_status');
+        });
+
+        // Penjadwalan Produksi
+        Route::prefix('penjadwalan')->name('penjadwalan.')->group(function () {
+            Route::get('/', [PenjadwalanController::class, 'index'])->name('index');
+            Route::get('/create', [PenjadwalanController::class, 'create'])->name('create');
+            Route::post('/', [PenjadwalanController::class, 'store'])->name('store');
+            Route::get('/{id}', [PenjadwalanController::class, 'show'])->name('show');
+            Route::get('/{id}/edit', [PenjadwalanController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [PenjadwalanController::class, 'update'])->name('update');
+            Route::delete('/{id}', [PenjadwalanController::class, 'destroy'])->name('destroy');
         });
     });
-    
-        
-    // Reports (accessible by all authenticated users)
+
+    // BOM (accessible by admin only)
+    Route::middleware('Role:admin')->resource('bill-of-materials', BillOfMaterialController::class);
+
+    // Reports & Settings
     Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
-    // Settings (Admin only)
-    Route::middleware('Role:admin')->group(function () {
-        
-        Route::post('/settings/update', [SettingsController::class, 'update'])->name('settings.update');
-    });
-
-   
+    Route::middleware('Role:admin')->post('/settings/update', [SettingsController::class, 'update'])->name('settings.update');
 });
-
-/*
-|--------------------------------------------------------------------------
-| Legacy Laravel Auth Route
-|--------------------------------------------------------------------------
-*/

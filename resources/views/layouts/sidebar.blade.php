@@ -5,44 +5,67 @@
     <title>Dashboard | Dunia Coating</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- Styles -->
+    {{-- Styles --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
 
     <style>
         body { overflow-x: hidden; }
+
         .sidebar {
             width: 250px;
             height: 100vh;
             position: fixed;
+            top: 0;
+            left: 0;
             background-color: #0d47a1;
             color: white;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            z-index: 1000;
         }
+
         .sidebar .nav-link {
             color: white;
         }
+
         .sidebar .nav-link.active {
             background-color: #1565c0;
             font-weight: bold;
         }
+
         .sidebar .nav-link:hover {
             background-color: #1976d2;
         }
-        .content {
+
+        .content-wrapper {
             margin-left: 250px;
-            padding: 1.5rem;
+            min-height: 100vh;
+            background-color: #f8f9fa;
         }
+
         .topbar {
             height: 60px;
             background-color: white;
             border-bottom: 1px solid #ddd;
             padding: 0 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
+
+        .main-content {
+            padding: 1.5rem;
+        }
+
         .logout-box {
             padding: 1rem;
         }
@@ -51,20 +74,17 @@
 <body>
 
     {{-- Sidebar --}}
-    <div class="sidebar d-flex flex-column p-3">
+    <div class="sidebar p-3">
         <div>
             <div class="mb-4 text-center">
                 <div class="bg-white p-2 rounded mb-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-factory text-primary">
-                        <path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path>
-                        <path d="M17 18h1"></path>
-                        <path d="M12 18h1"></path>
-                        <path d="M7 18h1"></path>
-                    </svg>
+                    <i class="bi bi-buildings text-primary" style="font-size: 2rem;"></i>
                 </div>
                 <h5 class="fw-bold mb-0">Dunia Coating</h5>
                 <p class="small mb-0">Production Management</p>
             </div>
+
+            @php $role = Auth::user()->Role ?? null; @endphp
 
             <ul class="nav nav-pills flex-column mb-auto">
                 <li class="nav-item">
@@ -72,8 +92,6 @@
                         <i class="bi bi-house-door me-2"></i> Dashboard
                     </a>
                 </li>
-
-                @php $role = Auth::user()->Role ?? null; @endphp
 
                 @if($role === 'admin' || $role === 'gudang')
                 <li>
@@ -105,6 +123,12 @@
                 @endif
 
                 <li>
+                    <a href="{{ route('pesanan-produksi.index') }}" class="nav-link {{ Request::is('pesanan-produksi*') ? 'active' : '' }}">
+                        <i class="bi bi-list-check me-2"></i> Order
+                    </a>
+                </li>
+
+                <li>
                     <a href="{{ route('settings.index') }}" class="nav-link {{ Request::is('settings*') ? 'active' : '' }}">
                         <i class="bi bi-gear me-2"></i> Settings
                     </a>
@@ -112,7 +136,7 @@
             </ul>
         </div>
 
-        {{-- Logout Button --}}
+        {{-- Logout --}}
         <div class="logout-box">
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
@@ -123,9 +147,10 @@
         </div>
     </div>
 
-    {{-- Topbar & Content --}}
-    <div class="content">
-        <div class="topbar d-flex justify-content-between align-items-center">
+    {{-- Content Area --}}
+    <div class="content-wrapper">
+        {{-- Topbar --}}
+        <div class="topbar">
             <input type="text" class="form-control w-25" placeholder="Search...">
             <div class="dropdown">
                 <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
@@ -146,12 +171,21 @@
             </div>
         </div>
 
-        <main class="mt-4">
+        {{-- Content from child view --}}
+        <main class="main-content">
             @yield('content')
         </main>
     </div>
 
-    <!-- JS -->
+    {{-- Scripts --}}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+    @stack('scripts')
 </body>
 </html>

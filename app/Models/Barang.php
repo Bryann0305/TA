@@ -24,18 +24,13 @@ class Barang extends Model
         return $this->hasMany(DetailPembelian::class, 'bahan_baku_Id_Bahan', 'Id_Bahan');
     }
 
-    public function barangHasBill()
-    {
-        return $this->hasMany(\App\Models\BarangHasBillOfMaterial::class, 'barang_id', 'Id_Bahan');
-    }
-
     public function billOfMaterials()
     {
         return $this->belongsToMany(
             BillOfMaterial::class,
             'barang_has_bill_of_material',
-            'barang_id',
-            'bill_of_material_id'
+            'barang_Id_Bahan',
+            'bill_of_material_Id_bill_of_material'
         );
     }
 }

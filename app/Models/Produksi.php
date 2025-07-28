@@ -11,6 +11,8 @@ class Produksi extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'Nama_Produksi',
+        'Jumlah_Produksi',
         'Hasil_Produksi',
         'Status',
         'Tanggal_Produksi',
@@ -42,4 +44,4 @@ class Produksi extends Model
     {
         return $this->belongsTo(BillOfMaterial::class, 'bill_of_material_Id_bill_of_material', 'Id_bill_of_material');
     }
-} 
+}
