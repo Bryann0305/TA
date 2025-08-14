@@ -26,8 +26,8 @@
             <thead class="table-light">
                 <tr>
                     <th>Item Name</th>
-                    <th>Category</th>
                     <th>Jenis</th>
+                    <th>Category</th>
                     <th>Stock</th>
                     <th>Reorder Point</th>
                     <th>EOQ</th>
@@ -49,8 +49,8 @@
                     @endphp
                     <tr>
                         <td><strong>{{ $item->Nama_Bahan }}</strong></td>
-                        <td>{{ $item->kategori->Nama_Kategori ?? 'Unknown' }}</td>
                         <td>{{ $item->Jenis ?? 'Unknown' }}</td>
+                        <td>{{ $item->kategori->Nama_Kategori ?? 'Unknown' }}</td>
                         <td>{{ $item->Stok }} unit</td>
                         <td>{{ $reorder }} unit</td>
                         <td>{{ $eoq }} unit</td>
