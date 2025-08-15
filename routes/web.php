@@ -13,7 +13,7 @@ use App\Http\Controllers\BillOfMaterialController;
 use App\Http\Controllers\PesananProduksiController;
 use App\Http\Controllers\PenjadwalanController;
 use App\Http\Controllers\GagalProduksiController;
-
+use App\Http\Controllers\PelangganController;
 /*
 |--------------------------------------------------------------------------
 | Guest Routes
@@ -60,6 +60,20 @@ Route::middleware('auth')->group(function () {
         Route::get('/bill-of-materials/{id}', [BillOfMaterialController::class, 'show'])->name('bill-of-materials.show');
     });
 
+    Route::middleware('Role:admin,pembelian')
+    ->prefix('pelanggan')
+    ->name('pelanggan.')
+    ->group(function () {
+        Route::get('/', [PelangganController::class, 'index'])->name('index');
+        Route::get('/create', [PelangganController::class, 'create'])->name('create');
+        Route::post('/', [PelangganController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [PelangganController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [PelangganController::class, 'update'])->name('update');
+        Route::put('/{id}/status', [PelangganController::class, 'updateStatus'])->name('update-status');
+        Route::get('/{id}', [PelangganController::class, 'show'])->name('show');
+    });
+
+
     // Produksi Gagal Routes
     Route::middleware('Role:admin,pembelian')->prefix('produksi-gagal')->name('produksi-gagal.')->group(function () {
         Route::get('/', [GagalProduksiController::class, 'index'])->name('index');
@@ -98,7 +112,7 @@ Route::middleware('auth')->group(function () {
         Route::patch('procurement/{id}/toggle-payment', [ProcurementController::class, 'togglePayment'])->name('procurement.toggle_payment');
 
         // Pesanan Produksi
-        Route::prefix('pesanan-produksi')->name('pesanan-produksi.')->group(function () {
+        Route::prefix('pesanan_produksi')->name('pesanan_produksi.')->group(function () {
             Route::get('/', [PesananProduksiController::class, 'index'])->name('index');
             Route::get('/create', [PesananProduksiController::class, 'create'])->name('create');
             Route::post('/', [PesananProduksiController::class, 'store'])->name('store');
@@ -120,6 +134,22 @@ Route::middleware('auth')->group(function () {
             Route::put('/{id}', [PenjadwalanController::class, 'update'])->name('update');
             Route::delete('/{id}', [PenjadwalanController::class, 'destroy'])->name('destroy');
         });
+
+        Route::middleware('Role:admin,pembelian')
+        ->prefix('pelanggan')
+        ->name('pelanggan.')
+        ->group(function () {
+            Route::get('/', [PelangganController::class, 'index'])->name('index');
+            Route::get('/create', [PelangganController::class, 'create'])->name('create');
+            Route::post('/', [PelangganController::class, 'store'])->name('store');
+            Route::get('/{id}/edit', [PelangganController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [PelangganController::class, 'update'])->name('update');
+            Route::delete('/{id}', [PelangganController::class, 'destroy'])->name('destroy');
+            // Route PATCH untuk toggle status pelanggan
+            Route::patch('/{id}/toggle-status', [PelangganController::class, 'toggleStatus'])->name('toggle-status');
+            Route::get('/{id}', [PelangganController::class, 'show'])->name('show');
+        });
+
     });
 
     // BOM (accessible by admin only)

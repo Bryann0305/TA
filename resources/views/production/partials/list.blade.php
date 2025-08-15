@@ -108,37 +108,14 @@
                             <i class="bi bi-eye"></i> View Details
                         </a>
                     </li>
-                    @if($order->Status == 'Draft')
+                    @if($order->Status !== 'Selesai')
                         <li>
-                            <form method="POST" action="{{ route('production.start', $order->Id_Produksi) }}" class="px-3">
+                            <form method="POST" action="{{ route('production.update-status', $order->Id_Produksi) }}" class="px-3">
                                 @csrf
+                                @method('PUT')
+                                <input type="hidden" name="Status" value="Selesai">
                                 <button type="submit" class="dropdown-item text-success p-0 mt-2">
-                                    <i class="bi bi-play-circle"></i> Start Production
-                                </button>
-                            </form>
-                        </li>
-                        <li>
-                            <form method="POST" action="{{ route('production.cancel', $order->Id_Produksi) }}" class="px-3">
-                                @csrf
-                                <button type="submit" class="dropdown-item text-danger p-0 mt-2">
-                                    <i class="bi bi-x-circle"></i> Cancel
-                                </button>
-                            </form>
-                        </li>
-                    @elseif($order->Status == 'In Progress')
-                        <li>
-                            <form method="POST" action="{{ route('production.done', $order->Id_Produksi) }}" class="px-3">
-                                @csrf
-                                <button type="submit" class="dropdown-item text-primary p-0 mt-2">
-                                    <i class="bi bi-flag-checkered"></i> Mark as Done
-                                </button>
-                            </form>
-                        </li>
-                        <li>
-                            <form method="POST" action="{{ route('production.cancel', $order->Id_Produksi) }}" class="px-3">
-                                @csrf
-                                <button type="submit" class="dropdown-item text-danger p-0 mt-2">
-                                    <i class="bi bi-x-circle"></i> Cancel
+                                    <i class="bi bi-check-circle"></i> Mark Complete
                                 </button>
                             </form>
                         </li>

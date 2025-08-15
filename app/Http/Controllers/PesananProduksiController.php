@@ -6,12 +6,13 @@ use Illuminate\Http\Request;
 use App\Models\PesananProduksi;
 use App\Models\User;
 use App\Models\Pelanggan;
+use App\Models\Barang;
 
 class PesananProduksiController extends Controller
 {
     public function index()
     {
-        $pesanan = PesananProduksi::with(['user', 'pelanggan'])->get();
+        $pesanan = PesananProduksi::with(['user', 'pelanggan', 'barang'])->get();
         return view('pesanan_produksi.index', compact('pesanan'));
     }
 
@@ -19,24 +20,35 @@ class PesananProduksiController extends Controller
     {
         $users = User::all();
         $pelanggans = Pelanggan::all();
-        return view('pesanan_produksi.create', compact('users', 'pelanggans'));
+        $produks = Barang::all(); // daftar produk
+        return view('pesanan_produksi.create', compact('users', 'pelanggans', 'produks'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'Jumlah_Pesanan' => 'required|numeric',
-            'Status' => 'required|in:Menunggu,Diproses,Selesai',
+            'Jumlah_Pesanan' => 'required|integer|min:1',
             'Tanggal_Pesanan' => 'required|date',
+            'Status' => 'required|in:Menunggu,Diproses,Selesai',
             'user_Id_User' => 'required|exists:users,Id_User',
             'pelanggan_Id_Pelanggan' => 'required|exists:pelanggans,Id_Pelanggan',
             'Surat_Perintah_Produksi' => 'nullable|string',
         ]);
 
-        PesananProduksi::create($request->all());
+        PesananProduksi::create([
+            'Jumlah_Pesanan' => $request->Jumlah_Pesanan,
+            'Tanggal_Pesanan' => $request->Tanggal_Pesanan,
+            'Status' => $request->Status,
+            'user_Id_User' => $request->user_Id_User,
+            'pelanggan_Id_Pelanggan' => $request->pelanggan_Id_Pelanggan,
+            'Surat_Perintah_Produksi' => $request->Surat_Perintah_Produksi,
+        ]);
 
-        return redirect()->route('pesananproduksi.index')->with('success', 'Pesanan produksi berhasil ditambahkan.');
+        return redirect()->route('pesanan_produksi.index')
+            ->with('success', 'Pesanan produksi berhasil ditambahkan.');
     }
+
+    // method lainnya tetap seperti sebelumnya...
 
     public function show($id)
     {
@@ -66,7 +78,7 @@ class PesananProduksiController extends Controller
         $pesanan = PesananProduksi::findOrFail($id);
         $pesanan->update($request->all());
 
-        return redirect()->route('pesananproduksi.index')->with('success', 'Pesanan produksi berhasil diperbarui.');
+        return redirect()->route('pesananp_roduksi.index')->with('success', 'Pesanan produksi berhasil diperbarui.');
     }
 
     public function destroy($id)
@@ -74,18 +86,6 @@ class PesananProduksiController extends Controller
         $pesanan = PesananProduksi::findOrFail($id);
         $pesanan->delete();
 
-        return redirect()->route('pesananproduksi.index')->with('success', 'Pesanan produksi berhasil dihapus.');
-    }
-
-    public function toggleStatus($id)
-    {
-        $pesanan = PesananProduksi::findOrFail($id);
-        if ($pesanan->Status === 'On Progress') {
-            $pesanan->Status = 'Completed';
-        } else {
-            $pesanan->Status = 'On Progress';
-        }
-        $pesanan->save();
-        return redirect()->route('pesanan-produksi.index')->with('success', 'Status pesanan berhasil diubah.');
+        return redirect()->route('pesanan_produksi.index')->with('success', 'Pesanan produksi berhasil dihapus.');
     }
 }

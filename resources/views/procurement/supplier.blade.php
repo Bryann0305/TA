@@ -62,7 +62,7 @@
                     <th>Contact</th>
                     <th>Address</th>
                     <th>Status</th>
-                    <th style="width: 140px;">Actions</th>
+                    <th style="width: 160px;">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -75,9 +75,15 @@
                     <td>{{ $supplier->Kontak }}</td>
                     <td>{{ $supplier->Alamat }}</td>
                     <td>
-                        <span class="badge bg-{{ $supplier->Status == 'Active' ? 'success' : 'secondary' }}">
-                            {{ $supplier->Status }}
-                        </span>
+                        {{-- Tombol toggle status --}}
+                        <form action="{{ route('procurement.toggle_status_supplier', $supplier->Id_Supplier) }}" method="POST">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="btn btn-sm 
+                                {{ $supplier->Status === 'Active' ? 'btn-success' : 'btn-secondary' }}">
+                                {{ $supplier->Status }}
+                            </button>
+                        </form>
                     </td>
                     <td style="white-space: nowrap;">
                         <div class="d-flex justify-content-center gap-1 flex-nowrap">
@@ -89,13 +95,6 @@
                                class="btn btn-sm btn-warning" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <form action="{{ route('procurement.toggle_status_supplier', ['id' => $supplier->Id_Supplier]) }}" method="POST" style="display:inline;">
-                                @csrf
-                                @method('PATCH')
-                                <button type="submit" class="btn btn-sm {{ $supplier->Status == 'Active' ? 'btn-secondary' : 'btn-success' }}" title="{{ $supplier->Status == 'Active' ? 'Deactivate' : 'Activate' }}">
-                                    <i class="fas {{ $supplier->Status == 'Active' ? 'fa-user-slash' : 'fa-user-check' }}"></i>
-                                </button>
-                            </form>
                             <form action="{{ route('procurement.destroy_supplier', ['id' => $supplier->Id_Supplier]) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this supplier?')">
                                 @csrf
                                 @method('DELETE')
@@ -125,11 +124,11 @@
             responsive: true,
             autoWidth: false,
             language: {
-                search: "_INPUT_",
+                search: "INPUT",
                 searchPlaceholder: "Search suppliers...",
-                lengthMenu: "Show _MENU_ entries per page",
+                lengthMenu: "Show MENU entries per page",
                 zeroRecords: "No matching suppliers found",
-                info: "Showing _START_ to _END_ of _TOTAL_ suppliers",
+                info: "Showing START to END of TOTAL suppliers",
                 infoEmpty: "No suppliers available",
                 paginate: {
                     previous: "‹",

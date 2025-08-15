@@ -5,6 +5,7 @@
     <h2><strong>Tambah Produksi</strong></h2>
     <p>Input pesanan, jadwal, dan produksi dalam satu halaman</p>
 
+    {{-- Error Handling --}}
     @if ($errors->any())
         <div class="alert alert-danger">
             <ul class="mb-0">
@@ -17,12 +18,8 @@
 
     <form action="{{ route('production.store') }}" method="POST">
         @csrf
-
         {{-- Tabs --}}
         <ul class="nav nav-tabs mb-3" id="productionFormTabs" role="tablist">
-            <li class="nav-item">
-                <a class="nav-link active" id="pesanan-tab" data-bs-toggle="tab" href="#pesanan" role="tab">Pesanan</a>
-            </li>
             <li class="nav-item">
                 <a class="nav-link" id="jadwal-tab" data-bs-toggle="tab" href="#jadwal" role="tab">Jadwal</a>
             </li>
@@ -33,22 +30,6 @@
 
         {{-- Tab Content --}}
         <div class="tab-content" id="productionFormTabsContent">
-            {{-- Tab Pesanan --}}
-            <div class="tab-pane fade show active" id="pesanan" role="tabpanel">
-                <div class="mb-3">
-                    <label>Jumlah Pesanan</label>
-                    <input type="number" name="Jumlah_Pesanan" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label>Tanggal Pesanan</label>
-                    <input type="date" name="Tanggal_Pesanan" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label>Surat Perintah Produksi</label>
-                    <input type="text" name="Surat_Perintah_Produksi" class="form-control">
-                </div>
-            </div>
-
             {{-- Tab Jadwal --}}
             <div class="tab-pane fade" id="jadwal" role="tabpanel">
                 <div class="mb-3">

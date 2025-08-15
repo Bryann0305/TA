@@ -12,21 +12,21 @@
         </div>
 
         <div class="mb-3">
-            <label>Jenis</label>
-            <select name="Jenis" class="form-select" required>
-                <option value="">-- Select Jenis --</option>
-                <option value="Bahan_Baku">Bahan Baku</option>
-                <option value="Produk">Produk</option>
-            </select>
-        </div>
-
-        <div class="mb-3">
             <label>Category</label>
             <select name="kategori_Id_Kategori" class="form-select" required>
                 <option value="">-- Select Category --</option>
                 @foreach($kategori as $kat)
                     <option value="{{ $kat->Id_Kategori }}">{{ $kat->Nama_Kategori }}</option>
                 @endforeach
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label>Type</label>
+            <select name="Jenis" class="form-select" required>
+                <option value="">-- Select Jenis --</option>
+                <option value="Bahan_Baku">Bahan Baku</option>
+                <option value="Produk">Produk</option>
             </select>
         </div>
 

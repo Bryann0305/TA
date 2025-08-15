@@ -116,6 +116,11 @@
 
                 @if($role === 'admin' || $role === 'pembelian')
                 <li>
+                    <a href="{{ route('pelanggan.index') }}" class="nav-link {{ Request::is('pelanggan*') ? 'active' : '' }}">
+                        <i class="bi bi-people-fill me-2"></i> Pelanggan
+                    </a>
+                </li>
+                <li>
                     <a href="{{ route('production.index') }}" class="nav-link {{ Request::is('production*') ? 'active' : '' }}">
                         <i class="bi bi-hammer me-2"></i> Production
                     </a>
@@ -123,7 +128,7 @@
                 @endif
 
                 <li>
-                    <a href="{{ route('pesanan-produksi.index') }}" class="nav-link {{ Request::is('pesanan-produksi*') ? 'active' : '' }}">
+                    <a href="{{ route('pesanan_produksi.index') }}" class="nav-link {{ Request::is('pesanan_produksi*') ? 'active' : '' }}">
                         <i class="bi bi-list-check me-2"></i> Order
                     </a>
                 </li>
