@@ -14,7 +14,7 @@ class Gudang extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'Lokasi', 'Kapasitas'
+       'Nama_Gudang', 'Lokasi', 'Kapasitas'
     ];
 
     public function detailPembelian()

@@ -74,83 +74,116 @@
 <body>
 
     {{-- Sidebar --}}
-    <div class="sidebar p-3">
-        <div>
-            <div class="mb-4 text-center">
-                <div class="bg-white p-2 rounded mb-2">
-                    <i class="bi bi-buildings text-primary" style="font-size: 2rem;"></i>
-                </div>
-                <h5 class="fw-bold mb-0">Dunia Coating</h5>
-                <p class="small mb-0">Production Management</p>
+<div class="sidebar p-3">
+    <div>
+        <div class="mb-4 text-center">
+            <div class="bg-white p-2 rounded mb-2">
+                <i class="bi bi-buildings text-primary" style="font-size: 2rem;"></i>
             </div>
-
-            @php $role = Auth::user()->Role ?? null; @endphp
-
-            <ul class="nav nav-pills flex-column mb-auto">
-                <li class="nav-item">
-                    <a href="{{ route('dashboard') }}" class="nav-link {{ Request::is('dashboard') ? 'active' : '' }}">
-                        <i class="bi bi-house-door me-2"></i> Dashboard
-                    </a>
-                </li>
-
-                @if($role === 'admin' || $role === 'gudang')
-                <li>
-                    <a href="{{ route('inventory.index') }}" class="nav-link {{ Request::is('inventory*') ? 'active' : '' }}">
-                        <i class="bi bi-box-seam me-2"></i> Inventory
-                    </a>
-                </li>
-                @endif
-
-                @if($role === 'admin' || $role === 'manajer_produksi')
-                <li>
-                    <a href="{{ route('procurement.index') }}" class="nav-link {{ Request::is('procurement*') ? 'active' : '' }}">
-                        <i class="bi bi-cart-plus me-2"></i> Procurement
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('reports.index') }}" class="nav-link {{ Request::is('reports*') ? 'active' : '' }}">
-                        <i class="bi bi-graph-up me-2"></i> Reports
-                    </a>
-                </li>
-                @endif
-
-                @if($role === 'admin' || $role === 'pembelian')
-                <li>
-                    <a href="{{ route('pelanggan.index') }}" class="nav-link {{ Request::is('pelanggan*') ? 'active' : '' }}">
-                        <i class="bi bi-people-fill me-2"></i> Pelanggan
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('production.index') }}" class="nav-link {{ Request::is('production*') ? 'active' : '' }}">
-                        <i class="bi bi-hammer me-2"></i> Production
-                    </a>
-                </li>
-                @endif
-
-                <li>
-                    <a href="{{ route('pesanan_produksi.index') }}" class="nav-link {{ Request::is('pesanan_produksi*') ? 'active' : '' }}">
-                        <i class="bi bi-list-check me-2"></i> Order
-                    </a>
-                </li>
-
-                <li>
-                    <a href="{{ route('settings.index') }}" class="nav-link {{ Request::is('settings*') ? 'active' : '' }}">
-                        <i class="bi bi-gear me-2"></i> Settings
-                    </a>
-                </li>
-            </ul>
+            <h5 class="fw-bold mb-0">Dunia Coating</h5>
+            <p class="small mb-0">Production Management</p>
         </div>
 
-        {{-- Logout --}}
-        <div class="logout-box">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="btn btn-danger w-100 d-flex align-items-center justify-content-center">
-                    <i class="bi bi-box-arrow-right me-2"></i> Logout
-                </button>
-            </form>
-        </div>
+        @php $role = Auth::user()->Role ?? null; @endphp
+
+        <ul class="nav nav-pills flex-column mb-auto">
+            {{-- Dashboard --}}
+            <li class="nav-item">
+                <a href="{{ route('dashboard') }}" class="nav-link {{ Request::is('dashboard') ? 'active' : '' }}">
+                    <i class="bi bi-house-door me-2"></i> Dashboard
+                </a>
+            </li>
+
+            {{-- Customer --}}
+            @if($role === 'admin' || $role === 'pembelian')
+            <li>
+                <a href="{{ route('pelanggan.index') }}" class="nav-link {{ Request::is('pelanggan*') ? 'active' : '' }}">
+                    <i class="bi bi-people-fill me-2"></i> Customer
+                </a>
+            </li>
+            @endif
+
+            {{-- Supplier --}}
+            @if($role === 'admin' || $role === 'pembelian')
+            <li>
+                <a href="{{ route('supplier.index') }}" class="nav-link {{ Request::is('supplier*') ? 'active' : '' }}">
+                    <i class="bi bi-truck me-2"></i> Supplier
+                </a>
+            </li>
+            @endif
+
+            {{-- Order --}}
+            <li>
+                <a href="{{ route('pesanan_produksi.index') }}" class="nav-link {{ Request::is('pesanan_produksi*') ? 'active' : '' }}">
+                    <i class="bi bi-list-check me-2"></i> Order
+                </a>
+            </li>
+
+            {{-- Inventory --}}
+            @if($role === 'admin' || $role === 'gudang')
+            <li>
+                <a href="{{ route('inventory.index') }}" class="nav-link {{ Request::is('inventory*') ? 'active' : '' }}">
+                    <i class="bi bi-box-seam me-2"></i> Inventory
+                </a>
+            </li>
+            @endif
+
+            {{-- Gudang --}}
+            @if($role === 'admin' || $role === 'gudang')
+            <li>
+                <a href="{{ route('gudang.index') }}" class="nav-link {{ Request::is('gudang*') ? 'active' : '' }}">
+                    <i class="bi bi-building me-2"></i> Warehouse
+                </a>
+            </li>
+            @endif
+
+
+            {{-- Procurement --}}
+            @if($role === 'admin' || $role === 'manajer_produksi')
+            <li>
+                <a href="{{ route('procurement.index') }}" class="nav-link {{ Request::is('procurement*') ? 'active' : '' }}">
+                    <i class="bi bi-cart-plus me-2"></i> Procurement
+                </a>
+            </li>
+            @endif
+
+            {{-- Production --}}
+            @if($role === 'admin' || $role === 'pembelian')
+            <li>
+                <a href="{{ route('production.index') }}" class="nav-link {{ Request::is('production*') ? 'active' : '' }}">
+                    <i class="bi bi-hammer me-2"></i> Production
+                </a>
+            </li>
+            @endif
+
+            {{-- Reports --}}
+            @if($role === 'admin' || $role === 'manajer_produksi')
+            <li>
+                <a href="{{ route('reports.index') }}" class="nav-link {{ Request::is('reports*') ? 'active' : '' }}">
+                    <i class="bi bi-graph-up me-2"></i> Reports
+                </a>
+            </li>
+            @endif
+
+            {{-- Settings --}}
+            <li>
+                <a href="{{ route('settings.index') }}" class="nav-link {{ Request::is('settings*') ? 'active' : '' }}">
+                    <i class="bi bi-gear me-2"></i> Settings
+                </a>
+            </li>
+        </ul>
     </div>
+
+    {{-- Logout --}}
+    <div class="logout-box">
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" class="btn btn-danger w-100 d-flex align-items-center justify-content-center">
+                <i class="bi bi-box-arrow-right me-2"></i> Logout
+            </button>
+        </form>
+    </div>
+</div>
 
     {{-- Content Area --}}
     <div class="content-wrapper">

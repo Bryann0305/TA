@@ -2,114 +2,143 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Pembelian;
-use App\Models\Supplier;
-use App\Models\User;
 use Illuminate\Http\Request;
+use App\Models\Pembelian;
+use App\Models\DetailPembelian;
+use App\Models\Supplier;
+use App\Models\Barang; 
+use App\Models\Gudang;
 
 class ProcurementController extends Controller
 {
+    // Menampilkan daftar pembelian
     public function index()
     {
-        $orders = Pembelian::with(['supplier', 'user'])
-            ->orderBy('Tanggal_Pemesanan', 'desc')
-            ->get();
-
+        $orders = Pembelian::with(['supplier', 'detailPembelian.barang'])->get();
         return view('procurement.index', compact('orders'));
     }
 
+    // Form buat pembelian baru
     public function create()
     {
         $suppliers = Supplier::all();
-        $users = User::all(); // Atau gunakan auth()->user() jika user login saja
-        return view('procurement.create_purchaseOrder', compact('suppliers', 'users'));
+        $barangs = Barang::all();
+        $gudangs = Gudang::all(); // Ambil data gudang
+        return view('procurement.create', compact('suppliers', 'barangs', 'gudangs'));
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'Status'               => 'required|string|max:50',
-            'Total_Biaya'          => 'required|numeric',
-            'Tanggal_Pemesanan'    => 'required|date',
-            'Tanggal_Kedatangan'   => 'nullable|date',
-            'Status_Pembayaran'    => 'required|string|max:50',
-            'user_Id_User'         => 'required|exists:users,Id_User',
-            'supplier_Id_Supplier' => 'required|exists:suppliers,Id_Supplier',
+        $request->validate([
+            'Total_Biaya' => 'required|numeric',
+            'Tanggal_Pemesanan' => 'required|date',
+            'Tanggal_Kedatangan' => 'nullable|date',
+            'Metode_Pembayaran' => 'required|string',
+            'supplier_Id_Supplier' => 'required|exists:supplier,Id_Supplier',
+            'gudang_Id_Gudang' => 'required|exists:gudang,Id_Gudang',
+            'Nama_Barang' => 'required|array',
         ]);
 
-        Pembelian::create($validated);
+        $pembelian = Pembelian::create([
+            'Total_Biaya' => $request->Total_Biaya,
+            'Tanggal_Pemesanan' => $request->Tanggal_Pemesanan,
+            'Tanggal_Kedatangan' => $request->Tanggal_Kedatangan,
+            'Metode_Pembayaran' => $request->Metode_Pembayaran,
+            'Status_Pembayaran' => 'Pending',
+            'user_Id_User' => auth()->id(),
+            'supplier_Id_Supplier' => $request->supplier_Id_Supplier,
+        ]);
 
-        return redirect()->route('procurement.index')->with('success', 'Procurement berhasil ditambahkan.');
+        $gudangId = $request->gudang_Id_Gudang;
+
+        foreach ($request->Nama_Barang as $barangId) {
+            DetailPembelian::create([
+                'pembelian_Id_Pembelian' => $pembelian->Id_Pembelian,
+                'bahan_baku_Id_Bahan' => $barangId,
+                'Jumlah' => 1,
+                'Harga_Keseluruhan' => 0,
+                'Keterangan' => '',
+                'gudang_Id_Gudang' => $gudangId,
+            ]);
+        }
+
+        return redirect()->route('procurement.index')->with('success', 'Purchase Order created successfully!');
     }
 
+
+    // Tampilkan detail pembelian
     public function show($id)
     {
-        $procurement = Pembelian::with(['supplier', 'user', 'detailPembelian'])->findOrFail($id);
-        return view('procurement.show', compact('procurement'));
+    $pembelian = Pembelian::with(['supplier', 'detailPembelian.barang', 'detailPembelian.gudang'])
+                          ->findOrFail($id);
+
+    return view('procurement.show', compact('pembelian'));
     }
 
+
+    // Form edit pembelian
     public function edit($id)
     {
-        $procurement = Pembelian::findOrFail($id);
+        $order = Pembelian::with('detailPembelian.barang')->findOrFail($id);
         $suppliers = Supplier::all();
-        $users = User::all();
-
-        return view('procurement.edit', compact('procurement', 'suppliers', 'users'));
+        $barangs = Barang::all(); // ganti variabel jadi $barangs
+        $gudangs = Gudang::all(); // Ambil data gudang
+        return view('procurement.edit', compact('order', 'suppliers', 'barangs', 'gudangs'));
     }
 
+    // Update pembelian
     public function update(Request $request, $id)
     {
-        $validated = $request->validate([
-            'Status'               => 'required|string|max:50',
-            'Total_Biaya'          => 'required|numeric',
-            'Tanggal_Pemesanan'    => 'required|date',
-            'Tanggal_Kedatangan'   => 'nullable|date',
-            'Status_Pembayaran'    => 'required|string|max:50',
-            'user_Id_User'         => 'required|exists:users,Id_User',
-            'supplier_Id_Supplier' => 'required|exists:suppliers,Id_Supplier',
+        $request->validate([
+            'Total_Biaya' => 'required|numeric',
+            'Tanggal_Pemesanan' => 'required|date',
+            'Tanggal_Kedatangan' => 'nullable|date',
+            'Metode_Pembayaran' => 'required|string',
+            'supplier_Id_Supplier' => 'required|exists:supplier,Id_Supplier',
+            'gudang_Id_Gudang' => 'required|exists:gudang,Id_Gudang',
+            'Nama_Barang' => 'required|array',
         ]);
 
-        $procurement = Pembelian::findOrFail($id);
-        $procurement->update($validated);
+        $pembelian = Pembelian::findOrFail($id);
+        $pembelian->update([
+            'Total_Biaya' => $request->Total_Biaya,
+            'Tanggal_Pemesanan' => $request->Tanggal_Pemesanan,
+            'Tanggal_Kedatangan' => $request->Tanggal_Kedatangan,
+            'Metode_Pembayaran' => $request->Metode_Pembayaran,
+            'supplier_Id_Supplier' => $request->supplier_Id_Supplier,
+        ]);
 
-        return redirect()->route('procurement.index')->with('success', 'Procurement berhasil diperbarui.');
+        // Hapus detail lama dan buat ulang
+        $pembelian->detailPembelian()->delete();
+        foreach ($request->Nama_Barang as $barangId) {
+            DetailPembelian::create([
+                'pembelian_Id_Pembelian' => $pembelian->Id_Pembelian,
+                'bahan_baku_Id_Bahan' => $barangId,
+                'Jumlah' => 1,
+                'Harga_Keseluruhan' => 0,
+            ]);
+        }
+
+        return redirect()->route('procurement.index')->with('success', 'Purchase Order updated successfully!');
     }
 
+    // Hapus pembelian
     public function destroy($id)
     {
-        $procurement = Pembelian::findOrFail($id);
-        $procurement->delete();
+        $pembelian = Pembelian::findOrFail($id);
+        $pembelian->detailPembelian()->delete();
+        $pembelian->delete();
 
-        return redirect()->route('procurement.index')->with('success', 'Procurement berhasil dihapus.');
+        return redirect()->route('procurement.index')->with('success', 'Purchase Order deleted successfully!');
     }
 
-    /**
-     * Toggle status PO antara 'Pending' dan 'Completed'
-     */
-    public function toggleStatus($id)
-{
-    $order = Pembelian::findOrFail($id);
-    $order->Status = $order->Status === 'Pending' ? 'Completed' : 'Pending';
-    $order->save();
+    // Toggle status pembayaran (Pending <-> Confirmed)
+    public function togglePayment($id)
+    {
+        $pembelian = Pembelian::findOrFail($id);
+        $pembelian->Status_Pembayaran = $pembelian->Status_Pembayaran === 'Pending' ? 'Confirmed' : 'Pending';
+        $pembelian->save();
 
-    return redirect()->back()->with('success', 'Status pemesanan berhasil diubah.');
-}
-
-public function togglePayment($id)
-{
-    $order = Pembelian::findOrFail($id);
-
-    // Misal toggle antara 'Pending' dan 'Confirmed'
-    if ($order->Status_Pembayaran === 'Pending') {
-        $order->Status_Pembayaran = 'Confirmed';
-    } else {
-        $order->Status_Pembayaran = 'Pending';
+        return redirect()->back()->with('success', 'Payment status updated successfully!');
     }
-
-    $order->save();
-
-    return redirect()->back()->with('success', 'Status pembayaran berhasil diubah.');
-}
-
-
 }

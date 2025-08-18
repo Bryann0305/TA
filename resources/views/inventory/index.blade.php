@@ -20,27 +20,26 @@
 
     <p class="text-muted mb-4">Manage your inventory with EOQ calculations.</p>
 
-    {{-- Table --}}
-    <div class="table-responsive">
-        <table id="inventoryTable" class="table table-bordered table-striped align-middle">
+    {{-- Tabel Bahan Baku --}}
+    <h4>Bahan Baku</h4>
+    <div class="table-responsive mb-5">
+        <table id="rawMaterialTable" class="table table-bordered table-striped align-middle">
             <thead class="table-light">
                 <tr>
-                    <th>Item Name</th>
-                    <th>Jenis</th>
-                    <th>Category</th>
-                    <th>Stock</th>
+                    <th>Nama Bahan</th>
+                    <th>Kategori</th>
+                    <th>Stok</th>
                     <th>Reorder Point</th>
                     <th>EOQ</th>
                     <th>Status</th>
-                    <th style="width: 140px;">Actions</th>
+                    <th style="width: 140px;">Aksi</th>
                 </tr>
             </thead>
             <tbody>
-                @forelse($items as $item)
+                @foreach($items->where('Jenis', 'Bahan_Baku') as $item)
                     @php
                         $reorder = $item->Reorder_Point ?? 100;
                         $eoq = $item->EOQ ?? 300;
-
                         [$status, $badge] = match (true) {
                             $item->Stok <= $reorder / 2 => ['Critical Low', 'danger'],
                             $item->Stok < $reorder => ['Below Reorder Point', 'warning'],
@@ -48,36 +47,73 @@
                         };
                     @endphp
                     <tr>
-                        <td><strong>{{ $item->Nama_Bahan }}</strong></td>
-                        <td>{{ $item->Jenis ?? 'Unknown' }}</td>
-                        <td>{{ $item->kategori->Nama_Kategori ?? 'Unknown' }}</td>
-                        <td>{{ $item->Stok }} unit</td>
-                        <td>{{ $reorder }} unit</td>
-                        <td>{{ $eoq }} unit</td>
+                        <td>{{ $item->Nama_Bahan }}</td>
+                        <td>{{ $item->kategori->Nama_Kategori ?? '-' }}</td>
+                        <td>{{ $item->Stok }}</td>
+                        <td>{{ $reorder }}</td>
+                        <td>{{ $eoq }}</td>
                         <td><span class="badge bg-{{ $badge }}">{{ $status }}</span></td>
                         <td style="white-space: nowrap;">
-                            <div class="d-flex justify-content-center gap-1 flex-nowrap">
-                                <a href="{{ route('inventory.show', ['inventory' => $item->Id_Bahan]) }}" class="btn btn-sm btn-info" title="Detail">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="{{ route('inventory.edit', ['inventory' => $item->Id_Bahan]) }}" class="btn btn-sm btn-warning" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <form action="{{ route('inventory.destroy', ['inventory' => $item->Id_Bahan]) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus item ini?');">
+                            <div class="d-flex gap-1">
+                                <a href="{{ route('inventory.edit', $item->Id_Bahan) }}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
+                                <form action="{{ route('inventory.destroy', $item->Id_Bahan) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus item ini?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger" title="Hapus">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
+                                    <button class="btn btn-sm btn-danger"><i class="fas fa-trash-alt"></i></button>
                                 </form>
                             </div>
                         </td>
                     </tr>
-                @empty
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+
+    {{-- Tabel Produk Jadi --}}
+    <h4>Produk Jadi</h4>
+    <div class="table-responsive">
+        <table id="finishedGoodsTable" class="table table-bordered table-striped align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Nama Produk</th>
+                    <th>Kategori</th>
+                    <th>Stok</th>
+                    <th>Reorder Point</th>
+                    <th>EOQ</th>
+                    <th>Status</th>
+                    <th style="width: 140px;">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($items->where('Jenis', 'Produk') as $item)
+                    @php
+                        $reorder = $item->Reorder_Point ?? 50;
+                        $eoq = $item->EOQ ?? 200;
+                        [$status, $badge] = match (true) {
+                            $item->Stok <= $reorder / 2 => ['Critical Low', 'danger'],
+                            $item->Stok < $reorder => ['Below Reorder Point', 'warning'],
+                            default => ['In Stock', 'success'],
+                        };
+                    @endphp
                     <tr>
-                        <td colspan="8" class="text-center text-muted">No items found.</td>
+                        <td>{{ $item->Nama_Bahan }}</td>
+                        <td>{{ $item->kategori->Nama_Kategori ?? '-' }}</td>
+                        <td>{{ $item->Stok }}</td>
+                        <td>{{ $reorder }}</td>
+                        <td>{{ $eoq }}</td>
+                        <td><span class="badge bg-{{ $badge }}">{{ $status }}</span></td>
+                        <td style="white-space: nowrap;">
+                            <div class="d-flex gap-1">
+                                <a href="{{ route('inventory.edit', $item->Id_Bahan) }}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
+                                <form action="{{ route('inventory.destroy', $item->Id_Bahan) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus item ini?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-sm btn-danger"><i class="fas fa-trash-alt"></i></button>
+                                </form>
+                            </div>
+                        </td>
                     </tr>
-                @endforelse
+                @endforeach
             </tbody>
         </table>
     </div>
@@ -87,7 +123,7 @@
 @push('scripts')
 <script>
     $(document).ready(function () {
-        $('#inventoryTable').DataTable({
+        $('#rawMaterialTable, #finishedGoodsTable').DataTable({
             pageLength: 10,
             responsive: true,
             autoWidth: false,

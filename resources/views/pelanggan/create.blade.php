@@ -20,7 +20,8 @@
 
         <div class="mb-3">
             <label for="Nama_Pelanggan" class="form-label">Nama Pelanggan</label>
-            <input type="text" name="Nama_Pelanggan" class="form-control" value="{{ old('Nama_Pelanggan') }}" required>
+            <input type="text" name="Nama_Pelanggan" class="form-control" 
+                   value="{{ old('Nama_Pelanggan') }}" required>
         </div>
 
         <div class="mb-3">
@@ -30,15 +31,8 @@
 
         <div class="mb-3">
             <label for="Nomor_Telp" class="form-label">No Telepon</label>
-            <input type="text" name="Nomor_Telp" class="form-control" value="{{ old('Nomor_Telp') }}" required>
-        </div>
-
-        <div class="mb-3">
-            <label for="Status" class="form-label">Status</label>
-            <select name="Status" class="form-control" required>
-                <option value="Aktif" {{ old('Status') == 'Aktif' ? 'selected' : '' }}>Aktif</option>
-                <option value="Tidak Aktif" {{ old('Status') == 'Tidak Aktif' ? 'selected' : '' }}>Tidak Aktif</option>
-            </select>
+            <input type="text" name="Nomor_Telp" class="form-control" 
+                   value="{{ old('Nomor_Telp') }}" required>
         </div>
 
         <button type="submit" class="btn btn-primary">Simpan</button>

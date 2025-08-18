@@ -26,11 +26,7 @@ class PelangganController extends Controller
             'Nomor_Telp' => 'required|string|max:20',
         ]);
 
-        // Jika form tidak ada input Status, set default 'Aktif'
-        $data = $request->only('Nama_Pelanggan', 'Alamat', 'Nomor_Telp');
-        $data['Status'] = $request->input('Status', 'Aktif');
-
-        Pelanggan::create($data);
+        Pelanggan::create($request->only('Nama_Pelanggan', 'Alamat', 'Nomor_Telp'));
 
         return redirect()->route('pelanggan.index')->with('success', 'Pelanggan berhasil ditambahkan.');
     }
@@ -47,11 +43,10 @@ class PelangganController extends Controller
             'Nama_Pelanggan' => 'required|string|max:255',
             'Alamat' => 'required|string',
             'Nomor_Telp' => 'required|string|max:20',
-            'Status' => 'required|string',
         ]);
 
         $pelanggan = Pelanggan::findOrFail($id);
-        $pelanggan->update($request->only('Nama_Pelanggan', 'Alamat', 'Nomor_Telp', 'Status'));
+        $pelanggan->update($request->only('Nama_Pelanggan', 'Alamat', 'Nomor_Telp'));
 
         return redirect()->route('pelanggan.index')->with('success', 'Pelanggan berhasil diperbarui.');
     }
@@ -60,14 +55,5 @@ class PelangganController extends Controller
     {
         Pelanggan::findOrFail($id)->delete();
         return redirect()->route('pelanggan.index')->with('success', 'Pelanggan berhasil dihapus.');
-    }
-
-    public function toggleStatus($id)
-    {
-        $pelanggan = Pelanggan::findOrFail($id);
-        $pelanggan->Status = $pelanggan->Status === 'Aktif' ? 'Tidak Aktif' : 'Aktif';
-        $pelanggan->save();
-
-        return redirect()->route('pelanggan.index')->with('success', 'Status pelanggan berhasil diperbarui.');
     }
 }

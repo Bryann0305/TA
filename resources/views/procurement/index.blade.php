@@ -5,50 +5,17 @@
     {{-- Header --}}
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Purchase Orders</h2>
-        <a href="{{ route('procurement.create_purchaseOrder') }}" class="btn btn-primary">
+        <a href="{{ route('procurement.create') }}" class="btn btn-primary">
             <i class="fas fa-plus me-1"></i> New Purchase Order
         </a>
     </div>
 
     <p class="text-muted mb-4">Manage your purchase order records below.</p>
 
-    {{-- Summary Cards --}}
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card text-center border-primary">
-                <div class="card-body">
-                    <h6>Total Orders</h6>
-                    <h4>{{ $orders->count() }}</h4>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-center border-warning">
-                <div class="card-body">
-                    <h6>Pending Orders</h6>
-                    <h4>{{ $orders->where('Status', 'Pending')->count() }}</h4>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-center border-success">
-                <div class="card-body">
-                    <h6>Completed Orders</h6>
-                    <h4>{{ $orders->where('Status', 'Completed')->count() }}</h4>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Tabs --}}
-    <ul class="nav nav-tabs mb-3" id="procurementTabs">
-        <li class="nav-item">
-            <a class="nav-link active" href="{{ route('procurement.index') }}">Purchase Orders</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{{ route('procurement.supplier') }}">Suppliers</a>
-        </li>
-    </ul>
+    {{-- Flash Message --}}
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
 
     {{-- Table --}}
     <div class="table-responsive">
@@ -61,9 +28,9 @@
                     <th>Tgl Pemesanan</th>
                     <th>Tgl Kedatangan</th>
                     <th>Total Biaya</th>
-                    <th>Status</th>
-                    <th>Pembayaran</th>
-                    <th style="width: 140px;">Actions</th>
+                    <th>Metode Pembayaran</th>
+                    <th>Status Pembayaran</th>
+                    <th style="width: 260px;">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -72,60 +39,54 @@
                         <td><strong>PO-{{ $order->Id_Pembelian }}</strong></td>
                         <td>{{ $order->supplier->Nama_Supplier ?? 'Unknown' }}</td>
                         <td>
-                            @if($order->barangs && $order->barangs->count())
+                            @if($order->detailPembelian && $order->detailPembelian->count())
                                 <ul class="mb-0 ps-3">
-                                    @foreach($order->barangs as $barang)
-                                        <li>{{ $barang->Nama_Bahan }}</li>
+                                    @foreach($order->detailPembelian as $detail)
+                                        <li>{{ $detail->barang->Nama_Bahan ?? '-' }}</li>
                                     @endforeach
                                 </ul>
                             @else
                                 <span class="text-muted">-</span>
                             @endif
                         </td>
-                        <td>{{ $order->Tanggal_Pemesanan ? \Carbon\Carbon::parse($order->Tanggal_Pemesanan)->format('d M Y') : '-' }}</td>
-                        <td>{{ $order->Tanggal_Kedatangan ? \Carbon\Carbon::parse($order->Tanggal_Kedatangan)->format('d M Y') : '-' }}</td>
+                        <td>{{ $order->Tanggal_Pemesanan ? $order->Tanggal_Pemesanan->format('d M Y') : '-' }}</td>
+                        <td>{{ $order->Tanggal_Kedatangan ? $order->Tanggal_Kedatangan->format('d M Y') : '-' }}</td>
                         <td>Rp {{ number_format($order->Total_Biaya, 0, ',', '.') }}</td>
+                        <td>{{ $order->Metode_Pembayaran ?? '-' }}</td>
                         <td>
-    <form action="{{ route('procurement.toggle_status', $order->Id_Pembelian) }}" method="POST">
-        @csrf
-        @method('PATCH')
-        <button type="submit" class="badge border-0 
-            {{ $order->Status == 'Pending' ? 'bg-warning text-dark' : 'bg-success' }}"
-            style="cursor: pointer;">
-            {{ $order->Status }}
-        </button>
-    </form>
-</td>
-
-
-
-<td>
-    <form action="{{ route('procurement.toggle_payment', $order->Id_Pembelian) }}" method="POST">
-        @csrf
-        @method('PATCH')
-        <button type="submit" class="badge border-0 
-            @if($order->Status_Pembayaran == 'Pending') bg-warning text-dark
-            @elseif($order->Status_Pembayaran == 'Confirmed') bg-info text-white
-            @else bg-secondary text-white
-            @endif"
-            style="cursor: pointer;">
-            {{ $order->Status_Pembayaran }}
-        </button>
-    </form>
-</td>
-
+                            <span class="badge 
+                                @if($order->Status_Pembayaran === 'Pending') bg-warning text-dark
+                                @elseif($order->Status_Pembayaran === 'Confirmed') bg-success text-white
+                                @else bg-secondary @endif">
+                                {{ $order->Status_Pembayaran }}
+                            </span>
+                        </td>
                         <td style="white-space: nowrap;">
                             <div class="d-flex justify-content-center gap-1 flex-nowrap">
-                                <a href="{{ route('procurement.show_po', $order->Id_Pembelian) }}" class="btn btn-sm btn-info" title="Detail">
+                                {{-- Show --}}
+                                <a href="{{ route('procurement.show', $order->Id_Pembelian) }}" class="btn btn-sm btn-info" title="Detail">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a href="{{ route('procurement.edit_purchaseOrder', $order->Id_Pembelian) }}" class="btn btn-sm btn-warning" title="Edit">
+
+                                {{-- Edit --}}
+                                <a href="{{ route('procurement.edit', $order->Id_Pembelian) }}" class="btn btn-sm btn-warning" title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <form action="{{ route('procurement.destroy_purchaseOrder', $order->Id_Pembelian) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus PO ini?');" class="d-inline">
+
+                                {{-- Approve Payment --}}
+                                @if($order->Status_Pembayaran === 'Pending')
+                                    <form action="{{ route('procurement.toggle_payment', $order->Id_Pembelian) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                    </form>
+                                @endif
+
+                                {{-- Delete --}}
+                                <form action="{{ route('procurement.destroy', $order->Id_Pembelian) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this PO?');" class="d-inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button class="btn btn-sm btn-danger" title="Hapus"><i class="fas fa-trash-alt"></i></button>
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Delete"><i class="fas fa-trash-alt"></i></button>
                                 </form>
                             </div>
                         </td>

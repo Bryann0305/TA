@@ -11,71 +11,46 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <p class="mb-0 text-muted">Inventory Items</p>
-                        <h5>487</h5>
-                        <small class="text-success">↑ 12% since last month</small>
+                        <h5>{{ $inventoryCount }}</h5>
                     </div>
-                    <div class="card-icon">
-                        📦
-                    </div>
+                    <div class="card-icon">📦</div>
                 </div>
             </div>
         </div>
+
         <div class="col-md-3">
             <div class="card shadow-sm p-3">
                 <div class="d-flex justify-content-between">
                     <div>
                         <p class="mb-0 text-muted">Production Output</p>
-                        <h5>2,347</h5>
-                        <small class="text-success">↑ 8% since last month</small>
+                        <h5>{{ number_format($productionCount) }}</h5>
                     </div>
-                    <div class="card-icon">
-                        📈
-                    </div>
+                    <div class="card-icon">📈</div>
                 </div>
             </div>
         </div>
+
         <div class="col-md-3">
             <div class="card shadow-sm p-3">
                 <div class="d-flex justify-content-between">
                     <div>
                         <p class="mb-0 text-muted">Procurement Cost</p>
-                        <h5>$28,459</h5>
-                        <small class="text-danger">↓ 3% since last month</small>
+                        <h5>Rp {{ number_format($procurementCost, 0, ',', '.') }}</h5>
                     </div>
-                    <div class="card-icon">
-                        💵
-                    </div>
+                    <div class="card-icon">💵</div>
                 </div>
             </div>
         </div>
+
         <div class="col-md-3">
             <div class="card shadow-sm p-3">
                 <div class="d-flex justify-content-between">
                     <div>
                         <p class="mb-0 text-muted">Pending Orders</p>
-                        <h5>24</h5>
-                        <small class="text-success">↑ 5% since last week</small>
+                        <h5>{{ $pendingOrders }}</h5>
                     </div>
-                    <div class="card-icon">
-                        🚚
-                    </div>
+                    <div class="card-icon">🚚</div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Charts -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-6">
-            <div class="card p-3 shadow-sm">
-                <h6 class="mb-3">Production Trend</h6>
-                <canvas id="productionChart"></canvas>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card p-3 shadow-sm">
-                <h6 class="mb-3">Inventory Levels</h6>
-                <canvas id="inventoryChart"></canvas>
             </div>
         </div>
     </div>
@@ -94,27 +69,26 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td class="text-warning">⚠️ Raw Epoxy Resin</td>
-                    <td>128 kg</td>
-                    <td>150 kg</td>
-                    <td>500 kg</td>
-                    <td><span class="badge bg-warning text-dark">Near Reorder Point</span></td>
-                </tr>
-                <tr>
-                    <td class="text-danger">❗ Titanium Dioxide</td>
-                    <td>45 kg</td>
-                    <td>100 kg</td>
-                    <td>350 kg</td>
-                    <td><span class="badge bg-danger">Below Reorder Point</span></td>
-                </tr>
-                <tr>
-                    <td class="text-danger">❗ Solvent Additive</td>
-                    <td>25 L</td>
-                    <td>50 L</td>
-                    <td>200 L</td>
-                    <td><span class="badge bg-danger">Below Reorder Point</span></td>
-                </tr>
+                @forelse($reorderAlerts as $alert)
+                    <tr>
+                        <td class="{{ $alert['Status']=='Critical Low' ? 'text-danger' : ($alert['Status']=='Near Reorder Point' ? 'text-warning' : '') }}">
+                            {{ $alert['Nama_Bahan'] }}
+                        </td>
+                        <td>{{ $alert['Stok'] }}</td>
+                        <td>{{ $alert['Reorder_Point'] }}</td>
+                        <td>{{ $alert['EOQ'] }}</td>
+                        <td>
+                            <span class="badge 
+                                {{ $alert['Status']=='Critical Low' ? 'bg-danger' : ($alert['Status']=='Near Reorder Point' ? 'bg-warning text-dark' : 'bg-success') }}">
+                                {{ $alert['Status'] }}
+                            </span>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">No alerts</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>

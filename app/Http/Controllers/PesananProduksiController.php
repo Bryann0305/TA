@@ -13,7 +13,7 @@ class PesananProduksiController extends Controller
     public function index()
     {
         $pesanan = PesananProduksi::with(['user', 'pelanggan', 'barang'])->get();
-        return view('pesanan_produksi.index', compact('pesanan'));
+        return view('pesanan-produksi.index', compact('pesanan'));
     }
 
     public function create()
@@ -21,7 +21,7 @@ class PesananProduksiController extends Controller
         $users = User::all();
         $pelanggans = Pelanggan::all();
         $produks = Barang::all(); // daftar produk
-        return view('pesanan_produksi.create', compact('users', 'pelanggans', 'produks'));
+        return view('pesanan-produksi.create', compact('users', 'pelanggans', 'produks'));
     }
 
     public function store(Request $request)
@@ -44,7 +44,7 @@ class PesananProduksiController extends Controller
             'Surat_Perintah_Produksi' => $request->Surat_Perintah_Produksi,
         ]);
 
-        return redirect()->route('pesanan_produksi.index')
+        return redirect()->route('pesanan-produksi.index')
             ->with('success', 'Pesanan produksi berhasil ditambahkan.');
     }
 
@@ -53,7 +53,7 @@ class PesananProduksiController extends Controller
     public function show($id)
     {
         $pesanan = PesananProduksi::with(['user', 'pelanggan'])->findOrFail($id);
-        return view('pesanan_produksi.show', compact('pesanan'));
+        return view('pesanan-produksi.show', compact('pesanan'));
     }
 
     public function edit($id)
@@ -61,7 +61,7 @@ class PesananProduksiController extends Controller
         $pesanan = PesananProduksi::findOrFail($id);
         $users = User::all();
         $pelanggans = Pelanggan::all();
-        return view('pesanan_produksi.edit', compact('pesanan', 'users', 'pelanggans'));
+        return view('pesanan-produksi.edit', compact('pesanan', 'users', 'pelanggans'));
     }
 
     public function update(Request $request, $id)
@@ -78,7 +78,7 @@ class PesananProduksiController extends Controller
         $pesanan = PesananProduksi::findOrFail($id);
         $pesanan->update($request->all());
 
-        return redirect()->route('pesananp_roduksi.index')->with('success', 'Pesanan produksi berhasil diperbarui.');
+        return redirect()->route('pesananp-roduksi.index')->with('success', 'Pesanan produksi berhasil diperbarui.');
     }
 
     public function destroy($id)
@@ -86,6 +86,6 @@ class PesananProduksiController extends Controller
         $pesanan = PesananProduksi::findOrFail($id);
         $pesanan->delete();
 
-        return redirect()->route('pesanan_produksi.index')->with('success', 'Pesanan produksi berhasil dihapus.');
+        return redirect()->route('pesanan-produksi.index')->with('success', 'Pesanan produksi berhasil dihapus.');
     }
 }

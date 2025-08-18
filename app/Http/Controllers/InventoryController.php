@@ -27,9 +27,8 @@ class InventoryController extends Controller
         }
 
         if ($request->filled('jenis')) {
-         $query->where('Jenis', $request->jenis);
+            $query->where('Jenis', $request->jenis);
         }
-
 
         $items = $query->get();
 
@@ -48,14 +47,25 @@ class InventoryController extends Controller
             'Nama_Bahan' => 'required|string|max:100',
             'Stok' => 'required|integer',
             'Jenis' => 'required|in:Bahan_Baku,Produk',
-            'Status' => 'required|in:Aktif,Tidak Aktif',
             'kategori_Id_Kategori' => 'required|exists:kategori,Id_Kategori',
             'EOQ' => 'nullable|integer',
             'Reorder_Point' => 'nullable|integer',
         ]);
 
         $validated['EOQ'] = $validated['EOQ'] ?? 0;
-        $validated['Reorder_Point'] = $validated['Reorder_Point'] ?? 0;
+        $validated['Reorder_Point'] = $validated['Reorder_Point'] ?? 100;
+
+        // Tentukan status otomatis berdasarkan stok
+        $stok = $validated['Stok'];
+        $reorder = $validated['Reorder_Point'];
+
+        if ($stok <= $reorder / 2) {
+            $validated['Status'] = 'Critical Low';
+        } elseif ($stok < $reorder) {
+            $validated['Status'] = 'Below Reorder Point';
+        } else {
+            $validated['Status'] = 'In Stock';
+        }
 
         Barang::create($validated);
 
@@ -81,14 +91,25 @@ class InventoryController extends Controller
             'Nama_Bahan' => 'required|string|max:100',
             'Stok' => 'required|integer',
             'Jenis' => 'required|in:Bahan_Baku,Produk',
-            'Status' => 'required|in:Aktif,Tidak Aktif',
             'kategori_Id_Kategori' => 'required|exists:kategori,Id_Kategori',
             'EOQ' => 'nullable|integer',
             'Reorder_Point' => 'nullable|integer',
         ]);
 
         $validated['EOQ'] = $validated['EOQ'] ?? 0;
-        $validated['Reorder_Point'] = $validated['Reorder_Point'] ?? 0;
+        $validated['Reorder_Point'] = $validated['Reorder_Point'] ?? 100;
+
+        // Tentukan status otomatis berdasarkan stok
+        $stok = $validated['Stok'];
+        $reorder = $validated['Reorder_Point'];
+
+        if ($stok <= $reorder / 2) {
+            $validated['Status'] = 'Critical Low';
+        } elseif ($stok < $reorder) {
+            $validated['Status'] = 'Below Reorder Point';
+        } else {
+            $validated['Status'] = 'In Stock';
+        }
 
         $barang = Barang::findOrFail($id);
         $barang->update($validated);

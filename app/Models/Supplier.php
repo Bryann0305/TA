@@ -16,10 +16,11 @@ class Supplier extends Model
     protected $fillable = [
         'Nama_Supplier',
         'Nama_Pegawai',
-        'Email',           // ← tambahkan ini!
+        'Email',           
         'Kontak',
         'Alamat',
         'Status',
+        'keterangan'
     ];
 
     public function pembelian()

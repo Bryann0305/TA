@@ -10,89 +10,97 @@ class SupplierController extends Controller
     public function index()
     {
         $suppliers = Supplier::all();
-        return view('procurement.supplier', compact('suppliers'));
+        return view('supplier.index', compact('suppliers'));
     }
 
     public function create()
     {
-        return view('procurement.create_supplier');
+        return view('supplier.create');
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'nama_supplier' => 'required',
-            'nama_pegawai'  => 'required',
-            'email'         => 'required|email',
-            'kontak'        => 'required',
-            'alamat'        => 'required',
-            'status'        => 'required',
+        $request->validate([
+            'Nama_Supplier' => 'required|string|max:255',
+            'Nama_Pegawai'  => 'nullable|string|max:255',
+            'Email'         => 'nullable|email|max:255',
+            'Kontak'        => 'nullable|string|max:50',
+            'Alamat'        => 'nullable|string|max:255',
         ]);
 
-        $data = [
-            'Nama_Supplier' => $validated['nama_supplier'],
-            'Nama_Pegawai'  => $validated['nama_pegawai'],
-            'Email'         => $validated['email'],
-            'Kontak'        => $validated['kontak'],
-            'Alamat'        => $validated['alamat'],
-            'Status'        => $validated['status'],
-        ];
+        Supplier::create([
+            'Nama_Supplier' => $request->Nama_Supplier,
+            'Nama_Pegawai'  => $request->Nama_Pegawai,
+            'Email'         => $request->Email,
+            'Kontak'        => $request->Kontak,
+            'Alamat'        => $request->Alamat,
+            'Status'        => 'Pending',
+            'keterangan'    => null,
+        ]);
 
-        Supplier::create($data);
-
-        return redirect()->route('procurement.supplier')->with('success', 'Supplier berhasil ditambahkan.');
-    }
-
-    public function show($id)
-    {
-        $supplier = Supplier::findOrFail($id);
-    return view('procurement.show_supplier', compact('supplier'));
+        return redirect()->route('supplier.index')->with('success', 'Supplier berhasil ditambahkan (Pending).');
     }
 
     public function edit($id)
     {
         $supplier = Supplier::findOrFail($id);
-        return view('procurement.edit_supplier', compact('supplier'));
+        return view('supplier.edit', compact('supplier'));
     }
 
     public function update(Request $request, $id)
     {
         $supplier = Supplier::findOrFail($id);
 
-        $validated = $request->validate([
-            'nama_supplier' => 'required',
-            'nama_pegawai'  => 'required',
-            'email'         => 'required|email',
-            'kontak'        => 'required',
-            'alamat'        => 'required',
-            'status'        => 'required',
+        $request->validate([
+            'Nama_Supplier' => 'required|string|max:255',
+            'Nama_Pegawai'  => 'nullable|string|max:255',
+            'Email'         => 'nullable|email|max:255',
+            'Kontak'        => 'nullable|string|max:50',
+            'Alamat'        => 'nullable|string|max:255',
         ]);
 
-        $data = [
-            'Nama_Supplier' => $validated['nama_supplier'],
-            'Nama_Pegawai'  => $validated['nama_pegawai'],
-            'Email'         => $validated['email'],
-            'Kontak'        => $validated['kontak'],
-            'Alamat'        => $validated['alamat'],
-            'Status'        => $validated['status'],
-        ];
+        $supplier->update([
+            'Nama_Supplier' => $request->Nama_Supplier,
+            'Nama_Pegawai'  => $request->Nama_Pegawai,
+            'Email'         => $request->Email,
+            'Kontak'        => $request->Kontak,
+            'Alamat'        => $request->Alamat,
+        ]);
 
-        $supplier->update($data);
-
-        return redirect()->route('procurement.supplier')->with('success', 'Supplier berhasil diperbarui.');
+        return redirect()->route('supplier.index')->with('success', 'Supplier berhasil diupdate.');
     }
 
     public function destroy($id)
     {
-        Supplier::destroy($id);
-        return redirect()->route('procurement.supplier')->with('success', 'Supplier berhasil dihapus.');
+        $supplier = Supplier::findOrFail($id);
+        $supplier->delete();
+
+        return redirect()->route('supplier.index')->with('success', 'Supplier berhasil dihapus.');
     }
 
-    public function toggleStatus($id)
+    public function approve($id)
     {
         $supplier = Supplier::findOrFail($id);
-        $supplier->Status = $supplier->Status === 'Active' ? 'Inactive' : 'Active';
-        $supplier->save();
-        return redirect()->route('procurement.supplier')->with('success', 'Status supplier berhasil diubah.');
+        $supplier->update([
+            'Status'     => 'Aktif',
+            'keterangan' => null
+        ]);
+
+        return redirect()->route('supplier.index')->with('success', 'Supplier berhasil di-approve (Aktif).');
+    }
+
+    public function deactivate(Request $request, $id)
+    {
+        $request->validate([
+            'keterangan' => 'required|string|max:255',
+        ]);
+
+        $supplier = Supplier::findOrFail($id);
+        $supplier->update([
+            'Status'     => 'Non Aktif',
+            'keterangan' => $request->keterangan
+        ]);
+
+        return redirect()->route('supplier.index')->with('success', 'Supplier berhasil dinonaktifkan.');
     }
 }

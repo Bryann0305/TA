@@ -3,39 +3,59 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Barang;
-use App\Models\Produksi;
 use App\Models\Pembelian;
-use App\Models\PesananProduksi;
+use App\Models\Produksi;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        $user = Auth::user();
+        // Inventory items
+        $inventoryCount = Barang::count();
 
-        $stats = [
-            'total_barang' => \App\Models\Barang::count(),
-            'total_produksi' => \App\Models\Produksi::count(),
-            'total_pembelian' => \App\Models\Pembelian::count(),
-            'total_pesanan_produksi' => \App\Models\PesananProduksi::count(),
-        ];
+        // Production output (misal total produksi)
+        $productionCount = Produksi::sum('Jumlah_Berhasil');
 
-        $alerts = \App\Models\Barang::all()->map(function ($item) {
-            return [
-                'material' => $item->Nama_Bahan,
-                'stock' => $item->Stok,
-                'rop' => $item->Reorder_Point ?? '-',
-                'eoq' => $item->EOQ ?? '-',
-                'status' => ($item->Stok < ($item->Reorder_Point ?? 0)) ? 'below' : 'near',
-            ];
-        });
+        // Procurement cost (total biaya PO yang sudah dikonfirmasi)
+        $procurementCost = Pembelian::where('Status_Pembayaran', 'Confirmed')
+                                ->sum('Total_Biaya');
 
-        return view('dashboard.admin', [
-            'user' => $user,
-            'stats' => $stats,
-            'alerts' => $alerts
-        ]);
+        // Pending orders
+        $pendingOrders = Pembelian::where('Status_Pembayaran', 'Pending')->count();
+
+        // Reorder alerts
+        $reorderAlerts = Barang::with('kategori')
+            ->get()
+            ->map(function($item){
+                $status = 'In Stock';
+                if($item->Stok <= ($item->Reorder_Point/2)){
+                    $status = 'Critical Low';
+                } elseif($item->Stok < $item->Reorder_Point){
+                    $status = 'Near Reorder Point';
+                }
+                return [
+                    'Nama_Bahan' => $item->Nama_Bahan,
+                    'Stok' => $item->Stok,
+                    'Reorder_Point' => $item->Reorder_Point,
+                    'EOQ' => $item->EOQ,
+                    'Status' => $status,
+                ];
+            })
+            ->sortBy(function($i){ // Prioritaskan status rendah
+                return match($i['Status']){
+                    'Critical Low' => 1,
+                    'Near Reorder Point' => 2,
+                    default => 3
+                };
+            });
+
+        return view('dashboard', compact(
+            'inventoryCount',
+            'productionCount',
+            'procurementCost',
+            'pendingOrders',
+            'reorderAlerts'
+        ));
     }
 }
