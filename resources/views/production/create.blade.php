@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container mt-4">
-    <h2><strong>Tambah Produksi</strong></h2>
+    <h2><strong>Add Production</strong></h2>
     <p>Input pesanan, jadwal, dan produksi dalam satu halaman</p>
 
     {{-- Error Handling --}}

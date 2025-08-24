@@ -6,7 +6,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Daftar Gudang</h2>
         <a href="{{ route('gudang.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus me-1"></i> Tambah Gudang
+            <i class="fas fa-plus me-1"></i> New Warehouse
         </a>
     </div>
 

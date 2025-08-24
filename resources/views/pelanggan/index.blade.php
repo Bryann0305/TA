@@ -6,7 +6,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Data Pelanggan</h2>
         <a href="{{ route('pelanggan.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus me-1"></i> Tambah Pelanggan
+            <i class="fas fa-plus me-1"></i> New Customer
         </a>
     </div>
 

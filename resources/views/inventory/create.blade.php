@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container">
-    <h2>New Inventory Item</h2>
+    <h2>Add Inventory Item</h2>
 
     @if($errors->any())
         <div class="alert alert-danger">
