@@ -4,15 +4,13 @@
 <div class="container">
     {{-- Header --}}
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Sales Order</h2>
+        <h2>Production Orders</h2>
         <a href="{{ route('pesanan_produksi.create') }}" class="btn btn-primary">
             <i class="fas fa-plus me-1"></i> New Order
         </a>
     </div>
 
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+    <p class="text-muted mb-4">Manage production orders in the system.</p>
 
     {{-- Table --}}
     <div class="table-responsive">
@@ -20,55 +18,74 @@
             <thead class="table-light">
                 <tr>
                     <th>ID</th>
-                    <th>User</th>
-                    <th>Pelanggan</th>
-                    <th>Jumlah Pesanan</th>
-                    <th>Tanggal</th>
+                    <th>Order Number</th>
+                    <th>Customer</th>
+                    <th>Product / Material</th>
+                    <th>Order Date</th>
                     <th>Status</th>
-                    <th>SPP</th>
-                    <th style="width: 220px;">Actions</th>
+                    <th style="width: 200px;">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                @forelse($pesanan as $item)
+                @forelse ($pesanan as $item)
                     <tr>
                         <td>{{ $item->Id_Pesanan }}</td>
-                        <td>{{ $item->user->name ?? '-' }}</td>
+                        <td>{{ $item->Nomor_Pesanan ?? '-' }}</td>
                         <td>{{ $item->pelanggan->Nama_Pelanggan ?? '-' }}</td>
-                        <td>{{ $item->Jumlah_Pesanan }}</td>
+                        <td>
+                            @if($item->detail && $item->detail->count())
+                                <ul class="mb-0 ps-3">
+                                    @foreach($item->detail as $d)
+                                        <li>{{ $d->barang->Nama_Bahan ?? '-' }} ({{ $d->Jumlah }})</li>
+                                    @endforeach
+                                </ul>
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
+                        </td>
                         <td>{{ $item->Tanggal_Pesanan ? \Carbon\Carbon::parse($item->Tanggal_Pesanan)->format('d M Y') : '-' }}</td>
                         <td>
-                            @php
-                                $badgeClass = match($item->Status) {
-                                    'Menunggu' => 'warning',
-                                    'Diproses' => 'primary',
-                                    'Selesai' => 'success',
-                                    default    => 'secondary',
-                                };
-                            @endphp
-                            <span class="badge bg-{{ $badgeClass }}">{{ $item->Status }}</span>
-                        </td>
-                        <td>
-                            @if($item->Surat_Perintah_Produksi)
-                                <a href="{{ asset('storage/'.$item->Surat_Perintah_Produksi) }}" target="_blank" class="btn btn-sm btn-secondary">
-                                    Lihat
-                                </a>
-                            @else
-                                -
+                            @if($item->Status == 'pending')
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            @elseif($item->Status == 'confirmed')
+                                <span class="badge bg-primary">Confirmed</span>
+                            @elseif($item->Status == 'in_progress')
+                                <span class="badge bg-info text-dark">In Progress</span>
+                            @elseif($item->Status == 'completed')
+                                <span class="badge bg-success">Completed</span>
+                            @elseif($item->Status == 'cancelled')
+                                <span class="badge bg-danger">Cancelled</span>
                             @endif
                         </td>
                         <td style="white-space: nowrap;">
                             <div class="d-flex justify-content-center gap-1 flex-nowrap">
-                                <a href="{{ route('pesanan_produksi.show', $item->Id_Pesanan) }}" class="btn btn-sm btn-info" title="Detail">
+                                {{-- View --}}
+                                <a href="{{ route('pesanan_produksi.show', $item->Id_Pesanan) }}" class="btn btn-sm btn-info" title="View Details">
                                     <i class="fas fa-eye"></i>
                                 </a>
+
+                                {{-- Edit --}}
                                 <a href="{{ route('pesanan_produksi.edit', $item->Id_Pesanan) }}" class="btn btn-sm btn-warning" title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <form action="{{ route('pesanan_produksi.destroy', $item->Id_Pesanan) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus pesanan ini?');" class="d-inline">
+
+                                {{-- Approve / Confirm --}}
+                                @if($item->Status == 'pending')
+                                    <form action="{{ route('pesanan_produksi.toggle_status', $item->Id_Pesanan) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="btn btn-sm btn-success" title="Approve">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    </form>
+                                @endif
+
+                                {{-- Delete --}}
+                                <form action="{{ route('pesanan_produksi.destroy', $item->Id_Pesanan) }}" method="POST" 
+                                      onsubmit="return confirm('Are you sure you want to delete this order?');" class="d-inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button class="btn btn-sm btn-danger" title="Hapus">
+                                    <button class="btn btn-sm btn-dark" title="Delete">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </form>
@@ -77,7 +94,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="text-center text-muted">Tidak ada pesanan produksi.</td>
+                        <td colspan="7" class="text-center text-muted">No production orders available.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -95,11 +112,11 @@
             autoWidth: false,
             language: {
                 search: "_INPUT_",
-                searchPlaceholder: "Cari pesanan...",
-                lengthMenu: "Tampilkan _MENU_ data per halaman",
-                zeroRecords: "Tidak ada pesanan yang cocok",
-                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ pesanan",
-                infoEmpty: "Tidak ada data pesanan",
+                searchPlaceholder: "Search orders...",
+                lengthMenu: "Show _MENU_ entries per page",
+                zeroRecords: "No matching orders found",
+                info: "Showing _START_ to _END_ of _TOTAL_ orders",
+                infoEmpty: "No orders available",
                 paginate: {
                     previous: "‹",
                     next: "›"

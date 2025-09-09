@@ -4,141 +4,138 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Pembelian;
-use App\Models\DetailPembelian;
 use App\Models\Supplier;
-use App\Models\Barang; 
+use App\Models\Barang;
 use App\Models\Gudang;
+use App\Models\DetailPembelian;
+use Illuminate\Database\QueryException;
 
 class ProcurementController extends Controller
 {
-    // Menampilkan daftar pembelian
+    // List semua Purchase Order
     public function index()
     {
-        $orders = Pembelian::with(['supplier', 'detailPembelian.barang'])->get();
+        $orders = Pembelian::with(['supplier', 'detailPembelian', 'detailPembelian.barang'])->get();
         return view('procurement.index', compact('orders'));
     }
 
-    // Form buat pembelian baru
+    // Form tambah PO
     public function create()
     {
         $suppliers = Supplier::all();
-        $barangs = Barang::all();
-        $gudangs = Gudang::all(); // Ambil data gudang
+        $barangs   = Barang::all();
+        $gudangs   = Gudang::all();
         return view('procurement.create', compact('suppliers', 'barangs', 'gudangs'));
     }
 
+    // Simpan PO baru
     public function store(Request $request)
     {
-        $request->validate([
-            'Total_Biaya' => 'required|numeric',
-            'Tanggal_Pemesanan' => 'required|date',
-            'Tanggal_Kedatangan' => 'nullable|date',
-            'Metode_Pembayaran' => 'required|string',
+        $validated = $request->validate([
             'supplier_Id_Supplier' => 'required|exists:supplier,Id_Supplier',
-            'gudang_Id_Gudang' => 'required|exists:gudang,Id_Gudang',
-            'Nama_Barang' => 'required|array',
+            'Tanggal_Pemesanan'    => 'required|date',
+            'Tanggal_Kedatangan'   => 'nullable|date|after_or_equal:Tanggal_Pemesanan',
+            'Metode_Pembayaran'    => 'nullable|string|max:50',
+            'Status_Pembayaran'    => 'nullable|in:Pending,Confirmed',
+            'details.*.bahan_baku_Id_Bahan' => 'required|exists:barang,Id_Bahan',
+            'details.*.Jumlah'              => 'required|integer|min:1',
+            'details.*.Harga'               => 'required|numeric|min:0',
+            'details.*.Keterangan'          => 'nullable|string|max:255',
         ]);
 
-        $pembelian = Pembelian::create([
-            'Total_Biaya' => $request->Total_Biaya,
-            'Tanggal_Pemesanan' => $request->Tanggal_Pemesanan,
-            'Tanggal_Kedatangan' => $request->Tanggal_Kedatangan,
-            'Metode_Pembayaran' => $request->Metode_Pembayaran,
-            'Status_Pembayaran' => 'Pending',
-            'user_Id_User' => auth()->id(),
-            'supplier_Id_Supplier' => $request->supplier_Id_Supplier,
-        ]);
-
-        $gudangId = $request->gudang_Id_Gudang;
-
-        foreach ($request->Nama_Barang as $barangId) {
-            DetailPembelian::create([
-                'pembelian_Id_Pembelian' => $pembelian->Id_Pembelian,
-                'bahan_baku_Id_Bahan' => $barangId,
-                'Jumlah' => 1,
-                'Harga_Keseluruhan' => 0,
-                'Keterangan' => '',
-                'gudang_Id_Gudang' => $gudangId,
-            ]);
+        $totalBiaya = 0;
+        foreach ($request->details as $d) {
+            $totalBiaya += $d['Jumlah'] * $d['Harga'];
         }
 
-        return redirect()->route('procurement.index')->with('success', 'Purchase Order created successfully!');
+        // Simpan header pembelian
+        $pembelian = Pembelian::create([
+            'supplier_Id_Supplier' => $request->supplier_Id_Supplier,
+            'Tanggal_Pemesanan'    => $request->Tanggal_Pemesanan,
+            'Tanggal_Kedatangan'   => $request->Tanggal_Kedatangan,
+            'Metode_Pembayaran'    => $request->Metode_Pembayaran,
+            'Total_Biaya'          => $totalBiaya,
+            'Status_Pembayaran'    => 'Pending',
+            'user_Id_User'         => auth()->id(),
+        ]);
+
+        // Simpan detail barang
+        foreach ($request->details as $d) {
+            DetailPembelian::create([
+                'pembelian_Id_Pembelian' => $pembelian->Id_Pembelian,
+                'bahan_baku_Id_Bahan'    => $d['bahan_baku_Id_Bahan'],
+                'Jumlah'                 => $d['Jumlah'],
+                'Harga_Keseluruhan'      => $d['Jumlah'] * $d['Harga'],
+                'gudang_Id_Gudang'       => $request->gudang_Id_Gudang,
+                'Keterangan'             => $d['Keterangan'] ?? '-', // ✅ default jika kosong
+            ]);
+
+            // Update stok barang
+            $barang = Barang::find($d['bahan_baku_Id_Bahan']);
+            if ($barang) {
+                $barang->Stok += $d['Jumlah'];
+                $barang->save();
+            }
+        }
+
+        return redirect()->route('procurement.index')->with('success', 'Purchase Order berhasil dibuat!');
     }
 
-
-    // Tampilkan detail pembelian
+    // Detail PO
     public function show($id)
     {
-    $pembelian = Pembelian::with(['supplier', 'detailPembelian.barang', 'detailPembelian.gudang'])
-                          ->findOrFail($id);
-
-    return view('procurement.show', compact('pembelian'));
+        $order = Pembelian::with(['supplier', 'detailPembelian', 'detailPembelian.barang'])->findOrFail($id);
+        return view('procurement.show', compact('order'));
     }
 
-
-    // Form edit pembelian
+    // Form edit PO
     public function edit($id)
     {
-        $order = Pembelian::with('detailPembelian.barang')->findOrFail($id);
+        $order     = Pembelian::with('detailPembelian')->findOrFail($id);
         $suppliers = Supplier::all();
-        $barangs = Barang::all(); // ganti variabel jadi $barangs
-        $gudangs = Gudang::all(); // Ambil data gudang
+        $barangs   = Barang::all();
+        $gudangs   = Gudang::all();
         return view('procurement.edit', compact('order', 'suppliers', 'barangs', 'gudangs'));
     }
 
-    // Update pembelian
+    // Update PO
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'Total_Biaya' => 'required|numeric',
-            'Tanggal_Pemesanan' => 'required|date',
-            'Tanggal_Kedatangan' => 'nullable|date',
-            'Metode_Pembayaran' => 'required|string',
+        $validated = $request->validate([
             'supplier_Id_Supplier' => 'required|exists:supplier,Id_Supplier',
-            'gudang_Id_Gudang' => 'required|exists:gudang,Id_Gudang',
-            'Nama_Barang' => 'required|array',
+            'Tanggal_Pemesanan'    => 'required|date',
+            'Tanggal_Kedatangan'   => 'nullable|date|after_or_equal:Tanggal_Pemesanan',
+            'Metode_Pembayaran'    => 'nullable|string|max:50',
+            'Status_Pembayaran'    => 'required|in:Pending,Confirmed',
         ]);
 
-        $pembelian = Pembelian::findOrFail($id);
-        $pembelian->update([
-            'Total_Biaya' => $request->Total_Biaya,
-            'Tanggal_Pemesanan' => $request->Tanggal_Pemesanan,
-            'Tanggal_Kedatangan' => $request->Tanggal_Kedatangan,
-            'Metode_Pembayaran' => $request->Metode_Pembayaran,
-            'supplier_Id_Supplier' => $request->supplier_Id_Supplier,
-        ]);
+        $order = Pembelian::findOrFail($id);
+        $order->update($validated);
 
-        // Hapus detail lama dan buat ulang
-        $pembelian->detailPembelian()->delete();
-        foreach ($request->Nama_Barang as $barangId) {
-            DetailPembelian::create([
-                'pembelian_Id_Pembelian' => $pembelian->Id_Pembelian,
-                'bahan_baku_Id_Bahan' => $barangId,
-                'Jumlah' => 1,
-                'Harga_Keseluruhan' => 0,
-            ]);
-        }
-
-        return redirect()->route('procurement.index')->with('success', 'Purchase Order updated successfully!');
+        return redirect()->route('procurement.index')->with('success', 'Purchase Order berhasil diperbarui!');
     }
 
-    // Hapus pembelian
+    // Hapus PO
     public function destroy($id)
     {
-        $pembelian = Pembelian::findOrFail($id);
-        $pembelian->detailPembelian()->delete();
-        $pembelian->delete();
+        $order = Pembelian::findOrFail($id);
 
-        return redirect()->route('procurement.index')->with('success', 'Purchase Order deleted successfully!');
+        try {
+            $order->delete();
+            return redirect()->route('procurement.index')->with('success', 'Purchase Order berhasil dihapus!');
+        } catch (QueryException $e) {
+            return redirect()->route('procurement.index')
+                ->with('error', 'Purchase Order tidak bisa dihapus karena masih memiliki data terkait.');
+        }
     }
 
-    // Toggle status pembayaran (Pending <-> Confirmed)
+    // Toggle status pembayaran
     public function togglePayment($id)
     {
-        $pembelian = Pembelian::findOrFail($id);
-        $pembelian->Status_Pembayaran = $pembelian->Status_Pembayaran === 'Pending' ? 'Confirmed' : 'Pending';
-        $pembelian->save();
+        $order = Pembelian::findOrFail($id);
+        $order->Status_Pembayaran = $order->Status_Pembayaran === 'Pending' ? 'Confirmed' : 'Pending';
+        $order->save();
 
-        return redirect()->back()->with('success', 'Payment status updated successfully!');
+        return redirect()->route('procurement.index')->with('success', 'Status pembayaran berhasil diperbarui!');
     }
 }

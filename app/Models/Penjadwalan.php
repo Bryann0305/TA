@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Penjadwalan extends Model
 {
+    use HasFactory;
+
     protected $table = 'penjadwalan';
     protected $primaryKey = 'Id_Jadwal';
     public $timestamps = false;
@@ -13,11 +16,13 @@ class Penjadwalan extends Model
     protected $fillable = [
         'Tanggal_Mulai',
         'Tanggal_Selesai',
-        'Status'
+        'Status',
+        'production_order_id',
     ];
 
-    public function produksi()
+    public function productionOrder()
     {
-        return $this->hasMany(Produksi::class, 'penjadwalan_Id_Jadwal', 'Id_Jadwal');
+        return $this->belongsTo(ProductionOrder::class, 'production_order_id');
     }
 }
+    

@@ -12,27 +12,27 @@
             <a href="{{ route('inventory.exportPdf', request()->query()) }}" class="btn btn-outline-dark">
                 <i class="fas fa-file-pdf me-1"></i> PDF
             </a>
-            <a href="{{ route('bill-of-materials.index') }}" class="btn btn-secondary">
-                <i class="fas fa-boxes me-1"></i> Kelola Bill of Materials
+            <a href="{{ route('bom.index') }}" class="btn btn-secondary">
+                <i class="fas fa-boxes me-1"></i> Manage Bill of Materials
             </a>
         </div>
     </div>
 
     <p class="text-muted mb-4">Manage your inventory with EOQ calculations.</p>
 
-    {{-- Tabel Bahan Baku --}}
-    <h4>Bahan Baku</h4>
+    {{-- Raw Materials --}}
+    <h4>Raw Materials</h4>
     <div class="table-responsive mb-5">
         <table id="rawMaterialTable" class="table table-bordered table-striped align-middle">
             <thead class="table-light">
                 <tr>
-                    <th>Nama Bahan</th>
-                    <th>Kategori</th>
-                    <th>Stok</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Stock</th>
                     <th>Reorder Point</th>
                     <th>EOQ</th>
                     <th>Status</th>
-                    <th style="width: 140px;">Aksi</th>
+                    <th style="width: 180px;">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -49,17 +49,22 @@
                     <tr>
                         <td>{{ $item->Nama_Bahan }}</td>
                         <td>{{ $item->kategori->Nama_Kategori ?? '-' }}</td>
-                        <td>{{ $item->Stok }}</td>
-                        <td>{{ $reorder }}</td>
-                        <td>{{ $eoq }}</td>
+                        <td>{{ number_format($item->Stok, 2) }}</td>
+                        <td>{{ number_format($reorder, 2) }}</td>
+                        <td>{{ number_format($eoq, 2) }}</td>
                         <td><span class="badge bg-{{ $badge }}">{{ $status }}</span></td>
                         <td style="white-space: nowrap;">
-                            <div class="d-flex gap-1">
-                                <a href="{{ route('inventory.edit', $item->Id_Bahan) }}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
-                                <form action="{{ route('inventory.destroy', $item->Id_Bahan) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus item ini?');">
+                            <div class="d-flex justify-content-center gap-1 flex-nowrap">
+                                <a href="{{ route('inventory.show', $item->Id_Bahan) }}" class="btn btn-sm btn-info" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ route('inventory.edit', $item->Id_Bahan) }}" class="btn btn-sm btn-warning" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form action="{{ route('inventory.destroy', $item->Id_Bahan) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this item?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button class="btn btn-sm btn-danger"><i class="fas fa-trash-alt"></i></button>
+                                    <button class="btn btn-sm btn-dark" title="Delete"><i class="fas fa-trash-alt"></i></button>
                                 </form>
                             </div>
                         </td>
@@ -69,19 +74,19 @@
         </table>
     </div>
 
-    {{-- Tabel Produk Jadi --}}
-    <h4>Produk Jadi</h4>
+    {{-- Finished Goods --}}
+    <h4>Finished Goods</h4>
     <div class="table-responsive">
         <table id="finishedGoodsTable" class="table table-bordered table-striped align-middle">
             <thead class="table-light">
                 <tr>
-                    <th>Nama Produk</th>
-                    <th>Kategori</th>
-                    <th>Stok</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Stock</th>
                     <th>Reorder Point</th>
                     <th>EOQ</th>
                     <th>Status</th>
-                    <th style="width: 140px;">Aksi</th>
+                    <th style="width: 180px;">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -98,17 +103,22 @@
                     <tr>
                         <td>{{ $item->Nama_Bahan }}</td>
                         <td>{{ $item->kategori->Nama_Kategori ?? '-' }}</td>
-                        <td>{{ $item->Stok }}</td>
-                        <td>{{ $reorder }}</td>
-                        <td>{{ $eoq }}</td>
+                        <td>{{ number_format($item->Stok, 2) }}</td>
+                        <td>{{ number_format($reorder, 2) }}</td>
+                        <td>{{ number_format($eoq, 2) }}</td>
                         <td><span class="badge bg-{{ $badge }}">{{ $status }}</span></td>
                         <td style="white-space: nowrap;">
-                            <div class="d-flex gap-1">
-                                <a href="{{ route('inventory.edit', $item->Id_Bahan) }}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
-                                <form action="{{ route('inventory.destroy', $item->Id_Bahan) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus item ini?');">
+                            <div class="d-flex justify-content-center gap-1 flex-nowrap">
+                                <a href="{{ route('inventory.show', $item->Id_Bahan) }}" class="btn btn-sm btn-info" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ route('inventory.edit', $item->Id_Bahan) }}" class="btn btn-sm btn-warning" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form action="{{ route('inventory.destroy', $item->Id_Bahan) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this item?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button class="btn btn-sm btn-danger"><i class="fas fa-trash-alt"></i></button>
+                                    <button class="btn btn-sm btn-dark" title="Delete"><i class="fas fa-trash-alt"></i></button>
                                 </form>
                             </div>
                         </td>
@@ -129,7 +139,7 @@
             autoWidth: false,
             language: {
                 search: "_INPUT_",
-                searchPlaceholder: "Search table...",
+                searchPlaceholder: "Search items...",
                 lengthMenu: "Show _MENU_ entries per page",
                 zeroRecords: "No matching items found",
                 info: "Showing _START_ to _END_ of _TOTAL_ items",

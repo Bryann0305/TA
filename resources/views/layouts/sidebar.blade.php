@@ -1,3 +1,4 @@
+{{-- resources/views/layouts/sidebar.blade.php --}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,10 +9,8 @@
     {{-- Styles --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-
 
     <style>
         body { overflow-x: hidden; }
@@ -73,7 +72,7 @@
 </head>
 <body>
 
-    {{-- Sidebar --}}
+{{-- Sidebar --}}
 <div class="sidebar p-3">
     <div>
         <div class="mb-4 text-center">
@@ -89,15 +88,15 @@
         <ul class="nav nav-pills flex-column mb-auto">
             {{-- Dashboard --}}
             <li class="nav-item">
-                <a href="{{ route('dashboard') }}" class="nav-link {{ Request::is('dashboard') ? 'active' : '' }}">
+                <a href="{{ route('dashboard') }}" class="nav-link {{ Request::routeIs('dashboard') ? 'active' : '' }}">
                     <i class="bi bi-house-door me-2"></i> Dashboard
                 </a>
             </li>
 
             {{-- Customer --}}
             @if($role === 'admin' || $role === 'pembelian')
-            <li>
-                <a href="{{ route('pelanggan.index') }}" class="nav-link {{ Request::is('pelanggan*') ? 'active' : '' }}">
+            <li class="nav-item">
+                <a href="{{ route('pelanggan.index') }}" class="nav-link {{ Request::routeIs('pelanggan.*') ? 'active' : '' }}">
                     <i class="bi bi-people-fill me-2"></i> Customer
                 </a>
             </li>
@@ -105,52 +104,60 @@
 
             {{-- Supplier --}}
             @if($role === 'admin' || $role === 'pembelian')
-            <li>
-                <a href="{{ route('supplier.index') }}" class="nav-link {{ Request::is('supplier*') ? 'active' : '' }}">
+            <li class="nav-item">
+                <a href="{{ route('supplier.index') }}" class="nav-link {{ Request::routeIs('supplier.*') ? 'active' : '' }}">
                     <i class="bi bi-truck me-2"></i> Supplier
                 </a>
             </li>
             @endif
 
             {{-- Order --}}
-            <li>
-                <a href="{{ route('pesanan_produksi.index') }}" class="nav-link {{ Request::is('pesanan_produksi*') ? 'active' : '' }}">
+            <li class="nav-item">
+                <a href="{{ route('pesanan_produksi.index') }}" class="nav-link {{ Request::routeIs('pesanan_produksi.*') ? 'active' : '' }}">
                     <i class="bi bi-list-check me-2"></i> Order
                 </a>
             </li>
 
             {{-- Inventory --}}
             @if($role === 'admin' || $role === 'gudang')
-            <li>
-                <a href="{{ route('inventory.index') }}" class="nav-link {{ Request::is('inventory*') ? 'active' : '' }}">
+            <li class="nav-item">
+                <a href="{{ route('inventory.index') }}" class="nav-link {{ Request::routeIs('inventory.*') ? 'active' : '' }}">
                     <i class="bi bi-box-seam me-2"></i> Inventory
                 </a>
             </li>
             @endif
 
-            {{-- Gudang --}}
+            {{-- Warehouse --}}
             @if($role === 'admin' || $role === 'gudang')
-            <li>
-                <a href="{{ route('gudang.index') }}" class="nav-link {{ Request::is('gudang*') ? 'active' : '' }}">
+            <li class="nav-item">
+                <a href="{{ route('gudang.index') }}" class="nav-link {{ Request::routeIs('gudang.*') ? 'active' : '' }}">
                     <i class="bi bi-building me-2"></i> Warehouse
                 </a>
             </li>
             @endif
 
-
             {{-- Procurement --}}
             @if($role === 'admin' || $role === 'manajer_produksi')
-            <li>
-                <a href="{{ route('procurement.index') }}" class="nav-link {{ Request::is('procurement*') ? 'active' : '' }}">
+            <li class="nav-item">
+                <a href="{{ route('procurement.index') }}" class="nav-link {{ Request::routeIs('procurement.*') ? 'active' : '' }}">
                     <i class="bi bi-cart-plus me-2"></i> Procurement
+                </a>
+            </li>
+            @endif
+            
+             {{-- Production Order / SPP --}}
+            @if($role === 'admin' || $role === 'manajer_produksi')
+            <li class="nav-item">
+                <a href="{{ route('production_order.index') }}" class="nav-link {{ Request::routeIs('production_order.*') ? 'active' : '' }}">
+                    <i class="bi bi-file-earmark-text me-2"></i> SPP
                 </a>
             </li>
             @endif
 
             {{-- Production --}}
             @if($role === 'admin' || $role === 'pembelian')
-            <li>
-                <a href="{{ route('production.index') }}" class="nav-link {{ Request::is('production*') ? 'active' : '' }}">
+            <li class="nav-item">
+                <a href="{{ route('production.index') }}" class="nav-link {{ Request::routeIs('production.*') ? 'active' : '' }}">
                     <i class="bi bi-hammer me-2"></i> Production
                 </a>
             </li>
@@ -158,16 +165,16 @@
 
             {{-- Reports --}}
             @if($role === 'admin' || $role === 'manajer_produksi')
-            <li>
-                <a href="{{ route('reports.index') }}" class="nav-link {{ Request::is('reports*') ? 'active' : '' }}">
+            <li class="nav-item">
+                <a href="{{ route('reports.index') }}" class="nav-link {{ Request::routeIs('reports.*') ? 'active' : '' }}">
                     <i class="bi bi-graph-up me-2"></i> Reports
                 </a>
             </li>
             @endif
 
             {{-- Settings --}}
-            <li>
-                <a href="{{ route('settings.index') }}" class="nav-link {{ Request::is('settings*') ? 'active' : '' }}">
+            <li class="nav-item">
+                <a href="{{ route('settings.index') }}" class="nav-link {{ Request::routeIs('settings.*') ? 'active' : '' }}">
                     <i class="bi bi-gear me-2"></i> Settings
                 </a>
             </li>
@@ -185,45 +192,43 @@
     </div>
 </div>
 
-    {{-- Content Area --}}
-    <div class="content-wrapper">
-        {{-- Topbar --}}
-        <div class="topbar">
-            <input type="text" class="form-control w-25" placeholder="Search...">
-            <div class="dropdown">
-                <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
-                    <span class="me-2 fw-bold">{{ Auth::user()->Nama ?? 'User' }}</span>
-                    <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->Nama ?? 'User') }}&background=0D8ABC&color=fff" width="32" class="rounded-circle" alt="Avatar">
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="#">Your Profile</a></li>
-                    <li><a class="dropdown-item" href="#">Settings</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button class="dropdown-item" type="submit">Sign out</button>
-                        </form>
-                    </li>
-                </ul>
-            </div>
+{{-- Content Area --}}
+<div class="content-wrapper">
+    {{-- Topbar --}}
+    <div class="topbar">
+        <input type="text" class="form-control w-25" placeholder="Search...">
+        <div class="dropdown">
+            <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+                <span class="me-2 fw-bold">{{ Auth::user()->Nama ?? 'User' }}</span>
+                <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->Nama ?? 'User') }}&background=0D8ABC&color=fff" width="32" class="rounded-circle" alt="Avatar">
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#">Your Profile</a></li>
+                <li><a class="dropdown-item" href="#">Settings</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button class="dropdown-item" type="submit">Sign out</button>
+                    </form>
+                </li>
+            </ul>
         </div>
-
-        {{-- Content from child view --}}
-        <main class="main-content">
-            @yield('content')
-        </main>
     </div>
 
-    {{-- Scripts --}}
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {{-- Content from child view --}}
+    <main class="main-content">
+        @yield('content')
+    </main>
+</div>
 
+{{-- Scripts --}}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
-    @stack('scripts')
+@stack('scripts')
 </body>
 </html>

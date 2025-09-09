@@ -2,188 +2,159 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{
-    Produksi,
-    BillOfMaterial,
-    Barang,
-    PesananProduksi,
-    Penjadwalan
-};
 use Illuminate\Http\Request;
+use App\Models\Produksi;
+use App\Models\ProduksiDetail;
+use App\Models\ProductionOrder;
+use App\Models\BillOfMaterial;
+use App\Models\GagalProduksi;
 
 class ProductionController extends Controller
 {
+    // Halaman index produksi
     public function index()
-{
-    $today = now()->startOfDay();
-
-    $produksiBerjalan = Produksi::with([
-            'pesananProduksi.pelanggan',
-            'billOfMaterial.barang',
-            'jadwal'
-        ])
-        ->whereDate('Tanggal_Produksi', '<=', $today)
-        ->where('Status', '!=', 'Selesai')
-        ->orderBy('Tanggal_Produksi', 'desc')
-        ->get();
-
-    $produksiDirencanakan = Produksi::with([
-            'pesananProduksi.pelanggan',
-            'billOfMaterial.barang',
-            'jadwal'
-        ])
-        ->whereDate('Tanggal_Produksi', '>', $today)
-        ->orderBy('Tanggal_Produksi', 'asc')
-        ->get();
-
-    $produksiSelesai = Produksi::with([
-            'pesananProduksi.pelanggan',
-            'billOfMaterial.barang',
-            'jadwal'
-        ])
-        ->where('Status', 'Selesai')
-        ->orderBy('Tanggal_Produksi', 'desc')
-        ->get();
-
-    // BOM list untuk bawahnya
-    $boms = BillOfMaterial::with('barang')->get();
-
-    return view('production.index', compact(
-        'produksiBerjalan',
-        'produksiDirencanakan',
-        'produksiSelesai',
-        'boms'
-    ));
-}
-
-    public function create($pesanan_id = null)
     {
-        $pesanan = null;
-        if ($pesanan_id) {
-            $pesanan = PesananProduksi::with('pelanggan')->findOrFail($pesanan_id);
-        }
+        $produksiPlanned = Produksi::where('Status', 'planned')
+            ->with(['details.billOfMaterial', 'details.barang', 'productionOrder'])
+            ->get();
 
-        $boms = BillOfMaterial::where('Status', 'approved')->get();
-        $barang = Barang::all();
-        $jadwal = Penjadwalan::all();
+        $produksiCurrent = Produksi::where('Status', 'current')
+            ->with(['details.billOfMaterial', 'details.barang', 'productionOrder'])
+            ->get();
 
-        return view('production.create', compact('pesanan', 'boms', 'barang', 'jadwal'));
+        $produksiCompleted = Produksi::where('Status', 'completed')
+            ->with(['details.billOfMaterial', 'details.barang', 'productionOrder'])
+            ->get();
+
+        return view('production.index', compact('produksiPlanned','produksiCurrent','produksiCompleted'));
     }
 
+    // Form create produksi baru
+    public function create()
+    {
+    // Ambil SPK yang belum pernah dipakai di produksi
+    // Tampilkan semua Production Order agar dropdown tidak kosong
+    // Jika ingin mengecualikan yang sudah dipakai, aktifkan kembali whereNotIn
+    $orders = ProductionOrder::with(['pesananProduksi.detail'])
+        ->orderBy('id', 'desc')
+        ->get();
+        $boms = BillOfMaterial::with('barangs')->get(); // BOM pilihan
+
+        return view('production.create', compact('orders','boms'));
+    }
+
+    // Simpan produksi baru
     public function store(Request $request)
     {
         $request->validate([
-            'Hasil_Produksi' => 'required|string|max:255',
-            'Status' => 'required|in:Menunggu,Berjalan,Selesai',
-            'Keterangan' => 'nullable|string',
-            'bill_of_material_Id_bill_of_material' => 'required|exists:bill_of_material,Id_bill_of_material',
-            'bahan_baku_Id_Bahan' => 'nullable|exists:barang,Id_Bahan',
-            'pesanan_produksi_Id_Pesanan' => 'nullable|exists:pesanan_produksi,Id_Pesanan',
-            'penjadwalan_Id_Jadwal' => 'nullable|exists:penjadwalan,Id_Jadwal',
+            'production_order_id' => 'required|exists:production_order,id',
+            'bill_of_materials' => 'required|array|min:1',
         ]);
 
+        // Cek apakah SPK sudah pernah dipakai
+        if (Produksi::where('production_order_id', $request->production_order_id)->exists()) {
+            return redirect()->back()->with('error', 'SPK sudah pernah dipakai untuk produksi.');
+        }
+
+        $order = ProductionOrder::findOrFail($request->production_order_id);
+
+        // Ambil penjadwalan ID jika ada
+        $jadwalId = $order->penjadwalan->Id_Jadwal ?? null;
+
+        // Buat produksi baru
         $produksi = Produksi::create([
-            'Hasil_Produksi' => $request->Hasil_Produksi,
-            'Status' => $request->Status,
+            'Hasil_Produksi' => $order->Nama_Produksi ?? 'Produksi #' . $order->id,
             'Tanggal_Produksi' => now(),
-            'Keterangan' => $request->Keterangan ?? '',
+            'Status' => 'planned',
             'Jumlah_Berhasil' => 0,
             'Jumlah_Gagal' => 0,
-            'bahan_baku_Id_Bahan' => $request->bahan_baku_Id_Bahan,
-            'pesanan_produksi_Id_Pesanan' => $request->pesanan_produksi_Id_Pesanan,
-            'penjadwalan_Id_Jadwal' => $request->penjadwalan_Id_Jadwal,
-            'bill_of_material_Id_bill_of_material' => $request->bill_of_material_Id_bill_of_material,
+            'pesanan_produksi_Id_Pesanan' => $order->pesanan_produksi_id,
+            'penjadwalan_Id_Jadwal' => $jadwalId,
+            'bill_of_material_Id_bill_of_material' => $request->bill_of_materials[0] ?? null,
+            'production_order_id' => $order->id,
         ]);
 
-        // Update status pesanan menjadi "Diproses" jika ada
-        if ($request->pesanan_produksi_Id_Pesanan) {
-            PesananProduksi::where('Id_Pesanan', $request->pesanan_produksi_Id_Pesanan)
-                ->update(['Status' => 'Diproses']);
+        // Tambahkan detail produksi tiap BOM & barang sesuai jumlah BOM yang diinput
+        $billOfMaterials = $request->bill_of_materials;
+        $jumlahBOMs = $request->jumlah_bom;
+        foreach ($billOfMaterials as $idx => $bom_id) {
+            $bom = BillOfMaterial::with('barangs')->find($bom_id);
+            if (!$bom) continue;
+            $jumlah = isset($jumlahBOMs[$idx]) ? (int)$jumlahBOMs[$idx] : 1;
+            foreach ($bom->barangs as $barang) {
+                for ($i = 0; $i < $jumlah; $i++) {
+                    ProduksiDetail::create([
+                        'produksi_id' => $produksi->Id_Produksi,
+                        'bill_of_material_id' => $bom->Id_bill_of_material,
+                        'barang_id' => $barang->Id_Bahan,
+                        'jumlah' => 0,
+                        'status' => 'pending',
+                    ]);
+                }
+            }
         }
 
-        return redirect()->route('production.index')->with('success', 'Produksi berhasil ditambahkan.');
+        return redirect()->route('production.index')
+            ->with('success', 'Produksi berhasil dibuat, status: planned.');
     }
 
-    public function edit($id)
+    // Approve produksi
+    public function approve($id)
     {
-        $produksi = Produksi::with(['billOfMaterial', 'pesananProduksi', 'jadwal'])->findOrFail($id);
-
-        if ($produksi->Status === 'Selesai') {
-            return redirect()->route('production.index')->with('error', 'Produksi yang sudah selesai tidak dapat diubah.');
+        $produksi = Produksi::findOrFail($id);
+        if ($produksi->Status != 'planned') {
+            return redirect()->route('production.index')
+                ->with('error', 'Produksi hanya bisa diapprove dari status planned.');
         }
 
-        $boms = BillOfMaterial::where('Status', 'approved')->get();
-        $barang = Barang::all();
-        $pesanan = PesananProduksi::all();
-        $jadwal = Penjadwalan::all();
-
-        return view('production.edit', compact('produksi', 'boms', 'barang', 'pesanan', 'jadwal'));
+        $produksi->update(['Status' => 'current']);
+        return redirect()->route('production.index')
+            ->with('success', 'Produksi diapprove, status sekarang: current.');
     }
 
-    public function update(Request $request, $id)
-    {
-        $produksi = Produksi::with('pesananProduksi')->findOrFail($id);
-
-        if ($produksi->Status === 'Selesai') {
-            return back()->with('error', 'Produksi yang sudah selesai tidak dapat diubah.');
-        }
-
-        $request->validate([
-            'Nama_Produksi' => 'required|string|max:255',
-            'Hasil_Produksi' => 'required|string|max:255',
-            'Jumlah_Berhasil' => 'required|numeric|min:0',
-            'Jumlah_Gagal' => 'required|numeric|min:0',
-            'Keterangan' => 'nullable|string',
-            'Status' => 'required|in:Menunggu,Berjalan,Selesai',
-            'bill_of_material_Id_bill_of_material' => 'required|exists:bill_of_material,Id_bill_of_material',
-            'bahan_baku_Id_Bahan' => 'nullable|exists:barang,Id_Bahan',
-            'pesanan_produksi_Id_Pesanan' => 'nullable|exists:pesanan_produksi,Id_Pesanan',
-            'penjadwalan_Id_Jadwal' => 'nullable|exists:penjadwalan,Id_Jadwal',
-        ]);
-
-        $jumlahBerhasil = $request->Jumlah_Berhasil;
-        $jumlahGagal = $request->Jumlah_Gagal;
-        $jumlahProduksi = $jumlahBerhasil + $jumlahGagal;
-
-        if ($produksi->pesananProduksi && $jumlahProduksi > $produksi->pesananProduksi->Jumlah_Pesanan) {
-            return back()->withErrors(['Jumlah_Berhasil' => 'Total produksi (berhasil + gagal) melebihi jumlah pesanan']);
-        }
-
-        $produksi->update([
-            'Nama_Produksi' => $request->Nama_Produksi,
-            'Hasil_Produksi' => $request->Hasil_Produksi,
-            'Jumlah_Produksi' => $jumlahProduksi,
-            'Jumlah_Berhasil' => $jumlahBerhasil,
-            'Jumlah_Gagal' => $jumlahGagal,
-            'Keterangan' => $request->Keterangan ?? '',
-            'Status' => $request->Status,
-            'bill_of_material_Id_bill_of_material' => $request->bill_of_material_Id_bill_of_material,
-            'bahan_baku_Id_Bahan' => $request->bahan_baku_Id_Bahan,
-            'pesanan_produksi_Id_Pesanan' => $request->pesanan_produksi_Id_Pesanan,
-            'penjadwalan_Id_Jadwal' => $request->penjadwalan_Id_Jadwal,
-        ]);
-
-        return redirect()->route('production.index')->with('success', 'Produksi berhasil diperbarui.');
-    }
-
+    // Detail produksi
     public function show($id)
     {
-        $produksi = Produksi::with(['billOfMaterial', 'pesananProduksi', 'jadwal'])->findOrFail($id);
-        return response()->json($produksi);
+        $produksi = Produksi::with([
+            'details.billOfMaterial',
+            'details.barang',
+            'gagalProduksi',
+            'productionOrder'
+        ])->findOrFail($id);
+
+        return view('production.show', compact('produksi'));
     }
 
-    public function updateStatus(Request $request, $id)
+    // Selesai produksi
+    public function complete(Request $request, $id)
     {
-        $request->validate(['Status' => 'required|in:Menunggu,Berjalan,Selesai']);
+        $request->validate([
+            'Jumlah_Berhasil' => 'required|numeric|min:0',
+            'gagal' => 'array'
+        ]);
 
         $produksi = Produksi::findOrFail($id);
 
-        if ($produksi->Status === 'Selesai') {
-            return back()->with('error', 'Status sudah selesai dan tidak dapat diubah.');
+        $produksi->update([
+            'Status' => 'completed',
+            'Jumlah_Berhasil' => $request->Jumlah_Berhasil,
+            'Jumlah_Gagal' => array_sum(array_column($request->gagal ?? [], 'total'))
+        ]);
+
+        if ($request->gagal) {
+            foreach ($request->gagal as $detail_id => $gagal) {
+                GagalProduksi::create([
+                    'produksi_Id_Produksi' => $id,
+                    'Total_Gagal' => $gagal['total'] ?? 0,
+                    'Keterangan' => $gagal['keterangan'] ?? null
+                ]);
+
+                $detail = ProduksiDetail::find($detail_id);
+                if ($detail) $detail->update(['status' => 'completed']);
+            }
         }
 
-        $produksi->update(['Status' => $request->Status]);
-
-        return redirect()->route('production.index')->with('success', 'Status produksi berhasil diperbarui.');
+        return redirect()->route('production.show', $id)
+            ->with('success', 'Produksi selesai dan berhasil/gagal tersimpan.');
     }
 }

@@ -25,13 +25,25 @@ class GudangController extends Controller
     {
         $validated = $request->validate([
             'Nama_Gudang' => 'required|string|max:255',
-            'Lokasi' => 'required|string|max:255',
             'Kapasitas' => 'required|numeric|min:0',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+            'alamat' => 'required|string|max:255',
         ]);
+
+        // Lokasi otomatis sama dengan alamat
+        $validated['Lokasi'] = $validated['alamat'];
 
         Gudang::create($validated);
 
         return redirect()->route('gudang.index')->with('success', 'Gudang berhasil ditambahkan!');
+    }
+
+    // Detail gudang (Show)
+    public function show($id)
+    {
+        $gudang = Gudang::findOrFail($id);
+        return view('gudang.show', compact('gudang'));
     }
 
     // Form edit gudang
@@ -46,9 +58,13 @@ class GudangController extends Controller
     {
         $validated = $request->validate([
             'Nama_Gudang' => 'required|string|max:255',
-            'Lokasi' => 'required|string|max:255',
             'Kapasitas' => 'required|numeric|min:0',
+            'alamat' => 'required|string|max:255',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
         ]);
+
+        $validated['Lokasi'] = $validated['alamat'];
 
         $gudang = Gudang::findOrFail($id);
         $gudang->update($validated);

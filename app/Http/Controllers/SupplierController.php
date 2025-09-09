@@ -26,6 +26,8 @@ class SupplierController extends Controller
             'Email'         => 'nullable|email|max:255',
             'Kontak'        => 'nullable|string|max:50',
             'Alamat'        => 'nullable|string|max:255',
+            'latitude'      => 'nullable|numeric',
+            'longitude'     => 'nullable|numeric',
         ]);
 
         Supplier::create([
@@ -34,6 +36,8 @@ class SupplierController extends Controller
             'Email'         => $request->Email,
             'Kontak'        => $request->Kontak,
             'Alamat'        => $request->Alamat,
+            'latitude'      => $request->latitude,
+            'longitude'     => $request->longitude,
             'Status'        => 'Pending',
             'keterangan'    => null,
         ]);
@@ -103,4 +107,11 @@ class SupplierController extends Controller
 
         return redirect()->route('supplier.index')->with('success', 'Supplier berhasil dinonaktifkan.');
     }
+
+    public function show($id)
+    {
+    $supplier = Supplier::findOrFail($id);
+    return view('supplier.show', compact('supplier'));
+    }
+
 }

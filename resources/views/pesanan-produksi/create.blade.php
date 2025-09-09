@@ -2,14 +2,16 @@
 
 @section('content')
 <div class="container mt-4">
-    <h2><strong>Add Sales Order</strong></h2>
-    <p>Form untuk menambahkan pesanan produksi baru</p>
+    {{-- Header --}}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Add Production Order</h2>
+        <a href="{{ route('pesanan_produksi.index') }}" class="btn btn-secondary">Back</a>
+    </div>
 
-    {{-- Error Handling --}}
+    {{-- Validation Errors --}}
     @if ($errors->any())
-        <div class="alert alert-danger">
-            <strong>Periksa kembali inputan:</strong>
-            <ul>
+        <div class="alert alert-danger mb-3">
+            <ul class="mb-0">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
@@ -17,72 +19,105 @@
         </div>
     @endif
 
-    {{-- Form Create --}}
-    <form action="{{ route('pesanan_produksi.store') }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('pesanan_produksi.store') }}" method="POST">
         @csrf
 
-        {{-- User --}}
+        {{-- Order Date --}}
         <div class="mb-3">
-            <label for="user_Id_User" class="form-label">User</label>
-            <select name="user_Id_User" id="user_Id_User" class="form-select" required>
-                <option value="">-- Pilih User --</option>
-                @foreach($users as $user)
-                    <option value="{{ $user->Id_User }}" {{ old('user_Id_User') == $user->Id_User ? 'selected' : '' }}>
-                        {{ $user->name }}
-                    </option>
-                @endforeach
-            </select>
+            <label for="Tanggal_Pesanan" class="form-label">Order Date</label>
+            <input type="date" name="Tanggal_Pesanan" class="form-control" required>
         </div>
 
-        {{-- Pelanggan --}}
+        {{-- Customer --}}
         <div class="mb-3">
-            <label for="pelanggan_Id_Pelanggan" class="form-label">Pelanggan</label>
-            <select name="pelanggan_Id_Pelanggan" id="pelanggan_Id_Pelanggan" class="form-select" required>
-                <option value="">-- Pilih Pelanggan --</option>
+            <label for="pelanggan_Id_Pelanggan" class="form-label">Customer</label>
+            <select name="pelanggan_Id_Pelanggan" class="form-select" required>
+                <option value="">-- Select Customer --</option>
                 @foreach($pelanggans as $pelanggan)
-                    <option value="{{ $pelanggan->Id_Pelanggan }}" {{ old('pelanggan_Id_Pelanggan') == $pelanggan->Id_Pelanggan ? 'selected' : '' }}>
-                        {{ $pelanggan->Nama_Pelanggan }}
-                    </option>
+                    <option value="{{ $pelanggan->Id_Pelanggan }}">{{ $pelanggan->Nama_Pelanggan }}</option>
                 @endforeach
             </select>
         </div>
 
-        {{-- Jumlah Pesanan --}}
-        <div class="mb-3">
-            <label for="Jumlah_Pesanan" class="form-label">Jumlah Pesanan</label>
-            <input type="number" name="Jumlah_Pesanan" id="Jumlah_Pesanan" class="form-control" 
-                   value="{{ old('Jumlah_Pesanan') }}" required min="1">
-        </div>
+        {{-- Products / Materials --}}
+        <h4>Products / Materials</h4>
+        <table class="table table-bordered align-middle" id="product-table">
+            <thead class="table-light">
+                <tr>
+                    <th>Product</th>
+                    <th style="width: 150px;">Quantity</th>
+                    <th style="width: 100px;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="product-row">
+                    <td>
+                        <select name="barang[0][barang_Id_Bahan]" class="form-select" required>
+                            <option value="">-- Select Product --</option>
+                            @foreach($barangs as $b)
+                                <option value="{{ $b->Id_Bahan }}">{{ $b->Nama_Bahan }}</option>
+                            @endforeach
+                        </select>
+                    </td>
+                    <td><input type="number" name="barang[0][Jumlah]" class="form-control" required min="1"></td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-dark btn-sm btn-remove">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {{-- Baris tombol Add --}}
+                <tr>
+                    <td colspan="3" class="text-center">
+                        <button type="button" id="btn-add-product" class="btn btn-warning btn-sm">
+                            <i class="bi bi-plus me-1"></i> Add Product
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
 
-        {{-- Tanggal Pesanan --}}
-        <div class="mb-3">
-            <label for="Tanggal_Pesanan" class="form-label">Tanggal Pesanan</label>
-            <input type="date" name="Tanggal_Pesanan" id="Tanggal_Pesanan" class="form-control" 
-                   value="{{ old('Tanggal_Pesanan') }}" required>
-        </div>
-
-        {{-- Status --}}
-        <div class="mb-3">
-            <label for="Status" class="form-label">Status</label>
-            <select name="Status" id="Status" class="form-select" required>
-                <option value="Menunggu" {{ old('Status') == 'Menunggu' ? 'selected' : '' }}>Menunggu</option>
-                <option value="Diproses" {{ old('Status') == 'Diproses' ? 'selected' : '' }}>Diproses</option>
-                <option value="Selesai" {{ old('Status') == 'Selesai' ? 'selected' : '' }}>Selesai</option>
-            </select>
-        </div>
-
-        {{-- Surat Perintah Produksi (optional file upload) --}}
-        <div class="mb-3">
-            <label for="Surat_Perintah_Produksi" class="form-label">Surat Perintah Produksi</label>
-            <input type="file" name="Surat_Perintah_Produksi" id="Surat_Perintah_Produksi" class="form-control" accept=".pdf,.jpg,.png">
-            <small class="text-muted">Opsional. Format: PDF, JPG, atau PNG</small>
-        </div>
-
-        {{-- Tombol Submit --}}
-        <div class="d-flex justify-content-end">
-            <a href="{{ route('pesanan_produksi.index') }}" class="btn btn-secondary me-2">Batal</a>
-            <button type="submit" class="btn btn-primary">Simpan Pesanan</button>
-        </div>
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-save me-1"></i> Save Order
+        </button>
     </form>
 </div>
+
+<script>
+let index = 1;
+
+// Add new product row
+document.getElementById('btn-add-product').addEventListener('click', function() {
+    const tbody = document.querySelector('#product-table tbody');
+    const addRow = document.querySelector('#btn-add-product').closest('tr');
+    
+    const row = document.createElement('tr');
+    row.classList.add('product-row');
+    row.innerHTML = `
+        <td>
+            <select name="barang[${index}][barang_Id_Bahan]" class="form-select" required>
+                <option value="">-- Select Product --</option>
+                @foreach($barangs as $b)
+                    <option value="{{ $b->Id_Bahan }}">{{ $b->Nama_Bahan }}</option>
+                @endforeach
+            </select>
+        </td>
+        <td><input type="number" name="barang[${index}][Jumlah]" class="form-control" required min="1"></td>
+        <td class="text-center">
+            <button type="button" class="btn btn-dark btn-sm btn-remove">
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>
+    `;
+    tbody.insertBefore(row, addRow);
+    index++;
+});
+
+// Remove row
+document.addEventListener('click', function(e){
+    if(e.target && (e.target.classList.contains('btn-remove') || e.target.closest('.btn-remove'))){
+        e.target.closest('.product-row').remove();
+    }
+});
+</script>
 @endsection

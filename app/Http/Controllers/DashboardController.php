@@ -4,58 +4,59 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Barang;
-use App\Models\Pembelian;
 use App\Models\Produksi;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // Inventory items
-        $inventoryCount = Barang::count();
+        // ===== Summary Cards =====
+        $stokBahanBaku  = Barang::where('Jenis', 'Bahan_Baku')->sum('Stok');
+        $stokProdukJadi = Barang::where('Jenis', 'Produk')->sum('Stok');
+        $totalItems     = $stokBahanBaku + $stokProdukJadi;
 
-        // Production output (misal total produksi)
-        $productionCount = Produksi::sum('Jumlah_Berhasil');
+        $produksiCurrent = Produksi::whereMonth('Tanggal_Produksi', now()->month)
+            ->whereYear('Tanggal_Produksi', now()->year)
+            ->sum('Jumlah_Berhasil');
 
-        // Procurement cost (total biaya PO yang sudah dikonfirmasi)
-        $procurementCost = Pembelian::where('Status_Pembayaran', 'Confirmed')
-                                ->sum('Total_Biaya');
+        // ===== Production Trend (Line Chart) =====
+        $produksiTrend = Produksi::selectRaw('DATE(Tanggal_Produksi) as tgl, SUM(Jumlah_Berhasil) as total')
+            ->where('Status', 'Selesai') // optional, hanya produksi selesai
+            ->whereMonth('Tanggal_Produksi', now()->month)
+            ->whereYear('Tanggal_Produksi', now()->year)
+            ->groupBy('tgl')
+            ->orderBy('tgl')
+            ->get();
 
-        // Pending orders
-        $pendingOrders = Pembelian::where('Status_Pembayaran', 'Pending')->count();
+        $chartLabels = $produksiTrend->isEmpty() 
+            ? [now()->format('Y-m-d')] 
+            : $produksiTrend->pluck('tgl');
+        $chartData = $produksiTrend->isEmpty() 
+            ? [0] 
+            : $produksiTrend->pluck('total');
 
-        // Reorder alerts
-        $reorderAlerts = Barang::with('kategori')
-            ->get()
-            ->map(function($item){
-                $status = 'In Stock';
-                if($item->Stok <= ($item->Reorder_Point/2)){
-                    $status = 'Critical Low';
-                } elseif($item->Stok < $item->Reorder_Point){
-                    $status = 'Near Reorder Point';
-                }
-                return [
-                    'Nama_Bahan' => $item->Nama_Bahan,
-                    'Stok' => $item->Stok,
-                    'Reorder_Point' => $item->Reorder_Point,
-                    'EOQ' => $item->EOQ,
-                    'Status' => $status,
-                ];
-            })
-            ->sortBy(function($i){ // Prioritaskan status rendah
-                return match($i['Status']){
-                    'Critical Low' => 1,
-                    'Near Reorder Point' => 2,
-                    default => 3
-                };
-            });
+        // ===== Inventory Levels (Bar Chart) =====
+        $barangLevels = Barang::all();
+        $invLabels = $barangLevels->isEmpty() 
+            ? ['No Data'] 
+            : $barangLevels->pluck('Nama_Bahan');
+        $invData = $barangLevels->isEmpty() 
+            ? [0] 
+            : $barangLevels->pluck('Stok');
+
+        // ===== Reorder Alerts =====
+        $barangReorder = Barang::whereNotNull('ROP')->get();
 
         return view('dashboard', compact(
-            'inventoryCount',
-            'productionCount',
-            'procurementCost',
-            'pendingOrders',
-            'reorderAlerts'
+            'stokBahanBaku',
+            'stokProdukJadi',
+            'totalItems',
+            'produksiCurrent',
+            'chartLabels',
+            'chartData',
+            'invLabels',
+            'invData',
+            'barangReorder'
         ));
     }
 }

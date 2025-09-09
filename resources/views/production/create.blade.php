@@ -2,96 +2,113 @@
 
 @section('content')
 <div class="container mt-4">
-    <h2><strong>Add Production</strong></h2>
-    <p>Input pesanan, jadwal, dan produksi dalam satu halaman</p>
+    <h2>Buat Produksi Baru</h2>
 
-    {{-- Error Handling --}}
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @elseif(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
     <form action="{{ route('production.store') }}" method="POST">
         @csrf
-        {{-- Tabs --}}
-        <ul class="nav nav-tabs mb-3" id="productionFormTabs" role="tablist">
-            <li class="nav-item">
-                <a class="nav-link" id="jadwal-tab" data-bs-toggle="tab" href="#jadwal" role="tab">Jadwal</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" id="produksi-tab" data-bs-toggle="tab" href="#produksi" role="tab">Produksi</a>
-            </li>
-        </ul>
 
-        {{-- Tab Content --}}
-        <div class="tab-content" id="productionFormTabsContent">
-            {{-- Tab Jadwal --}}
-            <div class="tab-pane fade" id="jadwal" role="tabpanel">
-                <div class="mb-3">
-                    <label>Tanggal Mulai</label>
-                    <input type="date" name="Tanggal_Mulai" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label>Tanggal Selesai</label>
-                    <input type="date" name="Tanggal_Selesai" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label>Status Jadwal</label>
-                    <select name="Status_Jadwal" class="form-control">
-                        <option value="Direncanakan">Direncanakan</option>
-                        <option value="Berjalan">Berjalan</option>
-                        <option value="Tertunda">Tertunda</option>
-                    </select>
-                </div>
-            </div>
+        {{-- Pilih SPP / Production Order --}}
+        <div class="mb-3">
+            <label for="production_order_id" class="form-label">Pilih Surat Perintah Produksi</label>
+            <select name="production_order_id" id="production_order_id" class="form-select" required onchange="showOrderDetail(this)">
+                <option value="">-- Pilih Surat Perintah Produksi --</option>
+                @forelse($orders as $order)
+                    <option value="{{ $order->id }}" data-barang='@json(optional($order->pesananProduksi)->detail ?? [])'>
+                        {{ $order->Nama_Produksi ?? ('Production Order #' . $order->id) }} (ID: {{ $order->id }})
+                    </option>
+                @empty
+                    <option value="" disabled>Data SPP tidak tersedia</option>
+                @endforelse
+            </select>
+        </div>
+        <div id="order-detail" class="mb-3" style="display:none">
+            <label class="form-label">Barang yang Dipesan:</label>
+            <ul id="order-barang-list"></ul>
+        </div>
 
-            {{-- Tab Produksi --}}
-            <div class="tab-pane fade" id="produksi" role="tabpanel">
-                <div class="mb-3">
-                    <label>Hasil Produksi</label>
-                    <input type="text" name="Hasil_Produksi" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label>Status Produksi</label>
-                    <select name="Status" class="form-control" required>
-                        <option value="Menunggu">Menunggu</option>
-                        <option value="Berjalan">Berjalan</option>
-                        <option value="Selesai">Selesai</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label>Keterangan</label>
-                    <textarea name="Keterangan" class="form-control" rows="2"></textarea>
-                </div>
-                <div class="mb-3">
-                    <label>Bill of Material</label>
-                    <select name="bill_of_material_Id_bill_of_material" class="form-control" required>
-                        @foreach($boms as $bom)
-                            <option value="{{ $bom->Id_bill_of_material }}">{{ $bom->Nama_bill_of_material }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label>Bahan Baku</label>
-                    <select name="bahan_baku_Id_Bahan" class="form-control">
-                        @foreach($barang as $b)
-                            <option value="{{ $b->Id_Bahan }}">{{ $b->Nama_Bahan }}</option>
-                        @endforeach
-                    </select>
+        {{-- Pilih BOM --}}
+        <div id="bom-container" class="mb-3">
+            <label class="form-label">Pilih BOM & Jumlah</label>
+            <div class="bom-row mb-2">
+                <div class="row">
+                    <div class="col-8">
+                        <select name="bill_of_materials[]" class="form-select mb-1" required>
+                            <option value="">-- Pilih BOM --</option>
+                            @forelse($boms as $bom)
+                                <option value="{{ $bom->Id_bill_of_material }}">
+                                    {{ $bom->Nama_BOM ?? $bom->Nama_bill_of_material }}
+                                </option>
+                            @empty
+                                <option value="" disabled>BOM belum tersedia</option>
+                            @endforelse
+                        </select>
+                    </div>
+                    <div class="col-4">
+                        <input type="number" name="jumlah_bom[]" class="form-control" min="1" value="1" required placeholder="Jumlah BOM">
+                    </div>
                 </div>
             </div>
         </div>
 
-        {{-- Submit --}}
-        <div class="mt-4">
-            <button type="submit" class="btn btn-primary">Simpan Produksi</button>
-            <a href="{{ route('production.index') }}" class="btn btn-secondary">Batal</a>
-        </div>
+    <button type="button" id="add-bom" class="btn btn-secondary mb-3">Tambah BOM</button>
+        <button type="submit" class="btn btn-primary">Buat Produksi</button>
     </form>
 </div>
+
+<script>
+    function showOrderDetail(select) {
+        const selected = select.options[select.selectedIndex];
+        const barangList = document.getElementById('order-barang-list');
+        const detailDiv = document.getElementById('order-detail');
+        barangList.innerHTML = '';
+        if (selected.dataset.barang) {
+            const details = JSON.parse(selected.dataset.barang);
+            if (details && details.length > 0) {
+                details.forEach(function(barang) {
+                    const li = document.createElement('li');
+                    li.textContent = barang.Nama_Bahan + ' (Jumlah: ' + barang.Jumlah + ')';
+                    barangList.appendChild(li);
+                });
+                detailDiv.style.display = 'block';
+            } else {
+                detailDiv.style.display = 'none';
+            }
+        } else {
+            detailDiv.style.display = 'none';
+        }
+    }
+    document.getElementById('add-bom').addEventListener('click', function() {
+        const container = document.getElementById('bom-container');
+        const row = document.createElement('div');
+        row.classList.add('bom-row', 'mb-2');
+        row.innerHTML = `
+            <div class="row">
+                <div class="col-8">
+                    <select name="bill_of_materials[]" class="form-select mb-1" required>
+                        <option value="">-- Pilih BOM --</option>
+                        @foreach($boms as $bom)
+                            <option value="{{ $bom->Id_bill_of_material }}">
+                                {{ $bom->Nama_BOM ?? $bom->Nama_bill_of_material }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-4">
+                    <input type="number" name="jumlah_bom[]" class="form-control" min="1" value="1" required placeholder="Jumlah BOM">
+                </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-danger remove-bom">Hapus</button>
+        `;
+        container.appendChild(row);
+        row.querySelector('.remove-bom').addEventListener('click', function() {
+            row.remove();
+        });
+    });
+</script>
 @endsection

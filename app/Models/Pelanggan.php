@@ -14,7 +14,7 @@ class Pelanggan extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'Nama_Pelanggan', 'Nomor_Telp', 'Alamat', 'Status'
+        'Nama_Pelanggan', 'Nomor_Telp', 'Alamat'
     ];
 
     public function pesananProduksi()

@@ -2,72 +2,99 @@
 
 @section('content')
 <div class="container">
-    <h2 class="mb-4">Add New Bill of Material</h2>
+    {{-- Header --}}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Create BOM</h2>
+        <a href="{{ route('bom.index') }}" class="btn btn-secondary">Back</a>
+    </div>
 
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-
+    {{-- Validation Errors --}}
     @if($errors->any())
-        <div class="alert alert-danger">
-            <strong>Whoops!</strong> Please fix the following issues:<br><br>
-            <ul>
-                @foreach($errors->all() as $error)
+        <div class="alert alert-danger mb-3">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
         </div>
     @endif
 
-    <form method="POST" action="{{ route('bill-of-materials.store') }}">
+    <form action="{{ route('bom.store') }}" method="POST">
         @csrf
 
+        {{-- BOM Name --}}
         <div class="mb-3">
             <label for="Nama_bill_of_material" class="form-label">BOM Name</label>
             <input type="text" name="Nama_bill_of_material" class="form-control" required>
         </div>
 
+        {{-- Hidden Status --}}
+        <input type="hidden" name="Status" value="pending">
+
+        {{-- Items --}}
+        <h4>Items</h4>
+        <div id="item-wrapper">
+            <div class="row mb-2 align-items-center item">
+                <div class="col-md-5">
+                    <select name="barang[0][barang_Id_Bahan]" class="form-select" required>
+                        <option value="">-- Select Item --</option>
+                        @foreach($barangs as $b)
+                            <option value="{{ $b->Id_Bahan }}">{{ $b->Nama_Bahan }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <input type="number" name="barang[0][Jumlah_Bahan]" class="form-control" placeholder="Quantity" min="1" required>
+                </div>
+                <div class="col-md-3 text-end">
+                    <button type="button" class="btn btn-danger btn-remove">Remove</button>
+                </div>
+            </div>
+        </div>
+
         <div class="mb-3">
-            <label for="Status" class="form-label">Status</label>
-            <select name="Status" class="form-select" required>
-                <option value="">-- Select Status --</option>
-                <option value="Approved">Approved</option>
-                <option value="Draft">Draft</option>
-            </select>
+            <button type="button" id="btn-add-item" class="btn btn-secondary">
+                <i class="bi bi-plus me-2"></i> Add Item
+            </button>
         </div>
 
-        <hr>
-        <h5>Select Raw Materials</h5>
-
-        <div class="table-responsive mb-3">
-            <table class="table table-bordered align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th style="width: 5%">✔</th>
-                        <th>Material Name</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($barangs as $barang)
-                        <tr>
-                            <td class="text-center">
-                                <input type="checkbox" name="bahan_baku[{{ $barang->Id_Bahan }}][selected]" value="1">
-                            </td>
-                            <td>{{ $barang->Nama_Bahan }}</td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="2" class="text-center">No raw materials available.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        <div class="d-flex justify-content-between">
-            <a href="{{ route('bill-of-materials.index') }}" class="btn btn-secondary">Back</a>
-            <button type="submit" class="btn btn-success">Save BOM</button>
-        </div>
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-save me-2"></i> Save BOM
+        </button>
     </form>
 </div>
+
+<script>
+let index = 1;
+
+document.getElementById('btn-add-item').addEventListener('click', function() {
+    const wrapper = document.getElementById('item-wrapper');
+    const div = document.createElement('div');
+    div.classList.add('row', 'mb-2', 'align-items-center', 'item');
+    div.innerHTML = `
+        <div class="col-md-5">
+            <select name="barang[${index}][barang_Id_Bahan]" class="form-select" required>
+                <option value="">-- Select Item --</option>
+                @foreach($barangs as $b)
+                    <option value="{{ $b->Id_Bahan }}">{{ $b->Nama_Bahan }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-4">
+            <input type="number" name="barang[${index}][Jumlah_Bahan]" class="form-control" placeholder="Quantity" min="1" required>
+        </div>
+        <div class="col-md-3 text-end">
+            <button type="button" class="btn btn-danger btn-remove">Remove</button>
+        </div>
+    `;
+    wrapper.appendChild(div);
+    index++;
+});
+
+document.addEventListener('click', function(e){
+    if(e.target && e.target.classList.contains('btn-remove')){
+        e.target.closest('.item').remove();
+    }
+});
+</script>
 @endsection

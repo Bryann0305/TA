@@ -7,15 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Gudang extends Model
 {
-    use HasFactory;
-
-    protected $table = 'gudang';
-    protected $primaryKey = 'Id_Gudang';
+    protected $table = 'gudang'; 
     public $timestamps = false;
+    protected $primaryKey = 'Id_Gudang'; 
+    protected $fillable = ['Nama_Gudang', 'Kapasitas', 'latitude', 'longitude', 'alamat', 'Lokasi'];
 
-    protected $fillable = [
-       'Nama_Gudang', 'Lokasi', 'Kapasitas'
-    ];
 
     public function detailPembelian()
     {

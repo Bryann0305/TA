@@ -3,89 +3,135 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\PesananProduksi;
-use App\Models\User;
-use App\Models\Pelanggan;
+use App\Models\DetailPesananProduksi;
 use App\Models\Barang;
+use App\Models\Pelanggan;
 
 class PesananProduksiController extends Controller
 {
+    // Tampilkan semua pesanan produksi
     public function index()
     {
-        $pesanan = PesananProduksi::with(['user', 'pelanggan', 'barang'])->get();
+        $pesanan = PesananProduksi::with(['pelanggan', 'detail.barang'])->get();
         return view('pesanan-produksi.index', compact('pesanan'));
     }
 
+    // Form buat pesanan produksi baru
     public function create()
     {
-        $users = User::all();
+        $barangs = Barang::all();
         $pelanggans = Pelanggan::all();
-        $produks = Barang::all(); // daftar produk
-        return view('pesanan-produksi.create', compact('users', 'pelanggans', 'produks'));
+        return view('pesanan-produksi.create', compact('barangs', 'pelanggans'));
     }
 
+    // Simpan pesanan produksi baru
     public function store(Request $request)
     {
-        $request->validate([
-            'Jumlah_Pesanan' => 'required|integer|min:1',
+        $validated = $request->validate([
             'Tanggal_Pesanan' => 'required|date',
-            'Status' => 'required|in:Menunggu,Diproses,Selesai',
-            'user_Id_User' => 'required|exists:users,Id_User',
-            'pelanggan_Id_Pelanggan' => 'required|exists:pelanggans,Id_Pelanggan',
-            'Surat_Perintah_Produksi' => 'nullable|string',
+            'pelanggan_Id_Pelanggan' => 'nullable|exists:pelanggan,Id_Pelanggan',
+            'barang' => 'required|array',
+            'barang.*.barang_Id_Bahan' => 'required|exists:barang,Id_Bahan',
+            'barang.*.Jumlah' => 'required|numeric|min:1',
         ]);
 
-        PesananProduksi::create([
-            'Jumlah_Pesanan' => $request->Jumlah_Pesanan,
-            'Tanggal_Pesanan' => $request->Tanggal_Pesanan,
-            'Status' => $request->Status,
-            'user_Id_User' => $request->user_Id_User,
-            'pelanggan_Id_Pelanggan' => $request->pelanggan_Id_Pelanggan,
-            'Surat_Perintah_Produksi' => $request->Surat_Perintah_Produksi,
+        $totalJumlah = collect($validated['barang'])->sum('Jumlah');
+
+        $last = PesananProduksi::latest('Id_Pesanan')->first();
+        $nomorPesanan = $last ? str_pad($last->Id_Pesanan + 1, 4, '0', STR_PAD_LEFT) : '0001';
+
+        $pesanan = PesananProduksi::create([
+            'Nomor_Pesanan' => $nomorPesanan,
+            'Jumlah_Pesanan' => $totalJumlah,
+            'Tanggal_Pesanan' => $validated['Tanggal_Pesanan'],
+            'Status' => 'pending', // default status
+            'user_Id_User' => Auth::id(),
+            'pelanggan_Id_Pelanggan' => $validated['pelanggan_Id_Pelanggan'] ?? null,
         ]);
 
-        return redirect()->route('pesanan-produksi.index')
-            ->with('success', 'Pesanan produksi berhasil ditambahkan.');
+        foreach($validated['barang'] as $b) {
+            DetailPesananProduksi::create([
+                'pesanan_produksi_Id_Pesanan' => $pesanan->Id_Pesanan,
+                'barang_Id_Bahan' => $b['barang_Id_Bahan'],
+                'Jumlah' => $b['Jumlah'],
+            ]);
+        }
+
+        return redirect()->route('pesanan_produksi.index')->with('success','Pesanan produksi berhasil dibuat!');
     }
 
-    // method lainnya tetap seperti sebelumnya...
+    // Form edit pesanan produksi
+    public function edit($id)
+    {
+        $pesanan = PesananProduksi::with('detail')->findOrFail($id);
+        $barangs = Barang::all();
+        $pelanggans = Pelanggan::all();
+        return view('pesanan-produksi.edit', compact('pesanan', 'barangs', 'pelanggans'));
+    }
 
+    // Update pesanan produksi
+    public function update(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'Tanggal_Pesanan' => 'required|date',
+            'pelanggan_Id_Pelanggan' => 'nullable|exists:pelanggan,Id_Pelanggan',
+            'barang' => 'required|array',
+            'barang.*.barang_Id_Bahan' => 'required|exists:barang,Id_Bahan',
+            'barang.*.Jumlah' => 'required|numeric|min:1',
+        ]);
+
+        $totalJumlah = collect($validated['barang'])->sum('Jumlah');
+
+        $pesanan = PesananProduksi::findOrFail($id);
+        $pesanan->update([
+            'Jumlah_Pesanan' => $totalJumlah,
+            'Tanggal_Pesanan' => $validated['Tanggal_Pesanan'],
+            'pelanggan_Id_Pelanggan' => $validated['pelanggan_Id_Pelanggan'] ?? null,
+            'user_Id_User' => Auth::id(),
+        ]);
+
+        DetailPesananProduksi::where('pesanan_produksi_Id_Pesanan', $id)->delete();
+
+        foreach($validated['barang'] as $b) {
+            DetailPesananProduksi::create([
+                'pesanan_produksi_Id_Pesanan' => $id,
+                'barang_Id_Bahan' => $b['barang_Id_Bahan'],
+                'Jumlah' => $b['Jumlah'],
+            ]);
+        }
+
+        return redirect()->route('pesanan_produksi.index')->with('success', 'Pesanan Produksi berhasil diperbarui!');
+    }
+
+    // Hapus pesanan produksi
+    public function destroy($id)
+    {
+        PesananProduksi::findOrFail($id)->delete();
+        return redirect()->route('pesanan_produksi.index')->with('success', 'Pesanan Produksi berhasil dihapus!');
+    }
+
+    // Halaman detail pesanan produksi
     public function show($id)
     {
-        $pesanan = PesananProduksi::with(['user', 'pelanggan'])->findOrFail($id);
+        $pesanan = PesananProduksi::with('detail.barang', 'pelanggan')->findOrFail($id);
         return view('pesanan-produksi.show', compact('pesanan'));
     }
 
-    public function edit($id)
+    // Toggle status pesanan produksi via action button
+    public function toggleStatus($id)
     {
         $pesanan = PesananProduksi::findOrFail($id);
-        $users = User::all();
-        $pelanggans = Pelanggan::all();
-        return view('pesanan-produksi.edit', compact('pesanan', 'users', 'pelanggans'));
-    }
 
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'Jumlah_Pesanan' => 'required|numeric',
-            'Status' => 'required|in:Menunggu,Diproses,Selesai',
-            'Tanggal_Pesanan' => 'required|date',
-            'user_Id_User' => 'required|exists:users,Id_User',
-            'pelanggan_Id_Pelanggan' => 'required|exists:pelanggans,Id_Pelanggan',
-            'Surat_Perintah_Produksi' => 'nullable|string',
-        ]);
+        if ($pesanan->Status === 'pending') {
+            $pesanan->Status = 'confirmed';
+        } elseif ($pesanan->Status === 'confirmed') {
+            $pesanan->Status = 'pending';
+        }
 
-        $pesanan = PesananProduksi::findOrFail($id);
-        $pesanan->update($request->all());
+        $pesanan->save();
 
-        return redirect()->route('pesananp-roduksi.index')->with('success', 'Pesanan produksi berhasil diperbarui.');
-    }
-
-    public function destroy($id)
-    {
-        $pesanan = PesananProduksi::findOrFail($id);
-        $pesanan->delete();
-
-        return redirect()->route('pesanan-produksi.index')->with('success', 'Pesanan produksi berhasil dihapus.');
+        return redirect()->route('pesanan_produksi.index')->with('success','Status pesanan diperbarui!');
     }
 }

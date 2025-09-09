@@ -2,114 +2,90 @@
 
 @section('content')
 <div class="container">
-    <h2>Add Inventory Item</h2>
+    {{-- Header --}}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Add Item</h2>
+        <a href="{{ route('inventory.index') }}" class="btn btn-secondary">
+            Back
+        </a>
+    </div>
 
+    {{-- Validation Errors --}}
     @if($errors->any())
-        <div class="alert alert-danger">
+        <div class="alert alert-danger mb-3">
             <ul class="mb-0">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
+                @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
                 @endforeach
             </ul>
         </div>
     @endif
 
-    <form action="{{ route('inventory.store') }}" method="POST" id="inventoryForm">
+    <form action="{{ route('inventory.store') }}" method="POST">
         @csrf
 
+        {{-- Item Name --}}
         <div class="mb-3">
-            <label class="form-label">Nama Bahan / Produk</label>
-            <input type="text" name="Nama_Bahan" class="form-control" value="{{ old('Nama_Bahan') }}" required>
+            <label class="form-label">Item Name</label>
+            <input type="text" name="Nama_Bahan" class="form-control" required>
         </div>
 
+        {{-- Stock --}}
         <div class="mb-3">
-            <label class="form-label">Jenis</label>
+            <label class="form-label">Stock</label>
+            <input type="number" name="Stok" class="form-control" required min="0">
+        </div>
+
+        {{-- Type --}}
+        <div class="mb-3">
+            <label class="form-label">Type</label>
             <select name="Jenis" class="form-select" required>
-                <option value="">-- Pilih Jenis --</option>
-                <option value="Bahan_Baku" {{ old('Jenis')=='Bahan_Baku' ? 'selected' : '' }}>Bahan Baku</option>
-                <option value="Produk" {{ old('Jenis')=='Produk' ? 'selected' : '' }}>Produk Jadi</option>
+                <option value="">-- Select Type --</option>
+                <option value="Bahan_Baku">Raw Material</option>
+                <option value="Produk">Finished Product</option>
             </select>
         </div>
 
+        {{-- Category --}}
         <div class="mb-3">
-            <label class="form-label">Kategori</label>
+            <label class="form-label">Category</label>
             <select name="kategori_Id_Kategori" class="form-select" required>
-                <option value="">-- Pilih Kategori --</option>
+                <option value="">-- Select Category --</option>
                 @foreach($kategori as $k)
-                    <option value="{{ $k->Id_Kategori }}" {{ old('kategori_Id_Kategori') == $k->Id_Kategori ? 'selected' : '' }}>
-                        {{ $k->Nama_Kategori }}
-                    </option>
+                    <option value="{{ $k->Id_Kategori }}">{{ $k->Nama_Kategori }}</option>
                 @endforeach
             </select>
         </div>
 
+        {{-- Unit --}}
         <div class="mb-3">
-            <label class="form-label">Stok Saat Ini</label>
-            <input type="number" name="Stok" class="form-control" value="{{ old('Stok',0) }}" min="0" required>
+            <label class="form-label">Unit</label>
+            <select name="Unit" class="form-select" required>
+                <option value="">-- Select Unit --</option>
+                <option value="drum">Drum</option>
+                <option value="pcs">Pcs</option>
+                <option value="karung">Bag</option>
+            </select>
         </div>
 
+        {{-- Weight per Unit --}}
         <div class="mb-3">
-            <label class="form-label">Reorder Point</label>
-            <input type="number" name="Reorder_Point" class="form-control" value="{{ old('Reorder_Point',100) }}" min="1" required>
+            <label class="form-label">Weight per Unit</label>
+            <input type="number" step="0.01" name="Berat" class="form-control" required>
         </div>
 
-        <h5>EOQ Calculation</h5>
-
+        {{-- Fixed Unit --}}
         <div class="mb-3">
-            <label class="form-label">Demand Tahunan (D)</label>
-            <input type="number" id="demand" class="form-control" value="{{ old('D',0) }}">
+            <label class="form-label">Unit Type</label>
+            <input type="text" name="Satuan" class="form-control" value="kg/liter" readonly>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Biaya Pemesanan per Order (S)</label>
-            <input type="number" id="sCost" class="form-control" value="{{ old('S',0) }}">
+        {{-- Action Buttons --}}
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save me-2"></i> Save Item
+            </button>
         </div>
-
-        <div class="mb-3">
-            <label class="form-label">Biaya Penyimpanan per Unit (H)</label>
-            <input type="number" id="hCost" class="form-control" value="{{ old('H',0) }}">
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">EOQ (otomatis)</label>
-            <input type="number" name="EOQ" id="eoq" class="form-control" readonly>
-        </div>
-
-        <input type="hidden" name="Status" id="status" value="">
-
-        <button type="submit" class="btn btn-primary">Save</button>
     </form>
 </div>
 @endsection
-
-@push('scripts')
-<script>
-    function calculateEOQ() {
-        let D = parseFloat(document.getElementById('demand').value) || 0;
-        let S = parseFloat(document.getElementById('sCost').value) || 0;
-        let H = parseFloat(document.getElementById('hCost').value) || 1; // jangan 0
-        let eoq = Math.sqrt((2 * D * S)/H);
-        document.getElementById('eoq').value = Math.round(eoq);
-    }
-
-    function updateStatus() {
-        let stok = parseFloat(document.querySelector('input[name="Stok"]').value) || 0;
-        let reorder = parseFloat(document.querySelector('input[name="Reorder_Point"]').value) || 100;
-        let statusField = document.getElementById('status');
-        if(stok <= reorder/2) statusField.value = 'Critical Low';
-        else if(stok < reorder) statusField.value = 'Below Reorder Point';
-        else statusField.value = 'In Stock';
-    }
-
-    document.getElementById('demand').addEventListener('input', calculateEOQ);
-    document.getElementById('sCost').addEventListener('input', calculateEOQ);
-    document.getElementById('hCost').addEventListener('input', calculateEOQ);
-
-    document.querySelector('input[name="Stok"]').addEventListener('input', updateStatus);
-    document.querySelector('input[name="Reorder_Point"]').addEventListener('input', updateStatus);
-
-    // inisialisasi
-    calculateEOQ();
-    updateStatus();
-</script>
-@endpush

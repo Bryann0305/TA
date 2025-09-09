@@ -11,7 +11,7 @@ class BillOfMaterial extends Model
 
     protected $table = 'bill_of_material';
     protected $primaryKey = 'Id_bill_of_material';
-    public $timestamps = true;
+    public $timestamps = false;
     public $incrementing = true;
     protected $keyType = 'int';
 
@@ -31,15 +31,15 @@ class BillOfMaterial extends Model
     }
 
     // Relasi many-to-many ke Barang langsung
-    public function barang()
+    public function barangs()  // ubah dari 'barang' menjadi 'barangs'
 {
     return $this->belongsToMany(
         Barang::class,
         'barang_has_bill_of_material',
         'bill_of_material_Id_bill_of_material',
         'barang_Id_Bahan'
-    );}
-
+    )->withPivot('Jumlah_Bahan'); // supaya bisa akses jumlah bahan di pivot
+}
     // Relasi ke tabel Produksi
     public function produksi()
     {

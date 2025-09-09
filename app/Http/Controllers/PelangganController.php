@@ -7,53 +7,93 @@ use Illuminate\Http\Request;
 
 class PelangganController extends Controller
 {
+    /**
+     * Tampilkan semua pelanggan
+     */
     public function index()
     {
-        $pelanggan = Pelanggan::all();
-        return view('pelanggan.index', compact('pelanggan'));
+        $pelanggans = Pelanggan::all();
+        return view('pelanggan.index', compact('pelanggans'));
     }
 
+    /**
+     * Form tambah pelanggan
+     */
     public function create()
     {
         return view('pelanggan.create');
     }
 
+    /**
+     * Simpan pelanggan baru
+     */
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'Nama_Pelanggan' => 'required|string|max:255',
-            'Alamat' => 'required|string',
-            'Nomor_Telp' => 'required|string|max:20',
+            'Alamat'        => 'required|string',
+            'Nomor_Telp'    => 'required|string|max:20',
+            'latitude'      => 'nullable|numeric',
+            'longitude'     => 'nullable|numeric',
         ]);
 
-        Pelanggan::create($request->only('Nama_Pelanggan', 'Alamat', 'Nomor_Telp'));
+        // Default status aktif
+        $validated['status'] = 'active';
 
-        return redirect()->route('pelanggan.index')->with('success', 'Pelanggan berhasil ditambahkan.');
+        Pelanggan::create($validated);
+
+        return redirect()->route('pelanggan.index')
+            ->with('success', 'Pelanggan berhasil ditambahkan.');
     }
 
-    public function edit($id)
+    /**
+     * Detail pelanggan
+     */
+    public function show(int $id)
+    {
+        $pelanggan = Pelanggan::findOrFail($id);
+        return view('pelanggan.show', compact('pelanggan'));
+    }
+
+    /**
+     * Form edit pelanggan
+     */
+    public function edit(int $id)
     {
         $pelanggan = Pelanggan::findOrFail($id);
         return view('pelanggan.edit', compact('pelanggan'));
     }
 
-    public function update(Request $request, $id)
+    /**
+     * Update pelanggan
+     */
+    public function update(Request $request, int $id)
     {
-        $request->validate([
+        $validated = $request->validate([
             'Nama_Pelanggan' => 'required|string|max:255',
-            'Alamat' => 'required|string',
-            'Nomor_Telp' => 'required|string|max:20',
+            'Alamat'        => 'required|string',
+            'Nomor_Telp'    => 'required|string|max:20',
         ]);
 
         $pelanggan = Pelanggan::findOrFail($id);
-        $pelanggan->update($request->only('Nama_Pelanggan', 'Alamat', 'Nomor_Telp'));
+        $pelanggan->update($validated);
 
-        return redirect()->route('pelanggan.index')->with('success', 'Pelanggan berhasil diperbarui.');
+        return redirect()->route('pelanggan.index')
+            ->with('success', 'Pelanggan berhasil diperbarui.');
     }
 
-    public function destroy($id)
+    /**
+     * Nonaktifkan pelanggan
+     */
+    public function deactivate(int $id)
     {
-        Pelanggan::findOrFail($id)->delete();
-        return redirect()->route('pelanggan.index')->with('success', 'Pelanggan berhasil dihapus.');
+        $pelanggan = Pelanggan::findOrFail($id);
+
+        // Ubah status menjadi inactive
+        $pelanggan->status = 'inactive';
+        $pelanggan->save();
+
+        return redirect()->route('pelanggan.index')
+            ->with('success', 'Pelanggan berhasil dinonaktifkan.');
     }
 }

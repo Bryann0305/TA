@@ -2,31 +2,81 @@
 
 @section('content')
 <div class="container">
-    <h2 class="mb-4">📦 Inventory Item Details</h2>
+    {{-- Header --}}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Detail Item</h2>
+        <a href="{{ route('inventory.index') }}" class="btn btn-secondary">Back</a>
+    </div>
 
-    <div class="card p-4">
-        <h4>{{ $item->Nama_Bahan }} <small class="text-muted">({{ $item->Id_Bahan }})</small></h4>
-        <p>Category: <strong>{{ $item->kategori->Nama_Kategori ?? 'Unknown' }}</strong></p>
-        <p>Stock: <strong>{{ $item->Stok }} unit</strong></p>
-        <p>Reorder Point: <strong>{{ $item->Reorder_Point }} unit</strong></p>
-        <p>EOQ (Economic Order Quantity): <strong>{{ $item->EOQ }} unit</strong></p>
-        
-        @php
-            if ($item->Stok <= $item->Reorder_Point / 2) {
-                $status = '⚠️ Critical Low Stock';
-                $color = 'danger';
-            } elseif ($item->Stok < $item->Reorder_Point) {
-                $status = '🔸 Below Reorder Point';
-                $color = 'warning';
-            } else {
-                $status = '✅ In Stock';
-                $color = 'success';
-            }
-        @endphp
-        <p>Status: <span class="badge bg-{{ $color }}">{{ $status }}</span></p>
+    <div class="card mb-3 shadow-sm">
+        <div class="card-body">
+            <table class="table table-borderless">
+                <tr>
+                    <th>Item Name</th>
+                    <td>{{ $item->Nama_Bahan }}</td>
+                </tr>
+                <tr>
+                    <th>Type</th>
+                    <td>{{ $item->Jenis }}</td>
+                </tr>
+                <tr>
+                    <th>Category</th>
+                    <td>{{ $item->kategori->Nama_Kategori ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <th>Stock</th>
+                    <td>{{ $item->Stok }}</td>
+                </tr>
+                <tr>
+                    <th>Weight per Unit</th>
+                    <td>
+                        @if($item->Berat && $item->Satuan)
+                            {{ $item->Berat }} {{ $item->Satuan }}
+                        @else
+                            -
+                        @endif
+                    </td>
+                </tr>
+                <tr>
+                    <th>Total Weight</th>
+                    <td>
+                        @if($item->Berat && $item->Satuan)
+                            {{ $item->Berat * $item->Stok }} {{ $item->Satuan }}
+                        @else
+                            -
+                        @endif
+                    </td>
+                </tr>
+                <tr>
+                    <th>EOQ</th>
+                    <td>{{ $item->EOQ ?? 'Belum dihitung' }}</td>
+                </tr>
+                <tr>
+                    <th>ROP</th>
+                    <td>{{ $item->ROP ?? 'Belum dihitung' }}</td>
+                </tr>
+                <tr>
+                    <th>Status</th>
+                    <td>
+                        @php
+                            [$statusText, $badge] = match ($item->Status) {
+                                'Critical Low' => ['Critical Low', 'danger'],
+                                'Below Reorder Point' => ['Below Reorder Point', 'warning'],
+                                default => ['In Stock', 'success'],
+                            };
+                        @endphp
+                        <span class="badge bg-{{ $badge }}">{{ $statusText }}</span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
 
-        <a href="{{ route('inventory.edit', $item->id) }}" class="btn btn-warning">Edit</a>
-        <a href="{{ route('inventory.index') }}" class="btn btn-secondary">Back to List</a>
+    {{-- Action Button --}}
+    <div class="d-flex gap-2">
+        <a href="{{ route('inventory.edit', $item->Id_Bahan) }}" class="btn btn-warning">
+            <i class="fas fa-edit me-1"></i> Edit
+        </a>
     </div>
 </div>
 @endsection
