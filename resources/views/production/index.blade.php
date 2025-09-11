@@ -82,7 +82,7 @@
                         <h5>{{ $p->productionOrder->Nama_Produksi ?? 'Produksi #' . $p->Id_Produksi }}</h5>
                         <p>Status: <span class="badge bg-primary">{{ ucfirst($p->Status) }}</span></p>
                         <p>Tanggal Produksi: {{ $p->Tanggal_Produksi }}</p>
-                        <p>Penjadwalan: {{ $p->penjadwalan->Nama_Jadwal ?? '-' }}</p>
+                        <!-- <p>Penjadwalan: {{ $p->penjadwalan->Nama_Jadwal ?? '-' }}</p>
                         @php
                             $target = $p->productionOrder->pesananProduksi->Jumlah_Pesanan ?? 0;
                             $progress = $target > 0 ? ($p->Jumlah_Berhasil / $target) * 100 : 0;
@@ -91,7 +91,7 @@
                             <div class="progress-bar" role="progressbar" style="width: {{ $progress }}%">
                                 {{ number_format($progress,0) }}%
                             </div>
-                        </div>
+                        </div> -->
                         {{-- BOM & Barang --}}
                         @if($p->details->count() > 0)
                             <ul>
@@ -105,6 +105,11 @@
                             </ul>
                         @endif
                         <a href="{{ route('production.show', $p->Id_Produksi) }}" class="btn btn-sm btn-info">Detail</a>
+                        <form action="{{ route('production.complete', $p->Id_Produksi) }}" method="POST" class="d-inline">
+                            @csrf
+                            <input type="hidden" name="Jumlah_Berhasil" value="{{ $p->Jumlah_Berhasil ?? 0 }}">
+                            <button type="submit" class="btn btn-sm btn-success">Complete</button>
+                        </form>
                     </div>
                 </div>
             @empty

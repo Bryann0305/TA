@@ -94,7 +94,7 @@
             </li>
 
             {{-- Customer --}}
-            @if($role === 'admin' || $role === 'pembelian')
+            @if($role === 'admin' || $role === 'manajer_produksi')
             <li class="nav-item">
                 <a href="{{ route('pelanggan.index') }}" class="nav-link {{ Request::routeIs('pelanggan.*') ? 'active' : '' }}">
                     <i class="bi bi-people-fill me-2"></i> Customer
@@ -112,14 +112,16 @@
             @endif
 
             {{-- Order --}}
+            @if($role === 'admin' || $role === 'manajer_produksi')
             <li class="nav-item">
                 <a href="{{ route('pesanan_produksi.index') }}" class="nav-link {{ Request::routeIs('pesanan_produksi.*') ? 'active' : '' }}">
                     <i class="bi bi-list-check me-2"></i> Order
                 </a>
             </li>
+            @endif
 
             {{-- Inventory --}}
-            @if($role === 'admin' || $role === 'gudang')
+            @if($role === 'admin' || $role === 'gudang' || $role === 'pembelian' || $role === 'manajer_produksi')
             <li class="nav-item">
                 <a href="{{ route('inventory.index') }}" class="nav-link {{ Request::routeIs('inventory.*') ? 'active' : '' }}">
                     <i class="bi bi-box-seam me-2"></i> Inventory
@@ -137,14 +139,14 @@
             @endif
 
             {{-- Procurement --}}
-            @if($role === 'admin' || $role === 'manajer_produksi')
+            @if($role === 'admin' || $role === 'pembelian')
             <li class="nav-item">
                 <a href="{{ route('procurement.index') }}" class="nav-link {{ Request::routeIs('procurement.*') ? 'active' : '' }}">
                     <i class="bi bi-cart-plus me-2"></i> Procurement
                 </a>
             </li>
             @endif
-            
+
              {{-- Production Order / SPP --}}
             @if($role === 'admin' || $role === 'manajer_produksi')
             <li class="nav-item">
@@ -155,7 +157,7 @@
             @endif
 
             {{-- Production --}}
-            @if($role === 'admin' || $role === 'pembelian')
+            @if($role === 'admin' || $role === 'manajer_produksi')
             <li class="nav-item">
                 <a href="{{ route('production.index') }}" class="nav-link {{ Request::routeIs('production.*') ? 'active' : '' }}">
                     <i class="bi bi-hammer me-2"></i> Production
@@ -164,7 +166,7 @@
             @endif
 
             {{-- Reports --}}
-            @if($role === 'admin' || $role === 'manajer_produksi')
+            @if($role === 'admin' || $role === 'manajer_produksi' || $role === 'pembelian' || $role === 'gudang')
             <li class="nav-item">
                 <a href="{{ route('reports.index') }}" class="nav-link {{ Request::routeIs('reports.*') ? 'active' : '' }}">
                     <i class="bi bi-graph-up me-2"></i> Reports

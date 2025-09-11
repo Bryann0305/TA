@@ -53,7 +53,7 @@
                                     <i class="fas fa-edit"></i>
                                 </a>
 
-                                {{-- Deactivate Button --}}
+                                {{-- Deactivate / Activate Button --}}
                                 @if($p->status === 'active')
                                 <form action="{{ route('pelanggan.deactivate', $p->Id_Pelanggan) }}" 
                                       method="POST" 
@@ -63,6 +63,17 @@
                                     @method('PATCH')
                                     <button class="btn btn-sm btn-secondary" title="Deactivate">
                                         <i class="fas fa-user-slash"></i>
+                                    </button>
+                                </form>
+                                @else
+                                <form action="{{ route('pelanggan.toggle-status', $p->Id_Pelanggan) }}" 
+                                      method="POST" 
+                                      onsubmit="return confirm('Activate this customer?');" 
+                                      class="d-inline">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button class="btn btn-sm btn-success" title="Activate">
+                                        <i class="fas fa-user-check"></i>
                                     </button>
                                 </form>
                                 @endif

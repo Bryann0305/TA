@@ -32,7 +32,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
     // Inventory Section (Roles: admin, gudang)
-    Route::middleware('Role:admin,gudang')->group(function () {
+    Route::middleware('Role:admin,gudang,pembelian,manajer_produksi')->group(function () {
         Route::resource('inventory', InventoryController::class)->names([
             'index' => 'inventory.index',
             'create' => 'inventory.create',
@@ -51,15 +51,15 @@ Route::prefix('production')->group(function(){
     Route::get('/create', [ProductionController::class,'create'])->name('production.create');
     Route::post('/store', [ProductionController::class,'store'])->name('production.store');
     Route::get('/{id}', [ProductionController::class,'show'])->name('production.show');
-    Route::post('/{id}/complete', [ProductionController::class,'updateStatus'])->name('production.complete');
+    Route::post('/{id}/complete', [ProductionController::class,'complete'])->name('production.complete');
     Route::get('production/{id}/approve', [ProductionController::class, 'approve'])->name('production.approve');
-    Route::post('/{id}/update-hasil', [ProduksiController::class, 'updateHasil'])->name('produksi.updateHasil');
+    Route::post('/{id}/update-hasil', [ProductionController::class, 'updateHasil'])->name('produksi.updateHasil');
 });
 
 
 
     // Pelanggan Section (Roles: admin, pembelian)
-    Route::middleware('Role:admin,pembelian')->prefix('pelanggan')->name('pelanggan.')->group(function () {
+    Route::middleware('Role:admin,manajer_produksi')->prefix('pelanggan')->name('pelanggan.')->group(function () {
         Route::get('/', [PelangganController::class, 'index'])->name('index');
         Route::get('/create', [PelangganController::class, 'create'])->name('create');
         Route::post('/', [PelangganController::class, 'store'])->name('store');
@@ -87,8 +87,8 @@ Route::prefix('production')->group(function(){
 
 
 
-    // Supplier Section (Roles: admin, manajer_produksi)
-    Route::middleware('Role:admin,manajer_produksi')->prefix('supplier')->name('supplier.')->group(function () {
+    // Supplier Section (Roles: admin, pembelian)
+    Route::middleware('Role:admin,pembelian')->prefix('supplier')->name('supplier.')->group(function () {
         Route::get('/', [SupplierController::class, 'index'])->name('index');
         Route::get('/create', [SupplierController::class, 'create'])->name('create');
         Route::post('/', [SupplierController::class, 'store'])->name('store');
@@ -100,8 +100,8 @@ Route::prefix('production')->group(function(){
         Route::patch('/{id}/deactivate', [SupplierController::class, 'deactivate'])->name('deactivate');
     });
 
-    // Gudang Section (Roles: admin, pembelian)
-    Route::middleware('Role:admin,pembelian')->prefix('gudang')->name('gudang.')->group(function () {
+    // Gudang Section (Roles: admin, gudang)
+    Route::middleware('Role:admin,gudang')->prefix('gudang')->name('gudang.')->group(function () {
         Route::get('/', [GudangController::class, 'index'])->name('index');
         Route::get('/create', [GudangController::class, 'create'])->name('create');
         Route::post('/', [GudangController::class, 'store'])->name('store');
@@ -172,5 +172,5 @@ Route::middleware('auth', 'Role:admin,manajer_produksi')
     // Reports & Settings
     Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
-    Route::middleware('Role:admin')->post('/settings/update', [SettingsController::class, 'update'])->name('settings.update');
+    Route::middleware('Role:admin,pembelian,gudang,manajer_produksi')->post('/settings/update', [SettingsController::class, 'update'])->name('settings.update');
 });

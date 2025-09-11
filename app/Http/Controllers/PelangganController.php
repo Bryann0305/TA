@@ -96,4 +96,18 @@ class PelangganController extends Controller
         return redirect()->route('pelanggan.index')
             ->with('success', 'Pelanggan berhasil dinonaktifkan.');
     }
+
+    /**
+     * Toggle status aktif/inaktif pelanggan
+     */
+    public function toggleStatus(int $id)
+    {
+        $pelanggan = Pelanggan::findOrFail($id);
+
+        $pelanggan->status = $pelanggan->status === 'active' ? 'inactive' : 'active';
+        $pelanggan->save();
+
+        return redirect()->route('pelanggan.index')
+            ->with('success', 'Status pelanggan berhasil diperbarui.');
+    }
 }
