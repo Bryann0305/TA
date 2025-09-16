@@ -46,11 +46,11 @@
                         @if($supplier->Status === 'Aktif')
                             <span class="badge bg-success">Active</span>
                         @elseif($supplier->Status === 'Non Aktif')
-                            <span class="badge bg-danger">Inactive</span>
+                            <span class="badge bg-secondary">Inactive</span>
                         @elseif($supplier->Status === 'Pending')
                             <span class="badge bg-warning text-dark">Pending</span>
                         @else
-                            <span class="badge bg-secondary">{{ $supplier->Status }}</span>
+                            <span class="badge bg-light text-dark">{{ $supplier->Status }}</span>
                         @endif
                     </td>
                     <td>{{ $supplier->keterangan ?? '-' }}</td>
@@ -79,7 +79,7 @@
 
                             {{-- Deactivate --}}
                             @if($supplier->Status === 'Aktif')
-                                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deactivateModal{{ $supplier->Id_Supplier }}">
+                                <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#deactivateModal{{ $supplier->Id_Supplier }}">
                                     <i class="fas fa-ban"></i>
                                 </button>
                             @endif
@@ -114,8 +114,8 @@
                                     </div>
                                 </div>
                                 <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="submit" class="btn btn-danger">Deactivate</button>
+                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-secondary">Deactivate</button>
                                 </div>
                             </div>
                         </form>

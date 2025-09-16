@@ -14,7 +14,7 @@ class DetailPembelian extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'Harga_Keseluruhan', 'Jumlah', 'Keterangan', 'pembelian_Id_Pembelian', 'gudang_Id_Gudang', 'bahan_baku_Id_Bahan'
+        'Harga_Keseluruhan', 'Jumlah', 'Keterangan', 'pembelian_Id_Pembelian', 'gudang_Id_Gudang', 'bahan_baku_Id_Bahan','Status_Penerimaan',
     ];
 
     public function pembelian()

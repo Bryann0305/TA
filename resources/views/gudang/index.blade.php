@@ -35,7 +35,7 @@
                         <td></td>
                         <td>{{ $g->Nama_Gudang }}</td>
                         <td>{{ $g->alamat ?? '-' }}</td>
-                        <td>{{ $g->Kapasitas }}</td>
+                        <td class="text-end">{{ number_format($g->Kapasitas, 0, ',', '.') }}</td>
                         <td style="white-space: nowrap;">
                             <div class="d-flex justify-content-center gap-1 flex-nowrap">
                                 {{-- View --}}
@@ -78,7 +78,8 @@
             responsive: true,
             autoWidth: false,
             columnDefs: [
-                { targets: 0, orderable: false, searchable: false }
+                { targets: 0, orderable: false, searchable: false },
+                { targets: 3, className: 'text-end' } // align capacity column right
             ],
             order: [[1, 'asc']],
             language: {

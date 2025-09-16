@@ -5,8 +5,8 @@
 
     {{-- Header --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Add Production</h2>
-        <a href="{{ route('production.index') }}" class="btn btn-secondary">Back</a>
+        <h2>Edit Production</h2>
+        <a href="{{ route('production.index', ['tab' => request('tab', 'planned')]) }}" class="btn btn-secondary">Back</a>
     </div>
 
     {{-- Validation Errors --}}
@@ -27,8 +27,12 @@
         <div class="alert alert-danger mb-3">{{ session('error') }}</div>
     @endif
 
-    <form action="{{ route('production.store') }}" method="POST">
+    <form action="{{ route('production.update', $produksi->Id_Produksi) }}" method="POST">
         @csrf
+        @method('PUT')
+
+        {{-- Hidden input untuk tab --}}
+        <input type="hidden" name="tab" value="{{ request('tab', 'planned') }}">
 
         {{-- Pilih Surat Perintah Produksi --}}
         <div class="mb-3">
@@ -37,9 +41,10 @@
                 <option value="">-- Pilih Surat Perintah Produksi --</option>
                 @foreach($orders as $order)
                     <option value="{{ $order->id }}" 
-                        data-barang='@json(optional($order->pesananProduksi)->detail->map(function($d){
+                        data-barang='@json(optional($order->pesananProduksi->detail ?? collect([]))->map(function($d){
                             return ["Nama_Bahan" => $d->barang->Nama_Bahan ?? "-", "Jumlah" => $d->Jumlah ?? 0];
-                        }) ?? [])'>
+                        }))'
+                        {{ $produksi->production_order_id == $order->id ? 'selected' : '' }}>
                         {{ $order->Nama_Produksi ?? 'Production Order #' . $order->id }}
                     </option>
                 @endforeach
@@ -52,48 +57,46 @@
             <ul id="order-barang-list" class="list-group list-group-flush"></ul>
         </div>
 
-        {{-- Pilih Produk & BOM --}}
-        <h5>Pilih Produk & BOM</h5>
-        <table class="table table-bordered align-middle" id="produk-bom-table">
+        {{-- Tabel BOM --}}
+        <h5 class="mt-4">Pilih BOM & Jumlah</h5>
+        <table class="table table-bordered align-middle" id="bom-table">
             <thead class="table-light">
                 <tr>
-                    <th>Produk</th>
                     <th>BOM</th>
-                    <th>Jumlah</th>
-                    <th style="width:100px;">Action</th>
+                    <th style="width: 150px;">Jumlah</th>
+                    <th style="width: 100px;">Action</th>
                 </tr>
             </thead>
             <tbody>
-                <tr class="produk-bom-row">
-                    <td>
-                        <select name="produk_ids[]" class="form-select" required>
-                            <option value="">-- Pilih Produk --</option>
-                            @foreach($barangs as $barang)
-                                <option value="{{ $barang->Id_Bahan }}">{{ $barang->Nama_Bahan }}</option>
-                            @endforeach
-                        </select>
-                    </td>
-                    <td>
-                        <select name="bom_ids[]" class="form-select" required>
-                            <option value="">-- Pilih BOM --</option>
-                            @foreach($boms as $bom)
-                                <option value="{{ $bom->Id_bill_of_material }}">{{ $bom->Nama_BOM ?? $bom->Nama_bill_of_material }}</option>
-                            @endforeach
-                        </select>
-                    </td>
-                    <td><input type="number" name="jumlah_bom[]" class="form-control" min="1" value="1" required></td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-dark btn-sm btn-remove">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </td>
-                </tr>
+                @foreach($produksi->details->groupBy('bill_of_material_id') as $bomId => $details)
+                    <tr class="bom-row">
+                        <td>
+                            <select name="bom_ids[]" class="form-select" required>
+                                <option value="">-- Pilih BOM --</option>
+                                @foreach($boms as $bom)
+                                    <option value="{{ $bom->Id_bill_of_material }}" {{ $bom->Id_bill_of_material == $bomId ? 'selected' : '' }}>
+                                        {{ $bom->Nama_BOM ?? $bom->Nama_bill_of_material }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </td>
+                        <td>
+                            <input type="number" name="jumlah_bom[]" class="form-control" min="1" 
+                                   value="{{ $details->sum('jumlah') }}" required>
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-dark btn-sm btn-remove">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                @endforeach
 
-                {{-- Tombol Add --}}
+                {{-- Baris tombol Add --}}
                 <tr>
-                    <td colspan="4" class="text-center">
-                        <button type="button" id="btn-add-produk-bom" class="btn btn-warning btn-sm">
-                            <i class="bi bi-plus me-1"></i> Add Produk & BOM
+                    <td colspan="3" class="text-center">
+                        <button type="button" id="btn-add-bom" class="btn btn-warning btn-sm">
+                            <i class="bi bi-plus me-1"></i> Add BOM
                         </button>
                     </td>
                 </tr>
@@ -102,15 +105,12 @@
 
         {{-- Submit --}}
         <button type="submit" class="btn btn-primary">
-            <i class="bi bi-save me-1"></i> Buat Produksi
+            <i class="bi bi-save me-1"></i> Update Produksi
         </button>
     </form>
 </div>
 
 <script>
-let bomIndex = 1;
-
-// Tampilkan detail barang pesanan
 function showOrderDetail(select) {
     const selected = select.options[select.selectedIndex];
     const barangList = document.getElementById('order-barang-list');
@@ -135,22 +135,14 @@ function showOrderDetail(select) {
     }
 }
 
-// Tambah row Produk & BOM
-document.getElementById('btn-add-produk-bom').addEventListener('click', function(){
-    const tbody = document.querySelector('#produk-bom-table tbody');
-    const addRow = document.querySelector('#btn-add-produk-bom').closest('tr');
+// Tambah row BOM baru
+document.getElementById('btn-add-bom').addEventListener('click', function() {
+    const tbody = document.querySelector('#bom-table tbody');
+    const addRow = document.querySelector('#btn-add-bom').closest('tr');
 
     const row = document.createElement('tr');
-    row.classList.add('produk-bom-row');
+    row.classList.add('bom-row');
     row.innerHTML = `
-        <td>
-            <select name="produk_ids[]" class="form-select" required>
-                <option value="">-- Pilih Produk --</option>
-                @foreach($barangs as $barang)
-                    <option value="{{ $barang->Id_Bahan }}">{{ $barang->Nama_Bahan }}</option>
-                @endforeach
-            </select>
-        </td>
         <td>
             <select name="bom_ids[]" class="form-select" required>
                 <option value="">-- Pilih BOM --</option>
@@ -167,14 +159,19 @@ document.getElementById('btn-add-produk-bom').addEventListener('click', function
         </td>
     `;
     tbody.insertBefore(row, addRow);
-    bomIndex++;
 });
 
-// Remove row
+// Remove row BOM
 document.addEventListener('click', function(e){
     if(e.target && (e.target.classList.contains('btn-remove') || e.target.closest('.btn-remove'))){
-        e.target.closest('.produk-bom-row').remove();
+        e.target.closest('.bom-row').remove();
     }
+});
+
+// Tampilkan detail barang saat page load
+document.addEventListener('DOMContentLoaded', function(){
+    const select = document.getElementById('production_order_id');
+    if(select.value) showOrderDetail(select);
 });
 </script>
 @endsection

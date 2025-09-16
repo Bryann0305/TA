@@ -18,11 +18,11 @@
             <thead class="table-light">
                 <tr>
                     <th>ID</th>
+                    <th>Order Number</th>
                     <th>Production Name</th>
                     <th>Production Date</th>
-                    <th>Status</th>
-                    <th>Order Number</th>
                     <th>Schedule</th>
+                    <th>Status</th>
                     <th style="width: 200px;">Actions</th>
                 </tr>
             </thead>
@@ -30,27 +30,28 @@
                 @forelse($orders as $order)
                     <tr>
                         <td>{{ $order->id }}</td>
+                        <td>{{ $order->pesananProduksi->Nomor_Pesanan ?? '-' }}</td>
                         <td>{{ $order->Nama_Produksi }}</td>
-                        <td>{{ $order->Tanggal_Produksi ? \Carbon\Carbon::parse($order->Tanggal_Produksi)->format('d M Y') : '-' }}</td>
+                        <td>{{ $order->Tanggal_Produksi ? \Carbon\Carbon::parse($order->Tanggal_Produksi)->format('d M Y') : '-' }}</td>                        
+                        <td>
+                            @if($order->penjadwalan)
+                                {{ \Carbon\Carbon::parse($order->penjadwalan->Tanggal_Mulai)->format('d M Y') }} - 
+                                {{ \Carbon\Carbon::parse($order->penjadwalan->Tanggal_Selesai)->format('d M Y') }}
+                            @else
+                                Not Scheduled
+                            @endif
+                        </td>
                         <td>
                             @if($order->Status === 'pending')
                                 <span class="badge bg-warning text-dark">Pending</span>
                             @elseif($order->Status === 'confirmed')
-                                <span class="badge bg-primary">Confirmed</span>
+                                <span class="badge bg-success">Confirmed</span> {{-- ✅ Ubah jadi hijau --}}
                             @elseif($order->Status === 'in_progress')
                                 <span class="badge bg-info text-dark">In Progress</span>
                             @elseif($order->Status === 'completed')
                                 <span class="badge bg-success">Completed</span>
                             @elseif($order->Status === 'cancelled')
                                 <span class="badge bg-danger">Cancelled</span>
-                            @endif
-                        </td>
-                        <td>{{ $order->pesananProduksi->Nomor_Pesanan ?? '-' }}</td>
-                        <td>
-                            @if($order->penjadwalan)
-                                {{ $order->penjadwalan->Tanggal_Mulai }} - {{ $order->penjadwalan->Tanggal_Selesai }}
-                            @else
-                                Not Scheduled
                             @endif
                         </td>
                         <td style="white-space: nowrap;">

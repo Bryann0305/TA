@@ -27,6 +27,11 @@ class Barang extends Model
         'ROP' // ✅ perbaikan, jangan "Reorder_Point"
     ];
 
+    public function gudang()
+{
+    return $this->belongsTo(Gudang::class, 'gudang_Id_Gudang', 'Id_Gudang');
+}
+
     // Relasi ke Kategori
     public function kategori()
     {
@@ -49,4 +54,7 @@ class Barang extends Model
             'bill_of_material_Id_bill_of_material'
         )->withPivot('Jumlah_Bahan');
     }
+
+    
+
 }

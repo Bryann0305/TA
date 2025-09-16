@@ -34,6 +34,7 @@ class PesananProduksi extends Model
     {
         return $this->hasMany(DetailPesananProduksi::class, 'pesanan_produksi_Id_Pesanan', 'Id_Pesanan');
     }
+    
 
     public function user()
     {
@@ -47,6 +48,6 @@ class PesananProduksi extends Model
 
     public function productionOrder()
     {
-        return $this->hasOne(ProductionOrder::class, 'pesanan_produksi_id');
+        return $this->hasMany(ProductionOrder::class, 'pesanan_produksi_id', 'Id_Pesanan');
     }
 }

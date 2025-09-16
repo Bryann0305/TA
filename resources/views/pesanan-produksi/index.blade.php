@@ -48,7 +48,7 @@
                             @if($item->Status == 'pending')
                                 <span class="badge bg-warning text-dark">Pending</span>
                             @elseif($item->Status == 'confirmed')
-                                <span class="badge bg-primary">Confirmed</span>
+                                <span class="badge bg-success">Confirmed</span>
                             @elseif($item->Status == 'in_progress')
                                 <span class="badge bg-info text-dark">In Progress</span>
                             @elseif($item->Status == 'completed')

@@ -5,7 +5,7 @@
     {{-- Header --}}
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Detail Item</h2>
-        <a href="{{ route('inventory.index') }}" class="btn btn-secondary">Back</a>
+        <a href="{{ route('inventory.showGudang') }}" class="btn btn-secondary">Back</a>
     </div>
 
     <div class="card mb-3 shadow-sm">

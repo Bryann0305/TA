@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use App\Models\Barang;
+
 class Gudang extends Model
 {
     protected $table = 'gudang'; 
@@ -17,4 +19,15 @@ class Gudang extends Model
     {
         return $this->hasMany(DetailPembelian::class, 'gudang_Id_Gudang', 'Id_Gudang');
     }
+
+   public function inventories()
+{
+    return $this->hasMany(Barang::class, 'gudang_Id_Gudang', 'Id_Gudang');
+}
+
+public function barangs()
+{
+    return $this->hasMany(Barang::class, 'gudang_Id_Gudang', 'Id_Gudang');
+}
+
 }

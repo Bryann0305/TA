@@ -46,4 +46,6 @@ class Pembelian extends Model
     {
         return $this->hasMany(DetailPembelian::class, 'pembelian_Id_Pembelian', 'Id_Pembelian');
     }
+
+    
 }

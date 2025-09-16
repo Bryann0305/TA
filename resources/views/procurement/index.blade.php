@@ -4,7 +4,7 @@
 <div class="container">
     {{-- Header --}}
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Purchase Orders</h2>
+        <h2 class="fw-bold">Purchase Orders</h2>
         <a href="{{ route('procurement.create') }}" class="btn btn-primary">
             <i class="fas fa-plus me-1"></i> New Purchase Order
         </a>
@@ -14,16 +14,22 @@
 
     {{-- Flash Messages --}}
     @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
     @endif
 
     @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
     @endif
 
     {{-- Table --}}
-    <div class="table-responsive">
-        <table id="purchaseOrderTable" class="table table-bordered table-striped align-middle">
+    <div class="table-responsive shadow-sm rounded">
+        <table id="purchaseOrderTable" class="table table-bordered table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
                     <th>PO ID</th>
@@ -34,6 +40,7 @@
                     <th>Total Cost</th>
                     <th>Payment Method</th>
                     <th>Payment Status</th>
+                    <th>Receiving Status</th>
                     <th style="width: 200px;">Actions</th>
                 </tr>
             </thead>
@@ -46,7 +53,7 @@
                         @if($order->detailPembelian && $order->detailPembelian->count())
                             <ul class="mb-0 ps-3">
                                 @foreach($order->detailPembelian as $detail)
-                                    <li>{{ $detail->barang->Nama_Bahan ?? '-' }}</li>
+                                    <li>{{ $detail->barang->Nama_Bahan ?? '-' }} ({{ $detail->Jumlah }})</li>
                                 @endforeach
                             </ul>
                         @else
@@ -57,30 +64,59 @@
                     <td>{{ $order->Tanggal_Kedatangan ? $order->Tanggal_Kedatangan->format('d M Y') : '-' }}</td>
                     <td>Rp {{ number_format($order->Total_Biaya,0,',','.') }}</td>
                     <td>{{ $order->Metode_Pembayaran ?? '-' }}</td>
+
+                    {{-- Payment Status --}}
                     <td>
-                        @if($order->Status_Pembayaran === 'Pending')
-                            <span class="badge bg-warning text-dark">Pending</span>
-                        @elseif($order->Status_Pembayaran === 'Confirmed')
-                            <span class="badge bg-success text-white">Approved</span>
-                        @else
-                            <span class="badge bg-secondary">{{ $order->Status_Pembayaran }}</span>
-                        @endif
+                        <span class="badge 
+                            @if($order->Status_Pembayaran === 'Pending') bg-warning text-dark
+                            @elseif($order->Status_Pembayaran === 'Confirmed') bg-success
+                            @else bg-secondary @endif">
+                            {{ $order->Status_Pembayaran ?? '-' }}
+                        </span>
                     </td>
-                    <td style="white-space: nowrap;">
+
+                    {{-- Receiving Status --}}
+<td>
+    @php
+        $statuses = $order->detailPembelian->pluck('Status_Penerimaan')->unique();
+        if ($statuses->count() === 1) {
+            $receivingStatus = $statuses->first() === 'Diterima' ? 'Completed' : $statuses->first();
+        } elseif ($statuses->count() > 1) {
+            $receivingStatus = 'Partial';
+        } else {
+            $receivingStatus = '-';
+        }
+    @endphp
+
+    <span class="badge 
+        @if($receivingStatus === 'Pending') bg-warning text-dark
+        @elseif($receivingStatus === 'Completed') bg-success
+        @elseif($receivingStatus === 'Partial') bg-primary
+        @else bg-secondary @endif">
+        {{ $receivingStatus }}
+    </span>
+</td>
+
+
+                    {{-- Actions --}}
+                    <td>
                         <div class="d-flex justify-content-center gap-1 flex-nowrap">
                             {{-- View --}}
-                            <a href="{{ route('procurement.show', $order->Id_Pembelian) }}" class="btn btn-sm btn-info" title="View">
+                            <a href="{{ route('procurement.show', $order->Id_Pembelian) }}" 
+                               class="btn btn-sm btn-info" title="View">
                                 <i class="fas fa-eye"></i>
                             </a>
 
                             {{-- Edit --}}
-                            <a href="{{ route('procurement.edit', $order->Id_Pembelian) }}" class="btn btn-sm btn-warning" title="Edit">
+                            <a href="{{ route('procurement.edit', $order->Id_Pembelian) }}" 
+                               class="btn btn-sm btn-warning" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </a>
 
                             {{-- Approve Payment --}}
                             @if($order->Status_Pembayaran === 'Pending')
-                                <form action="{{ route('procurement.toggle_payment', $order->Id_Pembelian) }}" method="POST" class="d-inline">
+                                <form action="{{ route('procurement.toggle_payment', $order->Id_Pembelian) }}" 
+                                      method="POST" class="d-inline">
                                     @csrf
                                     @method('PATCH')
                                     <button type="submit" class="btn btn-sm btn-success" title="Approve Payment">
@@ -90,7 +126,9 @@
                             @endif
 
                             {{-- Delete --}}
-                            <form action="{{ route('procurement.destroy', $order->Id_Pembelian) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this purchase order?')">
+                            <form action="{{ route('procurement.destroy', $order->Id_Pembelian) }}" 
+                                  method="POST" class="d-inline"
+                                  onsubmit="return confirm('Are you sure you want to delete this purchase order?')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-dark" title="Delete">
@@ -102,7 +140,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="9" class="text-center text-muted">No purchase orders available.</td>
+                    <td colspan="10" class="text-center text-muted">No purchase orders available.</td>
                 </tr>
                 @endforelse
             </tbody>
@@ -118,6 +156,7 @@
             pageLength: 10,
             responsive: true,
             autoWidth: false,
+            order: [[0, 'desc']], 
             language: {
                 search: "_INPUT_",
                 searchPlaceholder: "Search purchase orders...",

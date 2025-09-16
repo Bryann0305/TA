@@ -1,3 +1,4 @@
+{{-- resources/views/production/index.blade.php --}}
 @extends('layouts.sidebar')
 
 @section('content')
@@ -5,7 +6,7 @@
     <h2><strong>Production Management</strong></h2>
     <p>Plan, schedule, and track production orders</p>
 
-    {{-- Flash messages --}}
+    {{-- Flash Messages --}}
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @elseif(session('error'))
@@ -13,148 +14,79 @@
     @endif
 
     {{-- Tabs --}}
-    <ul class="nav nav-tabs mb-3">
+    @php
+        $activeTab = request('tab', 'planned'); // ambil tab dari query parameter
+    @endphp
+    <ul class="nav nav-tabs mb-3" id="productionTab" role="tablist">
         <li class="nav-item">
-            <a class="nav-link active" data-bs-toggle="tab" href="#planned">Planned</a>
+            <a class="nav-link {{ $activeTab === 'planned' ? 'active' : '' }}" 
+               id="planned-tab" data-bs-toggle="tab" href="#planned" role="tab">
+               <i class="bi bi-calendar2-event me-1"></i> Planned
+            </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#current">Current</a>
+            <a class="nav-link {{ $activeTab === 'current' ? 'active' : '' }}" 
+               id="current-tab" data-bs-toggle="tab" href="#current" role="tab">
+               <i class="bi bi-play-circle me-1"></i> Current
+            </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#completed">Completed</a>
+            <a class="nav-link {{ $activeTab === 'completed' ? 'active' : '' }}" 
+               id="completed-tab" data-bs-toggle="tab" href="#completed" role="tab">
+               <i class="bi bi-check2-circle me-1"></i> Completed
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {{ $activeTab === 'all' ? 'active' : '' }}" 
+               id="all-tab" data-bs-toggle="tab" href="#all" role="tab">
+               <i class="bi bi-list-ul me-1"></i> All
+            </a>
         </li>
     </ul>
 
     <div class="tab-content">
-        {{-- PLANNED --}}
-        <div class="tab-pane fade show active" id="planned">
-            <div class="d-flex justify-content-between mb-3">
-                <span class="fw-semibold">Planned Production Orders</span>
-                <a href="{{ route('production.create') }}" class="btn btn-primary">New Production Order</a>
-            </div>
-
-            @forelse($produksiPlanned as $p)
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h5>{{ $p->productionOrder->Nama_Produksi ?? 'Produksi #' . $p->Id_Produksi }}</h5>
-                        <p>Status: <span class="badge bg-warning">{{ ucfirst($p->Status) }}</span></p>
-                        <p>Tanggal Produksi: {{ $p->Tanggal_Produksi }}</p>
-                        <p>Penjadwalan: {{ $p->penjadwalan->Nama_Jadwal ?? '-' }}</p>
-                        @php
-                            $target = $p->productionOrder->pesananProduksi->Jumlah_Pesanan ?? 0;
-                            $progress = $target > 0 ? ($p->Jumlah_Berhasil / $target) * 100 : 0;
-                        @endphp
-                        <div class="progress mb-2">
-                            <div class="progress-bar" role="progressbar" style="width: {{ $progress }}%">
-                                {{ number_format($progress,0) }}%
-                            </div>
-                        </div>
-                        {{-- BOM & Barang --}}
-                        @if($p->details->count() > 0)
-                            <ul>
-                                @foreach($p->details as $detail)
-                                    <li>
-                                        {{ $detail->billOfMaterial->Nama_BOM ?? '-' }} - 
-                                        {{ $detail->barang->Nama_Bahan ?? '-' }} 
-                                        ({{ $detail->jumlah }})
-                                    </li>
-                                @endforeach
-                            </ul>
-                        @endif
-                        <a href="{{ route('production.show', $p->Id_Produksi) }}" class="btn btn-sm btn-info">Detail</a>
-                        <a href="{{ route('production.approve', $p->Id_Produksi) }}" class="btn btn-sm btn-success">Approve</a>
-                    </div>
-                </div>
-            @empty
-                <p class="text-muted">Tidak ada produksi planned.</p>
-            @endforelse
+        {{-- Planned --}}
+        <div class="tab-pane fade {{ $activeTab === 'planned' ? 'show active' : '' }}" id="planned" role="tabpanel">
+            @include('production.partials.planned', ['planned' => $produksiPlanned])
         </div>
 
-        {{-- CURRENT --}}
-        <div class="tab-pane fade" id="current">
-            <div class="d-flex justify-content-between mb-3">
-                <span class="fw-semibold">Currently Running Production Orders</span>
-            </div>
-
-            @forelse($produksiCurrent as $p)
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h5>{{ $p->productionOrder->Nama_Produksi ?? 'Produksi #' . $p->Id_Produksi }}</h5>
-                        <p>Status: <span class="badge bg-primary">{{ ucfirst($p->Status) }}</span></p>
-                        <p>Tanggal Produksi: {{ $p->Tanggal_Produksi }}</p>
-                        <!-- <p>Penjadwalan: {{ $p->penjadwalan->Nama_Jadwal ?? '-' }}</p>
-                        @php
-                            $target = $p->productionOrder->pesananProduksi->Jumlah_Pesanan ?? 0;
-                            $progress = $target > 0 ? ($p->Jumlah_Berhasil / $target) * 100 : 0;
-                        @endphp
-                        <div class="progress mb-2">
-                            <div class="progress-bar" role="progressbar" style="width: {{ $progress }}%">
-                                {{ number_format($progress,0) }}%
-                            </div>
-                        </div> -->
-                        {{-- BOM & Barang --}}
-                        @if($p->details->count() > 0)
-                            <ul>
-                                @foreach($p->details as $detail)
-                                    <li>
-                                        {{ $detail->billOfMaterial->Nama_BOM ?? '-' }} - 
-                                        {{ $detail->barang->Nama_Bahan ?? '-' }} 
-                                        ({{ $detail->jumlah }})
-                                    </li>
-                                @endforeach
-                            </ul>
-                        @endif
-                        <a href="{{ route('production.show', $p->Id_Produksi) }}" class="btn btn-sm btn-info">Detail</a>
-                        <form action="{{ route('production.complete', $p->Id_Produksi) }}" method="POST" class="d-inline">
-                            @csrf
-                            <input type="hidden" name="Jumlah_Berhasil" value="{{ $p->Jumlah_Berhasil ?? 0 }}">
-                            <button type="submit" class="btn btn-sm btn-success">Complete</button>
-                        </form>
-                    </div>
-                </div>
-            @empty
-                <p class="text-muted">Tidak ada produksi sedang berjalan.</p>
-            @endforelse
+        {{-- Current --}}
+        <div class="tab-pane fade {{ $activeTab === 'current' ? 'show active' : '' }}" id="current" role="tabpanel">
+            @include('production.partials.current', ['current' => $produksiCurrent])
         </div>
 
-        {{-- COMPLETED --}}
-        <div class="tab-pane fade" id="completed">
-            @forelse($produksiCompleted as $p)
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h5>{{ $p->productionOrder->Nama_Produksi ?? 'Produksi #' . $p->Id_Produksi }}</h5>
-                        <p>Status: <span class="badge bg-success">{{ ucfirst($p->Status) }}</span></p>
-                        <p>Tanggal Produksi: {{ $p->Tanggal_Produksi }}</p>
-                        <p>Penjadwalan: {{ $p->penjadwalan->Nama_Jadwal ?? '-' }}</p>
-                        <p>Jumlah Berhasil: {{ $p->Jumlah_Berhasil }} | Jumlah Gagal: {{ $p->Jumlah_Gagal }}</p>
-                        @php
-                            $target = $p->productionOrder->pesananProduksi->Jumlah_Pesanan ?? 0;
-                            $progress = $target > 0 ? ($p->Jumlah_Berhasil / $target) * 100 : 0;
-                        @endphp
-                        <div class="progress mb-2">
-                            <div class="progress-bar" role="progressbar" style="width: {{ $progress }}%">
-                                {{ number_format($progress,0) }}%
-                            </div>
-                        </div>
-                        {{-- BOM & Barang --}}
-                        @if($p->details->count() > 0)
-                            <ul>
-                                @foreach($p->details as $detail)
-                                    <li>
-                                        {{ $detail->billOfMaterial->Nama_BOM ?? '-' }} - 
-                                        {{ $detail->barang->Nama_Bahan ?? '-' }} 
-                                        ({{ $detail->jumlah }})
-                                    </li>
-                                @endforeach
-                            </ul>
-                        @endif
-                        <a href="{{ route('production.show', $p->Id_Produksi) }}" class="btn btn-sm btn-info">Detail</a>
-                    </div>
-                </div>
-            @empty
-                <p class="text-muted">Tidak ada produksi selesai.</p>
-            @endforelse
+        {{-- Completed --}}
+        <div class="tab-pane fade {{ $activeTab === 'completed' ? 'show active' : '' }}" id="completed" role="tabpanel">
+            @include('production.partials.completed', ['completed' => $produksiCompleted])
+        </div>
+
+        {{-- All --}}
+        <div class="tab-pane fade {{ $activeTab === 'all' ? 'show active' : '' }}" id="all" role="tabpanel">
+            @php
+                $all = collect([]);
+                if(isset($produksiPlanned)) $all = $all->merge($produksiPlanned);
+                if(isset($produksiCurrent)) $all = $all->merge($produksiCurrent);
+                if(isset($produksiCompleted)) $all = $all->merge($produksiCompleted);
+            @endphp
+            @include('production.partials.all', ['all' => $all])
         </div>
     </div>
 </div>
+
+{{-- Script untuk mengingat tab aktif saat reload --}}
+@push('scripts')
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get('tab');
+    if(tab){
+        const triggerEl = document.querySelector(`#${tab}-tab`);
+        if(triggerEl){
+            const tabInstance = new bootstrap.Tab(triggerEl);
+            tabInstance.show();
+        }
+    }
+});
+</script>
+@endpush
 @endsection
