@@ -5,18 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+
 class ProduksiDetail extends Model
 {
     use HasFactory;
 
     protected $table = 'produksi_detail';
     protected $fillable = [
-    'produksi_id',
-    'bill_of_material_id',
-    'barang_id',
-    'jumlah',
-    'status'
-];
+        'produksi_id',
+        'bill_of_material_id',
+        'barang_id',
+        'jumlah',
+        'status'
+    ];
 
     public $timestamps = false;
 

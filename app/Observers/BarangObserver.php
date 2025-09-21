@@ -14,16 +14,21 @@ class BarangObserver
 
     private function calculateEOQandROP(Barang $b)
     {
-        // Hitung permintaan tahunan (dari produksi & pembelian)
+        $tahun = date('Y');
+        // Permintaan dari produksi (hanya tahun berjalan)
         $permintaanProduksi = DB::table('detail_pesanan_produksi')
             ->where('barang_Id_Bahan', $b->Id_Bahan)
+            ->whereYear('created_at', $tahun)
             ->sum('Jumlah');
 
-        $permintaanLangsung = DB::table('detail_pembelian')
-            ->where('bahan_baku_Id_Bahan', $b->Id_Bahan)
-            ->sum('Jumlah');
+        // Permintaan dari pembelian (hanya tahun berjalan, join ke pembelian)
+        $permintaanLangsung = DB::table('detail_pembelian as dp')
+            ->join('pembelian as p', 'dp.pembelian_Id_Pembelian', '=', 'p.Id_Pembelian')
+            ->where('dp.bahan_baku_Id_Bahan', $b->Id_Bahan)
+            ->whereYear('p.Tanggal_Pemesanan', $tahun)
+            ->sum('dp.Jumlah');
 
-        $D = $permintaanProduksi + $permintaanLangsung; // demand
+        $D = $permintaanProduksi + $permintaanLangsung; // demand tahunan
 
         // Ambil biaya pemesanan rata-rata
         $S = DB::table('pembelian')->avg('Total_Biaya') ?? 50000;

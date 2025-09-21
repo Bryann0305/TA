@@ -59,7 +59,6 @@
                 <tr>
                     <th>Produk</th>
                     <th>BOM</th>
-                    <th>Jumlah</th>
                     <th style="width:100px;">Action</th>
                 </tr>
             </thead>
@@ -81,7 +80,7 @@
                             @endforeach
                         </select>
                     </td>
-                    <td><input type="number" name="jumlah_bom[]" class="form-control" min="1" value="1" required></td>
+                    <!-- <td><input type="number" name="jumlah_bom[]" class="form-control" min="1" value="1" required></td> -->
                     <td class="text-center">
                         <button type="button" class="btn btn-dark btn-sm btn-remove">
                             <i class="bi bi-trash"></i>
@@ -159,7 +158,7 @@ document.getElementById('btn-add-produk-bom').addEventListener('click', function
                 @endforeach
             </select>
         </td>
-        <td><input type="number" name="jumlah_bom[]" class="form-control" min="1" value="1" required></td>
+    <!-- <td><input type="number" name="jumlah_bom[]" class="form-control" min="1" value="1" required></td> -->
         <td class="text-center">
             <button type="button" class="btn btn-dark btn-sm btn-remove">
                 <i class="bi bi-trash"></i>

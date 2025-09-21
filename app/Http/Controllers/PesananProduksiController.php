@@ -11,22 +11,32 @@ use App\Models\Pelanggan;
 
 class PesananProduksiController extends Controller
 {
-    // Tampilkan semua pesanan produksi
+    /**
+     * Tampilkan semua pesanan produksi
+     */
     public function index()
     {
         $pesanan = PesananProduksi::with(['pelanggan', 'detail.barang'])->get();
         return view('pesanan-produksi.index', compact('pesanan'));
     }
 
-    // Form buat pesanan produksi baru
+    /**
+     * Form buat pesanan produksi baru
+     */
     public function create()
-    {
-        $barangs = Barang::all();
-        $pelanggans = Pelanggan::all();
-        return view('pesanan-produksi.create', compact('barangs', 'pelanggans'));
-    }
+{
+    // hanya ambil barang dengan Jenis = Produk
+    $barangs = Barang::where('Jenis', 'Produk')->get();
+    $pelanggans = Pelanggan::all();
 
-    // Simpan pesanan produksi baru
+    return view('pesanan-produksi.create', compact('barangs', 'pelanggans'));
+}
+
+
+
+    /**
+     * Simpan pesanan produksi baru
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -37,21 +47,27 @@ class PesananProduksiController extends Controller
             'barang.*.Jumlah' => 'required|numeric|min:1',
         ]);
 
+        // Hitung total jumlah
         $totalJumlah = collect($validated['barang'])->sum('Jumlah');
 
+        // Buat nomor pesanan otomatis
         $last = PesananProduksi::latest('Id_Pesanan')->first();
-        $nomorPesanan = $last ? str_pad($last->Id_Pesanan + 1, 4, '0', STR_PAD_LEFT) : '0001';
+        $nomorPesanan = $last
+            ? str_pad($last->Id_Pesanan + 1, 4, '0', STR_PAD_LEFT)
+            : '0001';
 
+        // Simpan pesanan
         $pesanan = PesananProduksi::create([
             'Nomor_Pesanan' => $nomorPesanan,
             'Jumlah_Pesanan' => $totalJumlah,
             'Tanggal_Pesanan' => $validated['Tanggal_Pesanan'],
-            'Status' => 'pending', // default status
+            'Status' => 'pending',
             'user_Id_User' => Auth::id(),
             'pelanggan_Id_Pelanggan' => $validated['pelanggan_Id_Pelanggan'] ?? null,
         ]);
 
-        foreach($validated['barang'] as $b) {
+        // Simpan detail pesanan
+        foreach ($validated['barang'] as $b) {
             DetailPesananProduksi::create([
                 'pesanan_produksi_Id_Pesanan' => $pesanan->Id_Pesanan,
                 'barang_Id_Bahan' => $b['barang_Id_Bahan'],
@@ -59,19 +75,29 @@ class PesananProduksiController extends Controller
             ]);
         }
 
-        return redirect()->route('pesanan_produksi.index')->with('success','Pesanan produksi berhasil dibuat!');
+        return redirect()
+            ->route('pesanan_produksi.index')
+            ->with('success', 'Pesanan produksi berhasil dibuat!');
     }
 
-    // Form edit pesanan produksi
+    /**
+     * Form edit pesanan produksi
+     */
     public function edit($id)
-    {
-        $pesanan = PesananProduksi::with('detail')->findOrFail($id);
-        $barangs = Barang::all();
-        $pelanggans = Pelanggan::all();
-        return view('pesanan-produksi.edit', compact('pesanan', 'barangs', 'pelanggans'));
-    }
+{
+    $pesanan = PesananProduksi::with('detail')->findOrFail($id);
 
-    // Update pesanan produksi
+    // hanya ambil barang dengan Jenis = Produk
+    $barangs = Barang::where('Jenis', 'Produk')->get();
+    $pelanggans = Pelanggan::all();
+
+    return view('pesanan-produksi.edit', compact('pesanan', 'barangs', 'pelanggans'));
+}
+
+
+    /**
+     * Update pesanan produksi
+     */
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
@@ -92,9 +118,10 @@ class PesananProduksiController extends Controller
             'user_Id_User' => Auth::id(),
         ]);
 
+        // Hapus detail lama & simpan ulang
         DetailPesananProduksi::where('pesanan_produksi_Id_Pesanan', $id)->delete();
 
-        foreach($validated['barang'] as $b) {
+        foreach ($validated['barang'] as $b) {
             DetailPesananProduksi::create([
                 'pesanan_produksi_Id_Pesanan' => $id,
                 'barang_Id_Bahan' => $b['barang_Id_Bahan'],
@@ -102,24 +129,36 @@ class PesananProduksiController extends Controller
             ]);
         }
 
-        return redirect()->route('pesanan_produksi.index')->with('success', 'Pesanan Produksi berhasil diperbarui!');
+        return redirect()
+            ->route('pesanan_produksi.index')
+            ->with('success', 'Pesanan Produksi berhasil diperbarui!');
     }
 
-    // Hapus pesanan produksi
+    /**
+     * Hapus pesanan produksi
+     */
     public function destroy($id)
     {
         PesananProduksi::findOrFail($id)->delete();
-        return redirect()->route('pesanan_produksi.index')->with('success', 'Pesanan Produksi berhasil dihapus!');
+
+        return redirect()
+            ->route('pesanan_produksi.index')
+            ->with('success', 'Pesanan Produksi berhasil dihapus!');
     }
 
-    // Halaman detail pesanan produksi
+    /**
+     * Halaman detail pesanan produksi
+     */
     public function show($id)
     {
         $pesanan = PesananProduksi::with('detail.barang', 'pelanggan')->findOrFail($id);
+
         return view('pesanan-produksi.show', compact('pesanan'));
     }
 
-    // Toggle status pesanan produksi via action button
+    /**
+     * Toggle status pesanan produksi
+     */
     public function toggleStatus($id)
     {
         $pesanan = PesananProduksi::findOrFail($id);
@@ -132,6 +171,8 @@ class PesananProduksiController extends Controller
 
         $pesanan->save();
 
-        return redirect()->route('pesanan_produksi.index')->with('success','Status pesanan diperbarui!');
+        return redirect()
+            ->route('pesanan_produksi.index')
+            ->with('success', 'Status pesanan diperbarui!');
     }
 }

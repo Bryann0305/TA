@@ -10,7 +10,7 @@
         <div class="card border-0 shadow-lg mb-4">
             <div class="card-header bg-light d-flex justify-content-between align-items-center">
                 <h5 class="mb-0 fw-bold text-dark">
-                    {{ $prod->Hasil_Produksi ?? 'Produksi #' . $prodId }}
+                    {{ $prod->Nama_Produksi ?? 'Produksi #' . ($prod->Id_Produksi ?? $prod->id) }}
                 </h5>
                 <span class="badge bg-success px-3 py-2">Completed</span>
             </div>
