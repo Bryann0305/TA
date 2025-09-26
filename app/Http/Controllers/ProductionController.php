@@ -8,7 +8,8 @@ use App\Models\ProductionOrder;
 use App\Models\BillOfMaterial;
 use App\Models\GagalProduksi;
 use App\Models\Barang;
-use DB;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ProductionController extends Controller
 {
@@ -91,7 +92,7 @@ class ProductionController extends Controller
         $jadwalId = $order->penjadwalan->Id_Jadwal;
 
 
-        DB::transaction(function() use ($order,$jadwalId){
+        DB::transaction(function() use ($order,$jadwalId,$request){
             $produksi = Produksi::create([
                 'Hasil_Produksi' => $order->Nama_Produksi ?? 'Produksi #'.$order->id,
                 'Tanggal_Produksi' => now(),
@@ -117,15 +118,20 @@ class ProductionController extends Controller
                 ]);
             }
 
-            // Tambahkan detail produk jadi (hasil produksi)
-            if ($order->produk_id ?? false) {
-                ProduksiDetail::create([
-                    'produksi_id' => $produksi->Id_Produksi,
-                    'bill_of_material_id' => $order->bill_of_material_id ?? 1, 
-                    'barang_id' => $order->produk_id,
-                    'jumlah' => 0, // jumlah berhasil diinput saat complete
-                    'status' => 'pending',
-                ]);
+            // Tambahkan detail produk jadi (hasil produksi) berdasarkan pilihan pada form
+            $produkIds = (array) $request->input('produk_ids', []);
+            $bomIds = (array) $request->input('bom_ids', []);
+            foreach ($produkIds as $idx => $produkId) {
+                if (!empty($produkId)) {
+                    $bomId = $bomIds[$idx] ?? null;
+                    ProduksiDetail::create([
+                        'produksi_id' => $produksi->Id_Produksi,
+                        'bill_of_material_id' => $bomId ?? 1,
+                        'barang_id' => $produkId,
+                        'jumlah' => 0, // jumlah berhasil diinput saat complete
+                        'status' => 'pending',
+                    ]);
+                }
             }
         });
 
@@ -154,18 +160,92 @@ class ProductionController extends Controller
                 $jumlahBerhasil = isset($hasilArr[$detailId]) ? (int)$hasilArr[$detailId] : 0;
                 $jumlahGagal = isset($gagalArr[$detailId]['jumlah']) ? (int)$gagalArr[$detailId]['jumlah'] : 0;
                 $keteranganGagal = isset($gagalArr[$detailId]['keterangan']) ? $gagalArr[$detailId]['keterangan'] : '';
+                $jumlahRencana = $jumlahBerhasil + $jumlahGagal; // konsumsi bahan berdasarkan rencana (berhasil+gagal)
+
+                // Hanya proses detail yang dikirim oleh form (produk jadi). Abaikan detail lain.
+                if (!array_key_exists($detailId, $hasilArr) && !array_key_exists($detailId, $gagalArr)) {
+                    continue;
+                }
 
                 // Update ProduksiDetail
                 $detail->jumlah = $jumlahBerhasil;
                 $detail->status = 'completed';
                 $detail->save();
 
-                // Update stok barang jika berhasil
+                // Tambah stok produk jadi sesuai jumlah berhasil
                 if ($jumlahBerhasil > 0 && $detail->barang_id) {
-                    $barang = Barang::find($detail->barang_id);
-                    if ($barang) {
-                        $barang->Stok = ($barang->Stok ?? 0) + $jumlahBerhasil;
-                        $barang->save();
+                    $barangJadi = Barang::find($detail->barang_id);
+                    if ($barangJadi) {
+                        $barangJadi->Stok = ($barangJadi->Stok ?? 0) + $jumlahBerhasil;
+                        $barangJadi->save();
+                    }
+                }
+
+                // Kurangi stok bahan baku berdasarkan BOM x jumlah rencana (berhasil+gagal)
+                // Jalankan untuk detail produk yang diproses (karena hanya produk yang dikirim dari form)
+                if ($jumlahRencana > 0) {
+                    // Tentukan BOM: pakai yang ter-assign di detail, jika null ambil dari relasi barang->boms (pertama)
+                    $bomId = $detail->bill_of_material_id;
+                    if (!$bomId && $detail->barang_id) {
+                        $barangForBom = Barang::with('boms')->find($detail->barang_id);
+                        $bomId = optional($barangForBom->boms->first())->Id_bill_of_material;
+                    }
+
+                    if ($bomId) {
+                        // 1) Coba lewat relasi Eloquent BOM->barangs (pivot 'Jumlah_Bahan' atau 'jumlah_bahan')
+                        $bomRel = BillOfMaterial::with('barangs')->find($bomId);
+                        $turunkanViaRelasi = false;
+                        if ($bomRel && $bomRel->barangs && $bomRel->barangs->count()) {
+                            foreach ($bomRel->barangs as $bahan) {
+                                $kebutuhanPerUnit = (int) ($bahan->pivot->Jumlah_Bahan ?? $bahan->pivot->jumlah_bahan ?? 0);
+                                if ($kebutuhanPerUnit <= 0) continue;
+                                $totalKebutuhan = $kebutuhanPerUnit * $jumlahRencana;
+                                $barangBaku = Barang::find($bahan->Id_Bahan);
+                                if ($barangBaku) {
+                                    $stokSekarang = (int) ($barangBaku->Stok ?? 0);
+                                    $barangBaku->Stok = max(0, $stokSekarang - $totalKebutuhan);
+                                    $barangBaku->save();
+                                    $turunkanViaRelasi = true;
+                                }
+                            }
+                        }
+
+                        // 2) Jika relasi tidak memberi kuantitas, fallback ke query pivot mentah (skema dinamis)
+                        if (!$turunkanViaRelasi) {
+                            $pivotTable = 'barang_has_bill_of_material';
+                            $colBomLegacy = 'bill_of_material_Id_bill_of_material';
+                            $colBomNew = 'bill_of_material_id';
+                            $colBarangLegacy = 'barang_Id_Bahan';
+                            $colBarangNew = 'barang_id';
+
+                            $bomColumn = Schema::hasColumn($pivotTable, $colBomLegacy)
+                                ? $colBomLegacy
+                                : (Schema::hasColumn($pivotTable, $colBomNew) ? $colBomNew : null);
+
+                            $barangColumn = Schema::hasColumn($pivotTable, $colBarangLegacy)
+                                ? $colBarangLegacy
+                                : (Schema::hasColumn($pivotTable, $colBarangNew) ? $colBarangNew : null);
+
+                            if ($bomColumn && $barangColumn) {
+                                $qtyColumn = Schema::hasColumn($pivotTable, 'Jumlah_Bahan')
+                                    ? 'Jumlah_Bahan'
+                                    : (Schema::hasColumn($pivotTable, 'jumlah_bahan') ? 'jumlah_bahan' : null);
+
+                                $pivotRows = DB::table($pivotTable)->where($bomColumn, $bomId)->get();
+                                foreach ($pivotRows as $pivot) {
+                                    $barangId = $pivot->{$barangColumn} ?? null;
+                                    $kebutuhanPerUnit = (int) ($qtyColumn ? ($pivot->{$qtyColumn} ?? 0) : 0);
+                                    if (!$barangId || $kebutuhanPerUnit <= 0) continue;
+                                    $totalKebutuhan = $kebutuhanPerUnit * $jumlahRencana;
+                                    $barangBaku = Barang::find($barangId);
+                                    if ($barangBaku) {
+                                        $stokSekarang = (int) ($barangBaku->Stok ?? 0);
+                                        $barangBaku->Stok = max(0, $stokSekarang - $totalKebutuhan);
+                                        $barangBaku->save();
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 

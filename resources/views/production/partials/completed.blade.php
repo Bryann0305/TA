@@ -19,46 +19,48 @@
                 <p><strong>SPP:</strong> {{ $prod->pesananProduksi->Nomor_Pesanan ?? '-' }}</p>
                 <p><strong>Tanggal:</strong> {{ optional($prod->Tanggal_Produksi)->format('d M Y') ?? '-' }}</p>
 
-                @if($pesananDetails->isNotEmpty())
+                @php
+                    // Ambil detail produk jadi dari ProduksiDetail: asumsi baris produk dibuat saat store dengan jumlah awal 0
+                    $produkDetail = optional($prod->details)->first(function($d){ return ($d->jumlah ?? 0) == 0 && !empty($d->bill_of_material_id); });
+                    if(!$produkDetail && optional($prod->details)->count()) { $produkDetail = $prod->details->first(); }
+                    $detailIdProduk = optional($produkDetail)->id;
+                    $namaProdukJadi = optional($produkDetail->barang ?? null)->Nama_Bahan ?? ($prod->Nama_Produksi ?? 'Produk Jadi');
+                    $jumlahPesananProduk = $prod->pesananProduksi->Jumlah_Pesanan ?? $pesananDetails->sum(function($d){ return $d->Jumlah ?? ($d->jumlah ?? 0); });
+                @endphp
+
+                @if($detailIdProduk)
                     <button class="btn btn-outline-primary btn-sm mt-2" type="button"
                             data-bs-toggle="collapse" data-bs-target="#inputHasil{{ $prodId }}">
-                        <i class="bi bi-box-seam me-1"></i> Input Hasil Produksi
+                        <i class="bi bi-box-seam me-1"></i> Input Hasil Produksi ({{ $namaProdukJadi }})
                     </button>
 
                     <div class="collapse mt-3" id="inputHasil{{ $prodId }}">
                         <form class="form-complete" data-prod-id="{{ $prodId }}">
                             @csrf
-                            @foreach($pesananDetails as $index => $detail)
-                                @php
-                                    $detailId = $detail->Id_Pesanan ?? $index;
-                                    $namaProduk = $detail->Nama_Produk ?? ($detail->barang->Nama_Bahan ?? 'Produk #' . ($index+1));
-                                    $jumlahPesanan = $detail->Jumlah ?? ($detail->jumlah ?? 0);
-                                @endphp
-                                <div class="card mb-2 border rounded">
-                                    <div class="card-header bg-light fw-bold">{{ $namaProduk }}</div>
-                                    <div class="card-body">
-                                        <p><strong>Jumlah Dipesan:</strong> {{ $jumlahPesanan }}</p>
+                            <div class="card mb-2 border rounded">
+                                <div class="card-header bg-light fw-bold">{{ $namaProdukJadi }}</div>
+                                <div class="card-body">
+                                    <p><strong>Jumlah Dipesan:</strong> {{ $jumlahPesananProduk }}</p>
 
-                                        <div class="mb-2">
-                                            <label>Jumlah Berhasil</label>
-                                            <input type="number" name="hasil[{{ $detailId }}]" class="form-control hasil-input" min="0" value="0" data-max="{{ $jumlahPesanan }}" required>
-                                        </div>
-                                        <div class="mb-2">
-                                            <label>Jumlah Gagal</label>
-                                            <input type="number" name="gagal[{{ $detailId }}][jumlah]" class="form-control gagal-input" min="0" value="0" data-max="{{ $jumlahPesanan }}">
-                                        </div>
-                                        <div class="mb-2">
-                                            <label>Keterangan</label>
-                                            <input type="text" name="gagal[{{ $detailId }}][keterangan]" class="form-control">
-                                        </div>
+                                    <div class="mb-2">
+                                        <label>Jumlah Berhasil</label>
+                                        <input type="number" name="hasil[{{ $detailIdProduk }}]" class="form-control hasil-input" min="0" value="0" data-max="{{ $jumlahPesananProduk }}" required>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label>Jumlah Gagal</label>
+                                        <input type="number" name="gagal[{{ $detailIdProduk }}][jumlah]" class="form-control gagal-input" min="0" value="0" data-max="{{ $jumlahPesananProduk }}">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label>Keterangan</label>
+                                        <input type="text" name="gagal[{{ $detailIdProduk }}][keterangan]" class="form-control">
                                     </div>
                                 </div>
-                            @endforeach
+                            </div>
                             <button type="submit" class="btn btn-primary btn-sm mt-2">Simpan Hasil Produksi</button>
                         </form>
                     </div>
                 @else
-                    <p class="text-muted">SPP ini belum memiliki produk yang valid untuk input hasil produksi.</p>
+                    <p class="text-muted">Produk jadi untuk produksi ini belum terdaftar.</p>
                 @endif
             </div>
         </div>
@@ -93,7 +95,7 @@ document.addEventListener('DOMContentLoaded', function () {
         form.addEventListener('submit', function(e){
             e.preventDefault();
             const prodId = form.dataset.prodId;
-            const actionUrl = `/production/${prodId}/complete`;
+            const actionUrl = /production/${prodId}/complete;
             const data = new FormData(form);
 
             fetch(actionUrl, {
@@ -108,7 +110,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if(result.success){
                     alert(result.success);
                     let tab = result.redirect_tab || 'all';
-                    window.location.href = `/production?tab=${tab}`;
+                    window.location.href = /production?tab=${tab};
                 } else if(result.error){
                     alert(result.error);
                 }
