@@ -3,7 +3,7 @@
     <div class="col-md-4">
         <div class="card shadow-sm p-3">
             <h6>Stock Value</h6>
-            <h4 class="text-primary">${{ number_format($data['stockValue']) }}</h4>
+            <h4 class="text-primary">Rp {{ number_format($data['stockValue'], 0, ',', '.') }}</h4>
             <small class="text-success">▲ {{ $data['inventoryGrowth'] ?? 0 }}% from last month</small>
         </div>
     </div>
@@ -31,7 +31,7 @@
             @foreach ($data['categories'] as $cat)
                 <div class="col-md-3 mb-2">
                     <strong>{{ $cat['name'] }}</strong><br>
-                    ${{ number_format($cat['value']) }}<br>
+                    Rp {{ number_format($cat['value'], 0, ',', '.') }}<br>
                     <small>{{ $cat['percentage'] }}% of total</small>
                 </div>
             @endforeach

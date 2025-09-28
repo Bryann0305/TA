@@ -14,14 +14,26 @@ class Barang extends Model
     public $incrementing = true;
     protected $keyType = 'int';
 
+    // Konstanta untuk ENUM Satuan
+    const SATUAN_DRUM = 'Drum';
+    const SATUAN_PIL = 'Pil';
+    
+    // Method untuk mendapatkan semua opsi satuan
+    public static function getSatuanOptions()
+    {
+        return [
+            self::SATUAN_DRUM => self::SATUAN_DRUM,
+            self::SATUAN_PIL => self::SATUAN_PIL,
+        ];
+    }
+
     protected $fillable = [
         'Nama_Bahan',
         'Stok', 
         'Jenis', 
         'Status', 
         'kategori_Id_Kategori', 
-        'Unit',
-        'Berat', 
+        'gudang_Id_Gudang',
         'Satuan', 
         'EOQ', 
         'ROP' // ✅ perbaikan, jangan "Reorder_Point"

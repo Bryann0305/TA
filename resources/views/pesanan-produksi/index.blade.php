@@ -17,13 +17,13 @@
         <table id="pesananProduksiTable" class="table table-bordered table-striped align-middle">
             <thead class="table-light">
                 <tr>
-                    <th>ID</th>
-                    <th>Order Number</th>
-                    <th>Customer</th>
-                    <th>Product / Material</th>
-                    <th>Order Date</th>
-                    <th>Status</th>
-                    <th style="width: 200px;">Actions</th>
+                    <th class="text-center">ID</th>
+                    <th class="text-center">Order Number</th>
+                    <th class="text-center">Customer</th>
+                    <th class="text-center">Product / Material</th>
+                    <th class="text-center">Order Date</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center" style="width: 200px;">Actions</th>
                 </tr>
             </thead>
             <tbody>

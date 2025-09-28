@@ -75,12 +75,8 @@ class DetailPembelianController extends Controller
             }
             $detail->Status_Penerimaan = 'Diterima';
         } else {
-            // Kurangi stok (rollback)
-            if ($barang && $barang->Stok >= $detail->Jumlah) {
-                $barang->Stok -= $detail->Jumlah;
-                $barang->save();
-            }
-            $detail->Status_Penerimaan = 'Pending';
+            // Prevent changing from "Diterima" (Complete) back to "Pending"
+            return redirect()->back()->with('error', 'Tidak dapat mengubah status dari Complete kembali ke Pending!');
         }
 
         $detail->save();

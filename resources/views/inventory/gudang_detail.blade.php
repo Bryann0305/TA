@@ -6,11 +6,11 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Inventory at {{ $gudang->Nama_Gudang }}</h2>
         <div class="d-flex gap-2">
+            <a href="{{ route('inventory.create') }}" class="btn btn-success">
+                <i class="fas fa-plus me-1"></i> Add Item
+            </a>
             <a href="{{ route('inventory.index') }}" class="btn btn-outline-primary">
                 <i class="fas fa-arrow-left me-1"></i> Back
-            </a>
-            <a href="{{ route('inventory.exportPdf', ['gudang' => $gudang->Id_Gudang]) }}" class="btn btn-outline-dark">
-                <i class="fas fa-file-pdf me-1"></i> Export PDF
             </a>
             <a href="{{ route('bom.index') }}" class="btn btn-secondary">
                 <i class="fas fa-boxes me-1"></i> Manage BOM
@@ -35,6 +35,7 @@
                     <th>Name</th>
                     <th>Category</th>
                     <th>Stock</th>
+                    <th>Satuan</th>
                     <th>Reorder Point</th>
                     <th>EOQ</th>
                     <th>Status</th>
@@ -59,6 +60,7 @@
                         <td class="text-end" data-bs-toggle="tooltip" title="{{ number_format($item->Stok, 0, ',', '.') }}">
                             {{ number_format($item->Stok, 0, ',', '.') }}
                         </td>
+                        <td class="text-center">{{ $item->Satuan ?? '-' }}</td>
                         <td class="text-end" data-bs-toggle="tooltip" title="{{ number_format($reorder, 0, ',', '.') }}">
                             {{ number_format($reorder, 0, ',', '.') }}
                         </td>
@@ -97,6 +99,7 @@
                     <th>Name</th>
                     <th>Category</th>
                     <th>Stock</th>
+                    <th>Satuan</th>
                     <th>Reorder Point</th>
                     <th>EOQ</th>
                     <th>Status</th>
@@ -120,6 +123,7 @@
                         <td class="text-end" data-bs-toggle="tooltip" title="{{ number_format($item->Stok, 0, ',', '.') }}">
                             {{ number_format($item->Stok, 0, ',', '.') }}
                         </td>
+                        <td class="text-center">{{ $item->Satuan ?? '-' }}</td>
                         <td class="text-end" data-bs-toggle="tooltip" title="{{ number_format($reorder, 0, ',', '.') }}">
                             {{ number_format($reorder, 0, ',', '.') }}
                         </td>
@@ -160,7 +164,8 @@
             autoWidth: false,
             columnDefs: [
                 { targets: [0], className: 'text-center' },
-                { targets: [3,4,5], className: 'text-end' }
+                { targets: [3,5,6], className: 'text-end' },
+                { targets: [4], className: 'text-center' }
             ],
             order: [[1, 'asc']],
             language: {

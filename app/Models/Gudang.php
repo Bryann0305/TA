@@ -30,4 +30,9 @@ public function barangs()
     return $this->hasMany(Barang::class, 'gudang_Id_Gudang', 'Id_Gudang');
 }
 
+public function biayaGudang()
+{
+    return $this->hasMany(BiayaGudang::class, 'gudang_Id_Gudang', 'Id_Gudang');
+}
+
 }

@@ -22,11 +22,11 @@
         <table id="gudangTable" class="table table-bordered table-striped align-middle">
             <thead class="table-light">
                 <tr>
-                    <th>No</th>
-                    <th>Warehouse Name</th>
-                    <th>Location</th>
-                    <th>Capacity</th>
-                    <th style="width: 180px;">Actions</th>
+                    <th class="text-center">No</th>
+                    <th class="text-center">Warehouse Name</th>
+                    <th class="text-center">Location</th>
+                    <th class="text-center">Capacity</th>
+                    <th class="text-center" style="width: 180px;">Actions</th>
                 </tr>
             </thead>
             <tbody>

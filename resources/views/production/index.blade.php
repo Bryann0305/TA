@@ -86,6 +86,64 @@ document.addEventListener("DOMContentLoaded", function() {
             tabInstance.show();
         }
     }
+
+    // Script untuk form completion
+    const forms = document.querySelectorAll('.form-complete');
+    forms.forEach(form => {
+        const hasilInputs = form.querySelectorAll('.hasil-input');
+        const gagalInputs = form.querySelectorAll('.gagal-input');
+
+        function validateSum() {
+            hasilInputs.forEach((hInput, idx) => {
+                const gInput = gagalInputs[idx];
+                const max = parseInt(hInput.dataset.max) || 0;
+                let sum = parseInt(hInput.value || 0) + parseInt(gInput.value || 0);
+                if(sum > max){
+                    alert('Jumlah Berhasil + Gagal tidak boleh melebihi Jumlah Pesanan!');
+                    hInput.value = 0;
+                    gInput.value = 0;
+                }
+            });
+        }
+
+        hasilInputs.forEach(input => input.addEventListener('change', validateSum));
+        gagalInputs.forEach(input => input.addEventListener('change', validateSum));
+
+        form.addEventListener('submit', function(e){
+            e.preventDefault();
+            const prodId = form.dataset.prodId;
+            const actionUrl = `/production/${prodId}/complete`;
+            const data = new FormData(form);
+
+            fetch(actionUrl, {
+                method: 'POST',
+                body: data,
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(result => {
+                if(result.success){
+                    alert(result.success);
+                    let tab = result.redirect_tab || 'all';
+                    window.location.href = `/production?tab=${tab}`;
+                } else if(result.error){
+                    alert(result.error);
+                }
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('Terjadi kesalahan saat menyimpan hasil produksi: ' + err.message);
+            });
+        });
+    });
 });
 </script>
 @endpush

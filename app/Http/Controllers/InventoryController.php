@@ -65,13 +65,34 @@ class InventoryController extends Controller
         return view('inventory.show', compact('item', 'stok_kg', 'rop_kg', 'eoq_kg'));
     }
 
+    // Form tambah barang baru
+    public function create()
+    {
+        $kategori = Kategori::all();
+        $gudangs = Gudang::all();
+        $satuanOptions = Barang::getSatuanOptions();
+        return view('inventory.create', compact('kategori', 'gudangs', 'satuanOptions'));
+    }
+
+    // Simpan barang baru
+    public function store(Request $request)
+    {
+        $validated = $this->validateRequest($request);
+        
+        $barang = Barang::create($validated);
+
+        return redirect()->route('inventory.showGudang', $barang->gudang_Id_Gudang)
+                         ->with('success', 'Item berhasil ditambahkan!');
+    }
+
     // Form edit barang
     public function edit($id)
     {
         $item = Barang::findOrFail($id);
         $kategori = Kategori::all();
         $gudangs = Gudang::all();
-        return view('inventory.edit', compact('item', 'kategori', 'gudangs'));
+        $satuanOptions = Barang::getSatuanOptions();
+        return view('inventory.edit', compact('item', 'kategori', 'gudangs', 'satuanOptions'));
     }
 
     // Update barang
@@ -102,19 +123,17 @@ class InventoryController extends Controller
     {
         $validated = $request->validate([
             'Nama_Bahan' => 'required|string|max:100',
-            'Stok' => 'required|numeric|min:0',
             'Jenis' => 'required|in:Bahan_Baku,Produk',
             'kategori_Id_Kategori' => 'required|exists:kategori,Id_Kategori',
             'gudang_Id_Gudang' => 'required|exists:gudang,Id_Gudang',
             'EOQ' => 'nullable|numeric|min:0',
             'ROP' => 'nullable|numeric|min:0',
-            'Unit' => 'required|string|max:20',
-            'Berat' => 'required|numeric|min:0',
-            'Satuan' => 'required|string|max:10',
+            'Satuan' => 'required|in:Drum,Pil',
         ]);
 
         $validated['EOQ'] = $validated['EOQ'] ?? 0;
         $validated['ROP'] = $validated['ROP'] ?? 100;
+        $validated['Stok'] = 0; // Default stock untuk item baru
 
         $validated['Status'] = $this->getStatus($validated['Stok'], $validated['ROP']);
 

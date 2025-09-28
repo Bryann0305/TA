@@ -5,7 +5,7 @@
     {{-- Header --}}
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Detail Item</h2>
-        <a href="{{ route('inventory.showGudang') }}" class="btn btn-secondary">Back</a>
+        <a href="{{ route('inventory.showGudang', $item->gudang_Id_Gudang) }}" class="btn btn-secondary">Back</a>
     </div>
 
     <div class="card mb-3 shadow-sm">
@@ -26,26 +26,6 @@
                 <tr>
                     <th>Stock</th>
                     <td>{{ $item->Stok }}</td>
-                </tr>
-                <tr>
-                    <th>Weight per Unit</th>
-                    <td>
-                        @if($item->Berat && $item->Satuan)
-                            {{ $item->Berat }} {{ $item->Satuan }}
-                        @else
-                            -
-                        @endif
-                    </td>
-                </tr>
-                <tr>
-                    <th>Total Weight</th>
-                    <td>
-                        @if($item->Berat && $item->Satuan)
-                            {{ $item->Berat * $item->Stok }} {{ $item->Satuan }}
-                        @else
-                            -
-                        @endif
-                    </td>
                 </tr>
                 <tr>
                     <th>EOQ</th>

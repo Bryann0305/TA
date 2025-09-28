@@ -38,7 +38,7 @@
                 @forelse ($boms as $bom)
                     <tr>
                         <td><strong>BOM-{{ $bom->Id_bill_of_material }}</strong></td>
-                        <td>{{ $bom->Nama_bill_of_material }}</td>
+                        <td>{{ str_replace('BOM - ', '', $bom->Nama_bill_of_material) }}</td>
                         <td>
                             @if($bom->barangs && $bom->barangs->count())
                                 <ul class="mb-0 ps-3">

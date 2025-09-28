@@ -47,14 +47,24 @@
                             @foreach($prod->details->groupBy('bill_of_material_id') as $bomId => $group)
                                 @php
                                     $bom = $group->first()->billOfMaterial ?? null;
-                                    $jumlahDipakai = $group->sum('jumlah');
+                                    $rawMaterials = $bom ? $bom->barangs : collect();
+                                    $jumlahBahanBaku = $rawMaterials->count(); // Jumlah bahan baku yang berbeda dari BOM
+                                    $quantityPesanan = optional($prod->pesananProduksi)->Jumlah_Pesanan ?? 1;
                                 @endphp
                                 <li class="mb-3">
-                                    <h6 class="fw-bold text-primary">{{ $bom->Nama_BOM ?? 'BOM '.$bomId }}</h6>
+                                    <h6 class="fw-bold text-primary">{{ $bom->Nama_bill_of_material ?? 'BOM '.$bomId }}</h6>
                                     <div class="small text-muted">
-                                        <div>Barang: {{ $group->pluck('barang.Nama_Bahan')->filter()->join(', ') }}</div>
-                                        <div>Jumlah per BOM: {{ $jumlahDipakai }}</div>
-                                        <div>Total kebutuhan: {{ $jumlahDipakai * (optional($prod->pesananProduksi)->Jumlah_Pesanan ?? 1) }}</div>
+                                        <div><strong>Produk:</strong> {{ $group->pluck('barang.Nama_Bahan')->filter()->join(', ') }}</div>
+                                        <div><strong>Jumlah per BOM:</strong> {{ $jumlahBahanBaku }} bahan baku</div>
+                                        <div><strong>Total kebutuhan:</strong> {{ $jumlahBahanBaku * $quantityPesanan }} unit</div>
+                                        <div class="mt-2">
+                                            <strong>Detail Bahan Baku:</strong>
+                                            <ul class="list-unstyled ms-3">
+                                                @foreach($rawMaterials as $material)
+                                                    <li>• {{ $material->Nama_Bahan }} ({{ $material->pivot->Jumlah_Bahan * $quantityPesanan }} {{ $material->Satuan }})</li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
                                     </div>
                                 </li>
                             @endforeach

@@ -37,4 +37,14 @@ class ProductionOrder extends Model
         return $this->belongsTo(BillOfMaterial::class, 'Id_BOM', 'Id_bill_of_material');
     }
 
+    public function finishedGood()
+    {
+        return $this->belongsTo(Barang::class, 'finished_good_id', 'Id_Bahan');
+    }
+
+    public function bom()
+    {
+        return $this->belongsTo(BillOfMaterial::class, 'bom_id', 'Id_bill_of_material');
+    }
+
 }

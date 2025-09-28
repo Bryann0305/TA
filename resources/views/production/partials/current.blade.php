@@ -28,6 +28,16 @@
                     <strong>Tanggal:</strong> {{ optional($prod->Tanggal_Produksi)->format('d M Y') ?? '-' }}
                 </p>
 
+                {{-- Info Produksi Ulang --}}
+                @if(str_contains($prod->Hasil_Produksi ?? '', 'Produksi Ulang'))
+                    <div class="alert alert-warning mb-3">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Produksi Ulang:</strong> {{ $prod->Hasil_Produksi }}
+                        <br><small class="text-muted">Produksi ini dibuat untuk mengulang bagian yang gagal dari produksi sebelumnya.</small>
+                        <br><strong>Jumlah Dipesan:</strong> {{ $prod->pesananProduksi->Jumlah_Pesanan ?? 0 }} unit (sudah dikurangi dengan yang berhasil)
+                    </div>
+                @endif
+
                 @php
                     $pesananDetails = $prod->pesananProduksi->detail ?? collect();
                     $prodId = $prod->Id_Produksi ?? $prod->id;
@@ -44,14 +54,30 @@
                             @foreach($prod->details->groupBy('bill_of_material_id') as $bomId => $group)
                                 @php
                                     $bom = $group->first()->billOfMaterial ?? null;
-                                    $jumlahDipakai = $group->sum('jumlah');
+                                    $rawMaterials = $bom ? $bom->barangs : collect();
+                                    $jumlahBahanBaku = $rawMaterials->count(); // Jumlah bahan baku yang berbeda dari BOM
+                                    
+                                    // Untuk produksi ulang, gunakan jumlah yang gagal (dari detail produksi)
+                                    if(str_contains($prod->Hasil_Produksi ?? '', 'Produksi Ulang')) {
+                                        $quantityPesanan = $group->sum('jumlah'); // Jumlah yang gagal dari detail
+                                    } else {
+                                        $quantityPesanan = optional($prod->pesananProduksi)->Jumlah_Pesanan ?? 1;
+                                    }
                                 @endphp
                                 <li class="mb-3">
-                                    <h6 class="fw-bold text-primary">{{ $bom->Nama_BOM ?? 'BOM '.$bomId }}</h6>
+                                    <h6 class="fw-bold text-primary">{{ $bom->Nama_bill_of_material ?? 'BOM '.$bomId }}</h6>
                                     <div class="small text-muted">
-                                        <div>Barang: {{ $group->pluck('barang.Nama_Bahan')->filter()->join(', ') }}</div>
-                                        <div>Jumlah per BOM: {{ $jumlahDipakai }}</div>
-                                        <div>Total kebutuhan: {{ $jumlahDipakai * (optional($prod->pesananProduksi)->Jumlah_Pesanan ?? 1) }}</div>
+                                        <div><strong>Produk:</strong> {{ $group->pluck('barang.Nama_Bahan')->filter()->join(', ') }}</div>
+                                        <div><strong>Jumlah per BOM:</strong> {{ $jumlahBahanBaku }} bahan baku</div>
+                                        <div><strong>Total kebutuhan:</strong> {{ $jumlahBahanBaku * $quantityPesanan }} unit</div>
+                                        <div class="mt-2">
+                                            <strong>Detail Bahan Baku:</strong>
+                                            <ul class="list-unstyled ms-3">
+                                                @foreach($rawMaterials as $material)
+                                                    <li>• {{ $material->Nama_Bahan }} ({{ $material->pivot->Jumlah_Bahan * $quantityPesanan }} {{ $material->Satuan }})</li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
                                     </div>
                                 </li>
                             @endforeach
@@ -63,18 +89,28 @@
             </div>
 
             {{-- Footer --}}
-            <div class="card-footer bg-white d-flex justify-content-end gap-1">
-                <a href="{{ route('production.show', ['id' => $prod->Id_Produksi, 'tab' => 'current']) }}" class="btn btn-sm btn-info" title="View">
-                    <i class="fas fa-eye"></i>
-                </a>
+            <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+                {{-- Info Produksi Ulang --}}
+                @if(str_contains($prod->Hasil_Produksi ?? '', 'Produksi Ulang'))
+                    <div class="text-muted small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Produksi ulang untuk mengatasi kegagalan sebelumnya
+                    </div>
+                @endif
 
-                {{-- Move to Completed --}}
-                <form action="{{ route('production.moveToCompleted', $prod->Id_Produksi) }}" method="POST" class="d-inline">
-                    @csrf
-                    <button type="submit" class="btn btn-sm btn-success" title="Move to Completed">
-                        <i class="fas fa-check-double"></i>
-                    </button>
-                </form>
+                <div class="d-flex gap-1">
+                    <a href="{{ route('production.show', ['id' => $prod->Id_Produksi, 'tab' => 'current']) }}" class="btn btn-sm btn-info" title="View">
+                        <i class="fas fa-eye"></i>
+                    </a>
+
+                    {{-- Move to Completed --}}
+                    <form action="{{ route('production.moveToCompleted', $prod->Id_Produksi) }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-success" title="Move to Completed">
+                            <i class="fas fa-check-double"></i>
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     @endforeach

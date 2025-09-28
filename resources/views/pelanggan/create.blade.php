@@ -34,10 +34,10 @@
             </div>
         </div>
 
-        <div class="mb-3">
+        <div class="mb-3 position-relative">
             <label for="Alamat" class="form-label">Address (click on the map)</label>
-            <input type="text" name="Alamat" id="Alamat" 
-                   class="form-control" readonly required>
+            <input type="text" name="Alamat" id="Alamat" class="form-control" autocomplete="off" required>
+            <div id="alamat-suggestions" class="list-group position-absolute w-100" style="z-index:2000; max-height: 240px; overflow-y:auto; display:none;"></div>
             <input type="hidden" name="latitude" id="latitude">
             <input type="hidden" name="longitude" id="longitude">
         </div>
@@ -63,27 +63,82 @@
 
     var marker = L.marker([-7.2575, 112.7521], {draggable:true}).addTo(map);
 
-    function updateLocation(latlng) {
+    function updateLocation(latlng, writeAddress) {
         document.getElementById('latitude').value = latlng.lat;
         document.getElementById('longitude').value = latlng.lng;
-
-        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latlng.lat}&lon=${latlng.lng}&format=json`)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('Alamat').value = data.display_name;
-            });
+        if (writeAddress) {
+            fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latlng.lat}&lon=${latlng.lng}&format=json`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('Alamat').value = data.display_name;
+                });
+        }
     }
 
     // set initial location
-    updateLocation(marker.getLatLng());
+    updateLocation(marker.getLatLng(), false);
 
+    // update saat marker digeser
     marker.on('dragend', function(e) {
-        updateLocation(e.target.getLatLng());
+        updateLocation(e.target.getLatLng(), true);
     });
 
+    // update saat klik peta
     map.on('click', function(e) {
         marker.setLatLng(e.latlng);
-        updateLocation(e.latlng);
+        updateLocation(e.latlng, true);
+    });
+
+    // Forward geocoding + suggestions
+    var geocodeTimeout;
+    var alamatInput = document.getElementById('Alamat');
+    var suggestionsEl = document.getElementById('alamat-suggestions');
+
+    function showSuggestions(suggestions) {
+        suggestionsEl.innerHTML = '';
+        suggestions.forEach(function(item) {
+            var a = document.createElement('a');
+            a.href = '#';
+            a.className = 'list-group-item list-group-item-action';
+            a.textContent = item.display_name;
+            a.addEventListener('click', function(e) {
+                e.preventDefault();
+                alamatInput.value = item.display_name;
+                suggestionsEl.style.display = 'none';
+                // Update marker position
+                marker.setLatLng([item.lat, item.lon]);
+                map.setView([item.lat, item.lon], 15);
+                updateLocation(marker.getLatLng(), false);
+            });
+            suggestionsEl.appendChild(a);
+        });
+        suggestionsEl.style.display = 'block';
+    }
+
+    function hideSuggestions() {
+        setTimeout(function() {
+            suggestionsEl.style.display = 'none';
+        }, 200);
+    }
+
+    alamatInput.addEventListener('input', function(){
+        clearTimeout(geocodeTimeout);
+        var q = this.value.trim();
+        if (!q) { suggestionsEl.style.display = 'none'; return; }
+        
+        geocodeTimeout = setTimeout(function() {
+            fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&addressdetails=1`)
+                .then(response => response.json())
+                .then(data => showSuggestions(data))
+                .catch(() => {});
+        }, 300);
+    });
+
+    alamatInput.addEventListener('blur', hideSuggestions);
+    alamatInput.addEventListener('focus', function() {
+        if (suggestionsEl.children.length > 0) {
+            suggestionsEl.style.display = 'block';
+        }
     });
 </script>
 @endpush

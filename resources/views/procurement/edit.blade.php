@@ -19,6 +19,20 @@
         </div>
     @endif
 
+    {{-- Warning for completed procurement --}}
+    @php
+        $currentStatuses = $pembelian->detailPembelian->pluck('Status_Penerimaan')->unique();
+        $isCurrentlyComplete = $currentStatuses->count() === 1 && $currentStatuses->first() === 'Diterima';
+    @endphp
+    
+    @if($isCurrentlyComplete)
+        <div class="alert alert-warning mb-3">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <strong>Peringatan:</strong> Procurement ini sudah Complete. 
+            Mengedit akan mengurangi stok yang sudah ditambahkan sebelumnya dan mengubah status kembali ke Pending.
+        </div>
+    @endif
+
     <form action="{{ route('procurement.update', $pembelian->Id_Pembelian) }}" method="POST">
         @csrf
         @method('PUT') {{-- Sesuai route update --}}
@@ -56,7 +70,7 @@
             <div class="col">
                 <label for="Tanggal_Pemesanan" class="form-label">Order Date</label>
                 <input type="date" name="Tanggal_Pemesanan" class="form-control" 
-                       value="{{ $pembelian->Tanggal_Pemesanan->format('Y-m-d') }}" required>
+                       value="{{ $pembelian->Tanggal_Pemesanan->format('Y-m-d') }}" readonly required>
             </div>
             <div class="col">
                 <label for="Tanggal_Kedatangan" class="form-label">Arrival Date</label>
@@ -150,13 +164,16 @@ document.getElementById('btn-add-item').addEventListener('click', function() {
     const addRow = document.querySelector('#btn-add-item').closest('tr');
     const row = document.createElement('tr');
     row.classList.add('item-row');
+    // Create options HTML for select
+    let optionsHtml = '<option value="">-- Select Item --</option>';
+    @foreach($barangs as $barang)
+        optionsHtml += '<option value="{{ $barang->Id_Bahan }}">{{ $barang->Nama_Bahan }}</option>';
+    @endforeach
+    
     row.innerHTML = `
         <td>
             <select name="details[${index}][bahan_baku_Id_Bahan]" class="form-select" required>
-                <option value="">-- Select Item --</option>
-                @foreach($barangs as $barang)
-                    <option value="{{ $barang->Id_Bahan }}">{{ $barang->Nama_Bahan }}</option>
-                @endforeach
+                ${optionsHtml}
             </select>
         </td>
         <td><input type="number" name="details[${index}][Jumlah]" class="form-control jumlah" required min="1"></td>

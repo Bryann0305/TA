@@ -98,28 +98,17 @@
             </select>
         </div>
 
-        {{-- Unit --}}
+        {{-- Satuan --}}
         <div class="mb-3">
-            <label class="form-label">Unit</label>
-            <select name="Unit" class="form-select" required>
-                <option value="">-- Select Unit --</option>
-                <option value="drum" {{ old('Unit', $item->Unit) == 'drum' ? 'selected' : '' }}>Drum</option>
-                <option value="pcs" {{ old('Unit', $item->Unit) == 'pcs' ? 'selected' : '' }}>Pcs</option>
-                <option value="karung" {{ old('Unit', $item->Unit) == 'karung' ? 'selected' : '' }}>Bag</option>
+            <label class="form-label">Satuan</label>
+            <select name="Satuan" class="form-select" required>
+                <option value="">-- Select Satuan --</option>
+                @foreach($satuanOptions as $value => $label)
+                    <option value="{{ $value }}" {{ old('Satuan', $item->Satuan) == $value ? 'selected' : '' }}>
+                        {{ $label }}
+                    </option>
+                @endforeach
             </select>
-        </div>
-
-        {{-- Weight per Unit --}}
-        <div class="mb-3">
-            <label class="form-label">Weight per Unit</label>
-            <input type="number" step="0.01" name="Berat" class="form-control" 
-                   value="{{ old('Berat', $item->Berat) }}">
-        </div>
-
-        {{-- Fixed Unit Type --}}
-        <div class="mb-3">
-            <label class="form-label">Unit Type</label>
-            <input type="text" name="Satuan" class="form-control" value="{{ old('Satuan', $item->Satuan ?? 'kg/liter') }}" readonly>
         </div>
 
         {{-- Action Buttons --}}

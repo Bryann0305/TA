@@ -22,15 +22,15 @@
         <table id="supplierTable" class="table table-bordered table-striped align-middle">
             <thead class="table-light">
                 <tr>
-                    <th>ID</th>
-                    <th>Supplier Name</th>
-                    <th>Employee Name</th>
-                    <th>Email</th>
-                    <th>Contact</th>
-                    <th>Address</th>
-                    <th>Status</th>
-                    <th>Note</th>
-                    <th style="width: 200px;">Actions</th>
+                    <th class="text-center" style="width: 60px;">ID</th>
+                    <th class="text-center">Supplier Name</th>
+                    <th class="text-center">Employee Name</th>
+                    <th class="text-center">Email</th>
+                    <th class="text-center">Contact</th>
+                    <th class="text-center">Address</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center">Note</th>
+                    <th class="text-center" style="width: 120px;">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -133,13 +133,75 @@
 </div>
 @endsection
 
+@push('styles')
+<style>
+    #supplierTable th {
+        white-space: nowrap !important;
+        text-align: center;
+        vertical-align: middle;
+        padding: 8px 4px !important;
+        font-size: 14px !important;
+        line-height: 1.2 !important;
+    }
+    
+    #supplierTable th.text-center {
+        text-align: center !important;
+    }
+    
+    /* Ensure table headers don't wrap */
+    .table thead th {
+        white-space: nowrap !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        word-break: keep-all !important;
+        hyphens: none !important;
+    }
+    
+    /* Specific styling for supplier table headers */
+    #supplierTable thead th {
+        white-space: nowrap !important;
+        word-wrap: normal !important;
+        word-break: keep-all !important;
+        max-width: none !important;
+    }
+    
+    /* Force single line for specific columns */
+    #supplierTable th:nth-child(2), /* Supplier Name */
+    #supplierTable th:nth-child(3) { /* Employee Name */
+        white-space: nowrap !important;
+        word-break: keep-all !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
+    }
+    
+    /* Actions column styling */
+    #supplierTable td:last-child {
+        white-space: nowrap !important;
+        padding: 4px !important;
+    }
+    
+    #supplierTable td:last-child .btn {
+        padding: 4px 6px !important;
+        font-size: 12px !important;
+        margin: 0 1px !important;
+    }
+</style>
+@endpush
+
 @push('scripts')
 <script>
     $(document).ready(function () {
         $('#supplierTable').DataTable({
             pageLength: 10,
-            responsive: true,
+            responsive: false, // Disable responsive to prevent column wrapping
             autoWidth: false,
+            scrollX: true, // Enable horizontal scroll if needed
+            columnDefs: [
+                { targets: '_all', className: 'text-center' },
+                { targets: [1, 2], className: 'text-center', width: '150px' }, // Supplier Name & Employee Name
+                { targets: [0], width: '60px' }, // ID column
+                { targets: [8], width: '120px' } // Actions column
+            ],
             language: {
                 search: "_INPUT_",
                 searchPlaceholder: "Search suppliers...",

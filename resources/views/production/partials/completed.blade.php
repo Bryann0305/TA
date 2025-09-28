@@ -62,62 +62,53 @@
                 @else
                     <p class="text-muted">Produk jadi untuk produksi ini belum terdaftar.</p>
                 @endif
+
+                {{-- Detail Informasi Hasil Produksi --}}
+                @if($prod->Jumlah_Berhasil > 0 || $prod->Jumlah_Gagal > 0)
+                    <button class="btn btn-outline-info btn-sm mt-2" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#detailHasil{{ $prodId }}">
+                        <i class="bi bi-info-circle me-1"></i> Detail Informasi
+                    </button>
+
+                    <div class="collapse mt-3" id="detailHasil{{ $prodId }}">
+                        <div class="card border-info">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0">Hasil Produksi</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="alert alert-success">
+                                            <h6 class="alert-heading">Jumlah Berhasil</h6>
+                                            <p class="mb-0"><strong>{{ $prod->Jumlah_Berhasil ?? 0 }}</strong> unit</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="alert alert-danger">
+                                            <h6 class="alert-heading">Jumlah Gagal</h6>
+                                            <p class="mb-0"><strong>{{ $prod->Jumlah_Gagal ?? 0 }}</strong> unit</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                @if($prod->gagalProduksi && $prod->gagalProduksi->count() > 0)
+                                    <div class="mt-3">
+                                        <h6>Detail Gagal Produksi:</h6>
+                                        <ul class="list-group">
+                                            @foreach($prod->gagalProduksi as $gagal)
+                                                <li class="list-group-item">
+                                                    <strong>Total Gagal:</strong> {{ $gagal->Total_Gagal }} unit<br>
+                                                    <strong>Keterangan:</strong> {{ $gagal->Keterangan ?? '-' }}
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     @endforeach
 @endif
-
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const forms = document.querySelectorAll('.form-complete');
-
-    forms.forEach(form => {
-        const hasilInputs = form.querySelectorAll('.hasil-input');
-        const gagalInputs = form.querySelectorAll('.gagal-input');
-
-        function validateSum() {
-            hasilInputs.forEach((hInput, idx) => {
-                const gInput = gagalInputs[idx];
-                const max = parseInt(hInput.dataset.max) || 0;
-                let sum = parseInt(hInput.value || 0) + parseInt(gInput.value || 0);
-                if(sum > max){
-                    alert('Jumlah Berhasil + Gagal tidak boleh melebihi Jumlah Pesanan!');
-                    hInput.value = 0;
-                    gInput.value = 0;
-                }
-            });
-        }
-
-        hasilInputs.forEach(input => input.addEventListener('change', validateSum));
-        gagalInputs.forEach(input => input.addEventListener('change', validateSum));
-
-        form.addEventListener('submit', function(e){
-            e.preventDefault();
-            const prodId = form.dataset.prodId;
-            const actionUrl = /production/${prodId}/complete;
-            const data = new FormData(form);
-
-            fetch(actionUrl, {
-                method: 'POST',
-                body: data,
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                }
-            })
-            .then(response => response.json())
-            .then(result => {
-                if(result.success){
-                    alert(result.success);
-                    let tab = result.redirect_tab || 'all';
-                    window.location.href = /production?tab=${tab};
-                } else if(result.error){
-                    alert(result.error);
-                }
-            })
-            .catch(err => console.error(err));
-        });
-    });
-});
-</script>
-@endpush

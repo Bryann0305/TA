@@ -14,7 +14,7 @@ class Kategori extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'Nama_Kategori', 'Status'
+        'Nama_Kategori'
     ];
 
     public function barang()

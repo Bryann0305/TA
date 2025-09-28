@@ -47,7 +47,7 @@
         {{-- Order Date --}}
         <div class="mb-3">
             <label for="Tanggal_Pemesanan" class="form-label">Order Date</label>
-            <input type="date" name="Tanggal_Pemesanan" class="form-control" required>
+            <input type="date" name="Tanggal_Pemesanan" class="form-control" value="{{ date('Y-m-d') }}" readonly required>
         </div>
 
         {{-- Arrival Date --}}
@@ -72,13 +72,14 @@
         <h4>Items</h4>
         <table class="table table-bordered align-middle" id="item-table">
             <thead class="table-light">
-                <tr>
-                    <th>Item</th>
-                    <th style="width: 120px;">Quantity</th>
-                    <th style="width: 120px;">Price</th>
-                    <th style="width: 120px;">Total</th>
-                    <th style="width: 100px;">Action</th>
-                </tr>
+            <tr>
+                <th style="width: 200px;">Item</th>
+                <th style="width: 100px;">Satuan</th>
+                <th style="width: 100px;">Quantity</th>
+                <th style="width: 130px;">Price</th>
+                <th style="width: 130px;">Total</th>
+                <th style="width: 100px;">Action</th>
+            </tr>
             </thead>
             <tbody>
                 <tr class="item-row">
@@ -86,13 +87,14 @@
                         <select name="details[0][bahan_baku_Id_Bahan]" class="form-select" required>
                             <option value="">-- Select Item --</option>
                             @foreach($barangs as $barang)
-                                <option value="{{ $barang->Id_Bahan }}">{{ $barang->Nama_Bahan }}</option>
+                                <option value="{{ $barang->Id_Bahan }}" data-satuan="{{ $barang->Satuan }}">{{ $barang->Nama_Bahan }}</option>
                             @endforeach
                         </select>
                     </td>
+                    <td class="text-center satuan-display">-</td>
                     <td><input type="number" name="details[0][Jumlah]" class="form-control jumlah" required min="1"></td>
-                    <td><input type="number" name="details[0][Harga]" class="form-control harga" required min="0"></td>
-                    <td><input type="number" name="details[0][Total]" class="form-control total" readonly></td>
+                    <td><input type="text" name="details[0][Harga]" class="form-control harga" required placeholder="0"></td>
+                    <td><input type="text" name="details[0][Total]" class="form-control total" readonly></td>
                     <td class="text-center">
                         <button type="button" class="btn btn-dark btn-sm btn-remove">
                             <i class="bi bi-trash"></i>
@@ -100,7 +102,7 @@
                     </td>
                 </tr>
                 <tr>
-                    <td colspan="5" class="text-center">
+                    <td colspan="6" class="text-center">
                         <button type="button" id="btn-add-item" class="btn btn-warning btn-sm">
                             <i class="bi bi-plus me-1"></i> Add Item
                         </button>
@@ -109,10 +111,16 @@
             </tbody>
         </table>
 
+        {{-- Biaya Pengiriman --}}
+        <div class="mb-3">
+            <label for="Biaya_Pengiriman" class="form-label">Biaya Pengiriman</label>
+            <input type="text" name="Biaya_Pengiriman" id="Biaya_Pengiriman" class="form-control" placeholder="0" value="{{ old('Biaya_Pengiriman', '0') }}">
+        </div>
+
         {{-- Grand Total --}}
         <div class="mb-3">
             <label for="Total_Biaya" class="form-label">Grand Total</label>
-            <input type="number" name="Total_Biaya" id="Total_Biaya" class="form-control" readonly>
+            <input type="text" name="Total_Biaya" id="Total_Biaya" class="form-control" readonly>
         </div>
 
         <button type="submit" class="btn btn-primary">
@@ -135,13 +143,14 @@ document.getElementById('btn-add-item').addEventListener('click', function() {
             <select name="details[${index}][bahan_baku_Id_Bahan]" class="form-select" required>
                 <option value="">-- Select Item --</option>
                 @foreach($barangs as $barang)
-                    <option value="{{ $barang->Id_Bahan }}">{{ $barang->Nama_Bahan }}</option>
+                    <option value="{{ $barang->Id_Bahan }}" data-satuan="{{ $barang->Satuan }}">{{ $barang->Nama_Bahan }}</option>
                 @endforeach
             </select>
         </td>
+        <td class="text-center satuan-display">-</td>
         <td><input type="number" name="details[${index}][Jumlah]" class="form-control jumlah" required min="1"></td>
-        <td><input type="number" name="details[${index}][Harga]" class="form-control harga" required min="0"></td>
-        <td><input type="number" name="details[${index}][Total]" class="form-control total" readonly></td>
+        <td><input type="text" name="details[${index}][Harga]" class="form-control harga" required placeholder="0"></td>
+        <td><input type="text" name="details[${index}][Total]" class="form-control total" readonly></td>
         <td class="text-center">
             <button type="button" class="btn btn-dark btn-sm btn-remove">
                 <i class="bi bi-trash"></i>
@@ -160,23 +169,119 @@ document.addEventListener('click', function(e){
     }
 });
 
-// Calculate total per row and grand total
+// Update satuan when item is selected
+document.addEventListener('change', function(e){
+    if(e.target.tagName === 'SELECT' && e.target.name.includes('bahan_baku_Id_Bahan')){
+        const row = e.target.closest('.item-row');
+        const satuanDisplay = row.querySelector('.satuan-display');
+        const selectedOption = e.target.selectedOptions[0];
+        
+        if(selectedOption && selectedOption.dataset.satuan){
+            satuanDisplay.textContent = selectedOption.dataset.satuan;
+        } else {
+            satuanDisplay.textContent = '-';
+        }
+    }
+});
+
+// Handle input for both formatting and calculation
 document.addEventListener('input', function(e){
-    if(e.target.classList.contains('jumlah') || e.target.classList.contains('harga')){
+    console.log('Input event triggered:', e.target.className);
+    
+    if(e.target.classList.contains('harga')){
+        console.log('Processing harga input');
+        let value = e.target.value.replace(/[^\d]/g, ''); // Remove non-digits
+        if(value){
+            // Format with Rp and dots as thousand separators
+            value = 'Rp ' + parseInt(value).toLocaleString('id-ID');
+            e.target.value = value;
+            console.log('Formatted harga:', value);
+        }
+        
+        // Calculate total after formatting
         let row = e.target.closest('.item-row');
         const qty = parseFloat(row.querySelector('.jumlah').value) || 0;
-        const price = parseFloat(row.querySelector('.harga').value) || 0;
-        row.querySelector('.total').value = qty * price;
+        
+        // Parse price by removing Rp and dots, then converting to number
+        const priceText = e.target.value.replace(/Rp\s?/g, '').replace(/\./g, '');
+        const price = parseFloat(priceText) || 0;
+        
+        console.log('Qty:', qty, 'Price:', price);
+        
+        const total = qty * price;
+        const formattedTotal = 'Rp ' + total.toLocaleString('id-ID');
+        row.querySelector('.total').value = formattedTotal;
+        console.log('Set total to:', formattedTotal);
+        
+        calculateGrandTotal();
+    }
+    
+    if(e.target.classList.contains('jumlah')){
+        console.log('Processing jumlah input');
+        let row = e.target.closest('.item-row');
+        const qty = parseFloat(e.target.value) || 0;
+        
+        // Parse price by removing Rp and dots, then converting to number
+        const priceText = row.querySelector('.harga').value.replace(/Rp\s?/g, '').replace(/\./g, '');
+        const price = parseFloat(priceText) || 0;
+        
+        console.log('Qty:', qty, 'Price:', price);
+        
+        const total = qty * price;
+        const formattedTotal = 'Rp ' + total.toLocaleString('id-ID');
+        row.querySelector('.total').value = formattedTotal;
+        console.log('Set total to:', formattedTotal);
+        
+        calculateGrandTotal();
+    }
+    
+    if(e.target.id === 'Biaya_Pengiriman'){
+        console.log('Processing biaya pengiriman input');
+        let value = e.target.value.replace(/[^\d]/g, ''); // Remove non-digits
+        if(value){
+            // Format with Rp and dots as thousand separators
+            value = 'Rp ' + parseInt(value).toLocaleString('id-ID');
+            e.target.value = value;
+            console.log('Formatted biaya pengiriman:', value);
+        }
+        
         calculateGrandTotal();
     }
 });
 
 function calculateGrandTotal(){
+    console.log('Calculating grand total...');
     let total = 0;
-    document.querySelectorAll('.item-row').forEach(row => {
-        total += parseFloat(row.querySelector('.total').value) || 0;
+    document.querySelectorAll('.item-row').forEach((row, index) => {
+        const totalElement = row.querySelector('.total');
+        const totalValue = totalElement.value;
+        console.log(`Row ${index} total value:`, totalValue);
+        
+        // Parse total by removing Rp and dots, then converting to number
+        const totalText = totalValue.replace(/Rp\s?/g, '').replace(/\./g, '');
+        const numericTotal = parseFloat(totalText) || 0;
+        console.log(`Row ${index} numeric total:`, numericTotal);
+        
+        total += numericTotal;
     });
-    document.getElementById('Total_Biaya').value = total;
+    
+    // Add shipping cost
+    const biayaPengirimanElement = document.getElementById('Biaya_Pengiriman');
+    const biayaPengirimanValue = biayaPengirimanElement.value;
+    console.log('Biaya pengiriman value:', biayaPengirimanValue);
+    
+    const biayaPengirimanText = biayaPengirimanValue.replace(/Rp\s?/g, '').replace(/\./g, '');
+    const biayaPengiriman = parseFloat(biayaPengirimanText) || 0;
+    console.log('Biaya pengiriman numeric:', biayaPengiriman);
+    
+    total += biayaPengiriman;
+    
+    console.log('Grand total calculated:', total);
+    
+    // Format grand total with currency format
+    const formattedGrandTotal = 'Rp ' + total.toLocaleString('id-ID');
+    document.getElementById('Total_Biaya').value = formattedGrandTotal;
+    console.log('Set grand total to:', formattedGrandTotal);
 }
 </script>
 @endsection

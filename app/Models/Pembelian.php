@@ -19,6 +19,7 @@ class Pembelian extends Model
         'Tanggal_Kedatangan',
         'Status_Pembayaran',
         'Metode_Pembayaran',
+        'Biaya_Pengiriman',
         'Nama_Barang',
         'user_Id_User',
         'supplier_Id_Supplier',

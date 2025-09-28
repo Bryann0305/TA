@@ -25,6 +25,7 @@ class ProductionOrderController extends Controller
     {
         // Hanya tampilkan pesanan produksi yang belum punya SPK
         $pesanan = PesananProduksi::doesntHave('productionOrder')->get();
+        
         return view('production-order.create', compact('pesanan'));
     }
 

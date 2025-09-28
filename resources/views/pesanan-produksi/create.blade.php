@@ -25,7 +25,7 @@
         {{-- Order Date --}}
         <div class="mb-3">
             <label for="Tanggal_Pesanan" class="form-label">Order Date</label>
-            <input type="date" name="Tanggal_Pesanan" class="form-control" required>
+            <input type="date" name="Tanggal_Pesanan" class="form-control" value="{{ date('Y-m-d') }}" readonly required>
         </div>
 
         {{-- Customer --}}

@@ -18,6 +18,8 @@ use App\Http\Controllers\GudangController;
 use App\Http\Controllers\DetailPembelianController;
 use App\Http\Controllers\DetailPesananProduksiController;
 use App\Http\Controllers\ProductionOrderController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\BiayaGudangController;
 
 // Guest routes
 Route::middleware('guest')->group(function () {
@@ -34,9 +36,11 @@ Route::middleware('auth')->group(function () {
     // Inventory Section (Roles: admin, gudang, pembelian, manajer_produksi)
 Route::middleware('Role:admin,gudang,pembelian,manajer_produksi')->group(function () {
 
-    // Resource tanpa create/store
-    Route::resource('inventory', InventoryController::class)->except(['create','store'])->names([
+    // Resource dengan create/store
+    Route::resource('inventory', InventoryController::class)->names([
         'index' => 'inventory.index',
+        'create' => 'inventory.create',
+        'store' => 'inventory.store',
         'show' => 'inventory.show',
         'edit' => 'inventory.edit',
         'update' => 'inventory.update',
@@ -52,20 +56,22 @@ Route::middleware('Role:admin,gudang,pembelian,manajer_produksi')->group(functio
 });
 
         // Production Section (Roles: admin, pembelian)
-        Route::prefix('production')->group(function() {
-            Route::get('/', [ProductionController::class, 'index'])->name('production.index');
-            Route::get('/create', [ProductionController::class, 'create'])->name('production.create');
-            Route::post('/store', [ProductionController::class, 'store'])->name('production.store');
-            Route::get('/{id}', [ProductionController::class, 'show'])->name('production.show');
-            Route::post('/{id}/complete', [ProductionController::class, 'complete'])->name('production.complete');
-            Route::post('/{id}/approve', [ProductionController::class, 'approve'])->name('production.approve');
-            Route::post('/{id}/update-hasil', [ProductionController::class, 'updateHasil'])->name('produksi.updateHasil');
-            Route::get('/{id}/edit', [ProductionController::class, 'edit'])->name('production.edit');
-            Route::put('/{id}', [ProductionController::class, 'update'])->name('production.update'); // ✅ tambahkan ini
-            Route::delete('/{id}', [ProductionController::class, 'destroy'])->name('production.destroy');
-            Route::get('ajax-order/{order}', [ProductionController::class,'ajaxOrderDetails'])->name('production.ajaxOrder');
-            Route::get('{id}/bom-details', [ProductionController::class,'bomDetails'])->name('production.bomDetails');
-            Route::post('{id}/move-to-completed', [ProductionController::class,'moveToCompleted'])->name('production.moveToCompleted');
+        Route::prefix('production')->name('production.')->group(function() {
+            Route::get('/', [ProductionController::class, 'index'])->name('index');
+            Route::get('/create', [ProductionController::class, 'create'])->name('create');
+            Route::post('/store', [ProductionController::class, 'store'])->name('store');
+            Route::get('/{id}', [ProductionController::class, 'show'])->name('show');
+            Route::post('/{id}/complete', [ProductionController::class, 'complete'])->name('complete');
+            Route::post('/{id}/approve', [ProductionController::class, 'approve'])->name('approve');
+            Route::post('/{id}/update-hasil', [ProductionController::class, 'updateHasil'])->name('updateHasil');
+            Route::get('/{id}/edit', [ProductionController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [ProductionController::class, 'update'])->name('update');
+            Route::delete('/{id}', [ProductionController::class, 'destroy'])->name('destroy');
+            Route::get('/ajax-order/{order}', [ProductionController::class,'ajaxOrderDetails'])->name('ajaxOrder');
+            Route::get('/{id}/bom-details', [ProductionController::class,'bomDetails'])->name('bomDetails');
+            Route::post('/{id}/move-to-completed', [ProductionController::class,'moveToCompleted'])->name('moveToCompleted');
+            Route::get('/bom-data', [ProductionController::class,'getBomData'])->name('getBomData');
+            Route::get('/stock-data', [ProductionController::class,'getStockData'])->name('getStockData');
         });
 
         // Pelanggan Section (Roles: admin, pembelian)
@@ -93,6 +99,12 @@ Route::middleware('Role:admin,gudang,pembelian,manajer_produksi')->group(functio
             
             // Toggle Payment
             Route::patch('/{id}/toggle-payment', [ProcurementController::class, 'togglePayment'])->name('toggle_payment');
+            
+            // Update Receiving Status
+            Route::patch('/{id}/update-receiving-status', [ProcurementController::class, 'updateReceivingStatus'])->name('updateReceivingStatus');
+            
+            // Download PDF
+            Route::get('/{id}/pdf', [ProcurementController::class, 'downloadPdf'])->name('pdf');
 
             // Nested route untuk detail pembelian
             Route::prefix('{purchaseId}/details')->name('details.')->group(function () {
@@ -124,6 +136,17 @@ Route::middleware('Role:admin,gudang,pembelian,manajer_produksi')->group(functio
             Route::get('/{id}/edit', [GudangController::class, 'edit'])->name('edit');
             Route::put('/{id}', [GudangController::class, 'update'])->name('update');
             Route::delete('/{id}', [GudangController::class, 'destroy'])->name('destroy');
+        });
+
+        // Category Section (Roles: admin, gudang, pembelian, manajer_produksi)
+        Route::middleware('Role:admin,gudang,pembelian,manajer_produksi')->prefix('category')->name('category.')->group(function () {
+            Route::get('/', [CategoryController::class, 'index'])->name('index');
+            Route::get('/create', [CategoryController::class, 'create'])->name('create');
+            Route::post('/', [CategoryController::class, 'store'])->name('store');
+            Route::get('/{id}', [CategoryController::class, 'show'])->name('show');
+            Route::get('/{id}/edit', [CategoryController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [CategoryController::class, 'update'])->name('update');
+            Route::delete('/{id}', [CategoryController::class, 'destroy'])->name('destroy');
         });
 
         // Pesanan Produksi
@@ -176,6 +199,17 @@ Route::middleware('Role:admin,gudang,pembelian,manajer_produksi')->group(functio
             Route::get('/{id}/edit', [PenjadwalanController::class, 'edit'])->name('edit');
             Route::put('/{id}', [PenjadwalanController::class, 'update'])->name('update');
             Route::delete('/{id}', [PenjadwalanController::class, 'destroy'])->name('destroy');
+        });
+
+        // Biaya Gudang
+        Route::middleware('Role:admin,gudang,manajer_produksi')->group(function () {
+            Route::get('/biaya-gudang', [BiayaGudangController::class, 'index'])->name('biaya-gudang.index');
+            Route::get('/biaya-gudang/create', [BiayaGudangController::class, 'create'])->name('biaya-gudang.create');
+            Route::post('/biaya-gudang', [BiayaGudangController::class, 'store'])->name('biaya-gudang.store');
+            Route::get('/biaya-gudang/{id}', [BiayaGudangController::class, 'show'])->name('biaya-gudang.show');
+            Route::get('/biaya-gudang/{id}/edit', [BiayaGudangController::class, 'edit'])->name('biaya-gudang.edit');
+            Route::put('/biaya-gudang/{id}', [BiayaGudangController::class, 'update'])->name('biaya-gudang.update');
+            Route::delete('/biaya-gudang/{id}', [BiayaGudangController::class, 'destroy'])->name('biaya-gudang.destroy');
         });
 
         // Reports & Settings

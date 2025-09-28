@@ -21,7 +21,7 @@
                 @if(isset($data['productionDetails'][$prod->Id_Produksi]))
                     @foreach($data['productionDetails'][$prod->Id_Produksi] as $detail)
                         <tr class="text-center">
-                            <td>{{ $detail->Nama_bill_of_material }}</td>
+                            <td>{{ str_replace('BOM - ', '', $detail->Nama_bill_of_material) }}</td>
                             <td>{{ $detail->Nama_Bahan }}</td>
                             <td>{{ $detail->jumlah }}</td>
                             <td>{{ $detail->status }}</td>

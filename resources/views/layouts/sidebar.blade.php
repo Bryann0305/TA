@@ -27,6 +27,8 @@
             flex-direction: column;
             justify-content: space-between;
             z-index: 1000;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .sidebar .nav-link {
@@ -40,6 +42,25 @@
 
         .sidebar .nav-link:hover {
             background-color: #1976d2;
+        }
+
+        /* Custom scrollbar for sidebar */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
         }
 
         .content-wrapper {
@@ -134,6 +155,24 @@
             <li class="nav-item">
                 <a href="{{ route('gudang.index') }}" class="nav-link {{ Request::routeIs('gudang.*') ? 'active' : '' }}">
                     <i class="bi bi-building me-2"></i> Warehouse
+                </a>
+            </li>
+            @endif
+
+            {{-- Biaya Gudang --}}
+            @if($role === 'admin' || $role === 'gudang' || $role === 'manajer_produksi')
+            <li class="nav-item">
+                <a href="{{ route('biaya-gudang.index') }}" class="nav-link {{ Request::routeIs('biaya-gudang.*') ? 'active' : '' }}">
+                    <i class="bi bi-cash-coin me-2"></i> Biaya Gudang
+                </a>
+            </li>
+            @endif
+
+            {{-- Category --}}
+            @if($role === 'admin' || $role === 'gudang' || $role === 'pembelian' || $role === 'manajer_produksi')
+            <li class="nav-item">
+                <a href="{{ route('category.index') }}" class="nav-link {{ Request::routeIs('category.*') ? 'active' : '' }}">
+                    <i class="bi bi-tags me-2"></i> Category
                 </a>
             </li>
             @endif

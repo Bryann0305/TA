@@ -26,7 +26,7 @@
         {{-- Order Date --}}
         <div class="mb-3">
             <label for="Tanggal_Pesanan" class="form-label">Order Date</label>
-            <input type="date" name="Tanggal_Pesanan" class="form-control" value="{{ $pesanan->Tanggal_Pesanan->format('Y-m-d') }}" required>
+            <input type="date" name="Tanggal_Pesanan" class="form-control" value="{{ $pesanan->Tanggal_Pesanan->format('Y-m-d') }}" readonly required>
         </div>
 
         {{-- Customer --}}

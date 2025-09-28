@@ -30,11 +30,6 @@
             <input type="text" name="Nama_Bahan" class="form-control" required>
         </div>
 
-        {{-- Stock --}}
-        <div class="mb-3">
-            <label class="form-label">Stock</label>
-            <input type="number" name="Stok" class="form-control" required min="0">
-        </div>
 
         {{-- Type --}}
         <div class="mb-3">
@@ -57,27 +52,39 @@
             </select>
         </div>
 
-        {{-- Unit --}}
+        {{-- Warehouse --}}
         <div class="mb-3">
-            <label class="form-label">Unit</label>
-            <select name="Unit" class="form-select" required>
-                <option value="">-- Select Unit --</option>
-                <option value="drum">Drum</option>
-                <option value="pcs">Pcs</option>
-                <option value="karung">Bag</option>
+            <label class="form-label">Warehouse</label>
+            <select name="gudang_Id_Gudang" class="form-select" required>
+                <option value="">-- Select Warehouse --</option>
+                @foreach($gudangs as $gudang)
+                    <option value="{{ $gudang->Id_Gudang }}">{{ $gudang->Nama_Gudang }}</option>
+                @endforeach
             </select>
         </div>
 
-        {{-- Weight per Unit --}}
+        {{-- Satuan --}}
         <div class="mb-3">
-            <label class="form-label">Weight per Unit</label>
-            <input type="number" step="0.01" name="Berat" class="form-control" required>
+            <label class="form-label">Satuan</label>
+            <select name="Satuan" class="form-select" required>
+                <option value="">-- Select Satuan --</option>
+                @foreach($satuanOptions as $value => $label)
+                    <option value="{{ $value }}">{{ $label }}</option>
+                @endforeach
+            </select>
         </div>
 
-        {{-- Fixed Unit --}}
+
+        {{-- EOQ (Economic Order Quantity) --}}
         <div class="mb-3">
-            <label class="form-label">Unit Type</label>
-            <input type="text" name="Satuan" class="form-control" value="kg/liter" readonly>
+            <label class="form-label">EOQ (Economic Order Quantity)</label>
+            <input type="number" step="0.01" name="EOQ" class="form-control" min="0" value="0">
+        </div>
+
+        {{-- ROP (Reorder Point) --}}
+        <div class="mb-3">
+            <label class="form-label">ROP (Reorder Point)</label>
+            <input type="number" step="0.01" name="ROP" class="form-control" min="0" value="100">
         </div>
 
         {{-- Action Buttons --}}

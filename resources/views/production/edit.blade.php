@@ -75,7 +75,7 @@
                                 <option value="">-- Pilih BOM --</option>
                                 @foreach($boms as $bom)
                                     <option value="{{ $bom->Id_bill_of_material }}" {{ $bom->Id_bill_of_material == $bomId ? 'selected' : '' }}>
-                                        {{ $bom->Nama_BOM ?? $bom->Nama_bill_of_material }}
+                                        {{ str_replace('BOM - ', '', $bom->Nama_BOM ?? $bom->Nama_bill_of_material) }}
                                     </option>
                                 @endforeach
                             </select>
@@ -147,7 +147,7 @@ document.getElementById('btn-add-bom').addEventListener('click', function() {
             <select name="bom_ids[]" class="form-select" required>
                 <option value="">-- Pilih BOM --</option>
                 @foreach($boms as $bom)
-                    <option value="{{ $bom->Id_bill_of_material }}">{{ $bom->Nama_BOM ?? $bom->Nama_bill_of_material }}</option>
+                    <option value="{{ $bom->Id_bill_of_material }}">{{ str_replace('BOM - ', '', $bom->Nama_BOM ?? $bom->Nama_bill_of_material) }}</option>
                 @endforeach
             </select>
         </td>

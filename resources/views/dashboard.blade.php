@@ -39,7 +39,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <p class="mb-0 text-muted">Procurement Cost</p>
-                        <h5>$28,459</h5>
+                        <h5>Rp 28.459.000</h5>
                         <small class="text-danger">↓ 3% since last month</small>
                     </div>
                     <div class="card-icon">

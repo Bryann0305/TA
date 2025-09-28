@@ -57,14 +57,16 @@
                             @foreach($produksi->details->groupBy('bill_of_material_id') as $bomId => $details)
                                 @php
                                     $bom = $details->first()->billOfMaterial;
+                                    $jumlahBahanBaku = $bom ? $bom->barangs->count() : 0; // Jumlah bahan baku yang berbeda dari BOM
+                                    $quantityPesanan = optional($produksi->productionOrder->pesananProduksi)->Jumlah_Pesanan ?? 1;
                                 @endphp
                                 <tr>
-                                    <td>{{ $bom->Nama_BOM ?? 'BOM #'.$bomId }}</td>
-                                    <td>{{ $details->sum('jumlah') }}</td>
+                                    <td>{{ $bom->Nama_bill_of_material ?? 'BOM #'.$bomId }}</td>
+                                    <td>{{ $jumlahBahanBaku }} bahan baku</td>
                                     <td>
                                         <ul class="mb-0">
                                             @foreach($bom->barangs ?? [] as $barang)
-                                                <li>{{ $barang->Nama_Bahan ?? 'Barang #'.$barang->Id_Barang }}</li>
+                                                <li>{{ $barang->Nama_Bahan ?? 'Barang #'.$barang->Id_Bahan }} ({{ $barang->pivot->Jumlah_Bahan * $quantityPesanan }} {{ $barang->Satuan }})</li>
                                             @endforeach
                                         </ul>
                                     </td>

@@ -23,43 +23,61 @@
         @csrf
         @method('PUT')
 
-        {{-- BOM Name --}}
-        <div class="mb-3">
-            <label for="Nama_bill_of_material" class="form-label">BOM Name</label>
-            <input type="text" name="Nama_bill_of_material" class="form-control" value="{{ $bom->Nama_bill_of_material }}" required>
-        </div>
-
         {{-- Hidden Status --}}
         <input type="hidden" name="Status" value="{{ $bom->Status }}">
 
-        {{-- Items --}}
-        <h4>Items</h4>
-        <div id="item-wrapper">
-            @foreach($bom->barangs as $i => $barang)
-            <div class="row mb-2 align-items-center item">
-                <div class="col-md-5">
-                    <select name="barang[{{ $i }}][barang_Id_Bahan]" class="form-select" required>
-                        <option value="">-- Select Item --</option>
-                        @foreach($barangs as $b)
-                            <option value="{{ $b->Id_Bahan }}" {{ $barang->Id_Bahan == $b->Id_Bahan ? 'selected' : '' }}>
-                                {{ $b->Nama_Bahan }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <input type="number" name="barang[{{ $i }}][Jumlah_Bahan]" class="form-control" placeholder="Quantity" min="1" value="{{ $barang->pivot->Jumlah_Bahan }}" required>
-                </div>
-                <div class="col-md-3 text-end">
-                    <button type="button" class="btn btn-danger btn-remove">Remove</button>
-                </div>
+        {{-- Finished Goods (Produk) Selection --}}
+        <div class="mb-4">
+            <h4>Finished Goods (Produk)</h4>
+            <div class="mb-3">
+                <select name="finished_good_id" class="form-select" required>
+                    <option value="">-- Select Finished Good --</option>
+                    @foreach($finishedGoods as $product)
+                        @php
+                            // Extract product name from BOM name (remove "BOM - " prefix)
+                            $currentProductName = str_replace('BOM - ', '', $bom->Nama_bill_of_material);
+                        @endphp
+                        <option value="{{ $product->Id_Bahan }}" {{ $currentProductName == $product->Nama_Bahan ? 'selected' : '' }}>
+                            {{ $product->Nama_Bahan }} ({{ $product->Satuan }})
+                        </option>
+                    @endforeach
+                </select>
             </div>
-            @endforeach
+        </div>
+
+        {{-- Raw Materials (Bahan Baku) --}}
+        <div class="mb-4">
+            <h4>Raw Materials (Bahan Baku)</h4>
+            <div id="raw-materials-wrapper">
+                @foreach($bom->barangs as $i => $material)
+                <div class="row mb-2 align-items-center raw-material-item">
+                    <div class="col-md-5">
+                        <select name="raw_materials[{{ $i }}][barang_Id_Bahan]" class="form-select raw-material-select" required>
+                            <option value="">-- Select Raw Material --</option>
+                            @foreach($rawMaterials as $raw)
+                                <option value="{{ $raw->Id_Bahan }}" data-satuan="{{ $raw->Satuan }}" {{ $material->Id_Bahan == $raw->Id_Bahan ? 'selected' : '' }}>
+                                    {{ $raw->Nama_Bahan }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <span class="satuan-display text-center d-block">{{ $material->Satuan ?? '-' }}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="number" name="raw_materials[{{ $i }}][Jumlah_Bahan]" class="form-control" placeholder="Quantity" min="1" value="{{ $material->pivot->Jumlah_Bahan }}" required>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <button type="button" class="btn btn-danger btn-sm btn-remove-raw">Remove</button>
+                    </div>
+                </div>
+                @endforeach
+            </div>
         </div>
 
         <div class="mb-3">
-            <button type="button" id="btn-add-item" class="btn btn-secondary">
-                <i class="bi bi-plus me-2"></i> Add Item
+            <button type="button" id="btn-add-raw-material" class="btn btn-secondary">
+                <i class="bi bi-plus me-2"></i> Add Raw Material
             </button>
         </div>
 
@@ -70,36 +88,63 @@
 </div>
 
 <script>
-let index = {{ $bom->barangs->count() }};
+let rawMaterialIndex = {{ $bom->barangs->count() }};
 
-document.getElementById('btn-add-item').addEventListener('click', function() {
-    const wrapper = document.getElementById('item-wrapper');
+// Add Raw Material button
+document.getElementById('btn-add-raw-material').addEventListener('click', function() {
+    const wrapper = document.getElementById('raw-materials-wrapper');
     const div = document.createElement('div');
-    div.classList.add('row', 'mb-2', 'align-items-center', 'item');
+    div.classList.add('row', 'mb-2', 'align-items-center', 'raw-material-item');
     div.innerHTML = `
         <div class="col-md-5">
-            <select name="barang[${index}][barang_Id_Bahan]" class="form-select" required>
-                <option value="">-- Select Item --</option>
-                @foreach($barangs as $b)
-                    <option value="{{ $b->Id_Bahan }}">{{ $b->Nama_Bahan }}</option>
+            <select name="raw_materials[${rawMaterialIndex}][barang_Id_Bahan]" class="form-select raw-material-select" required>
+                <option value="">-- Select Raw Material --</option>
+                @foreach($rawMaterials as $material)
+                    <option value="{{ $material->Id_Bahan }}" data-satuan="{{ $material->Satuan }}">{{ $material->Nama_Bahan }}</option>
                 @endforeach
             </select>
         </div>
-        <div class="col-md-4">
-            <input type="number" name="barang[${index}][Jumlah_Bahan]" class="form-control" placeholder="Quantity" min="1" required>
+        <div class="col-md-2">
+            <span class="satuan-display text-center d-block">-</span>
         </div>
-        <div class="col-md-3 text-end">
-            <button type="button" class="btn btn-danger btn-remove">Remove</button>
+        <div class="col-md-3">
+            <input type="number" name="raw_materials[${rawMaterialIndex}][Jumlah_Bahan]" class="form-control" placeholder="Quantity" min="1" required>
+        </div>
+        <div class="col-md-2 text-end">
+            <button type="button" class="btn btn-danger btn-sm btn-remove-raw">Remove</button>
         </div>
     `;
     wrapper.appendChild(div);
-    index++;
+    rawMaterialIndex++;
 });
 
+// Remove Raw Material button
 document.addEventListener('click', function(e){
-    if(e.target && e.target.classList.contains('btn-remove')){
-        e.target.closest('.item').remove();
+    if(e.target && e.target.classList.contains('btn-remove-raw')){
+        e.target.closest('.raw-material-item').remove();
     }
+});
+
+// Update Satuan display when raw material is selected
+document.addEventListener('change', function(e){
+    if(e.target && e.target.classList.contains('raw-material-select')){
+        const selectedOption = e.target.options[e.target.selectedIndex];
+        const satuan = selectedOption.getAttribute('data-satuan');
+        const satuanDisplay = e.target.closest('.raw-material-item').querySelector('.satuan-display');
+        satuanDisplay.textContent = satuan || '-';
+    }
+});
+
+// Initialize satuan display for existing items
+document.addEventListener('DOMContentLoaded', function(){
+    document.querySelectorAll('.raw-material-select').forEach(function(select) {
+        select.addEventListener('change', function(){
+            const selectedOption = this.options[this.selectedIndex];
+            const satuan = selectedOption.getAttribute('data-satuan');
+            const satuanDisplay = this.closest('.raw-material-item').querySelector('.satuan-display');
+            satuanDisplay.textContent = satuan || '-';
+        });
+    });
 });
 </script>
 @endsection
