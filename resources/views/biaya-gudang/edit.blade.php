@@ -4,9 +4,9 @@
 <div class="container">
     {{-- Header --}}
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Edit Biaya Gudang</h2>
+        <h2>Edit Warehouse Cost</h2>
         <a href="{{ route('biaya-gudang.index') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left me-1"></i> Kembali
+            <i class="bi bi-arrow-left me-2"></i> Back
         </a>
     </div>
 
@@ -19,9 +19,10 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label for="gudang_Id_Gudang" class="form-label">Pilih Gudang <span class="text-danger">*</span></label>
-                            <select class="form-select @error('gudang_Id_Gudang') is-invalid @enderror" id="gudang_Id_Gudang" name="gudang_Id_Gudang" required>
-                                <option value="">-- Pilih Gudang --</option>
+                            <label for="gudang_Id_Gudang" class="form-label">Select Warehouse <span class="text-danger">*</span></label>
+                            <select class="form-select @error('gudang_Id_Gudang') is-invalid @enderror" 
+                                    id="gudang_Id_Gudang" name="gudang_Id_Gudang" required>
+                                <option value="">-- Choose Warehouse --</option>
                                 @foreach($gudangs as $gudang)
                                     <option value="{{ $gudang->Id_Gudang }}" 
                                             {{ (old('gudang_Id_Gudang', $biayaGudang->gudang_Id_Gudang) == $gudang->Id_Gudang) ? 'selected' : '' }}>
@@ -37,7 +38,7 @@
                     
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label for="tanggal_biaya" class="form-label">Tanggal Biaya <span class="text-danger">*</span></label>
+                            <label for="tanggal_biaya" class="form-label">Cost Date <span class="text-danger">*</span></label>
                             <input type="date" class="form-control @error('tanggal_biaya') is-invalid @enderror" 
                                    id="tanggal_biaya" name="tanggal_biaya" 
                                    value="{{ old('tanggal_biaya', $biayaGudang->tanggal_biaya->format('Y-m-d')) }}" required>
@@ -51,7 +52,7 @@
                 <div class="row">
                     <div class="col-md-4">
                         <div class="mb-3">
-                            <label for="biaya_sewa" class="form-label">Biaya Sewa <span class="text-danger">*</span></label>
+                            <label for="biaya_sewa" class="form-label">Rent Cost <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text">Rp</span>
                                 <input type="text" class="form-control @error('biaya_sewa') is-invalid @enderror currency-input" 
@@ -67,7 +68,7 @@
                     
                     <div class="col-md-4">
                         <div class="mb-3">
-                            <label for="biaya_listrik" class="form-label">Biaya Listrik <span class="text-danger">*</span></label>
+                            <label for="biaya_listrik" class="form-label">Electricity Cost <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text">Rp</span>
                                 <input type="text" class="form-control @error('biaya_listrik') is-invalid @enderror currency-input" 
@@ -83,7 +84,7 @@
                     
                     <div class="col-md-4">
                         <div class="mb-3">
-                            <label for="biaya_air" class="form-label">Biaya Air <span class="text-danger">*</span></label>
+                            <label for="biaya_air" class="form-label">Water Cost <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text">Rp</span>
                                 <input type="text" class="form-control @error('biaya_air') is-invalid @enderror currency-input" 
@@ -99,19 +100,19 @@
                 </div>
 
                 <div class="mb-3">
-                    <label for="keterangan" class="form-label">Keterangan</label>
+                    <label for="keterangan" class="form-label">Notes</label>
                     <textarea class="form-control @error('keterangan') is-invalid @enderror" 
                               id="keterangan" name="keterangan" rows="3" 
-                              placeholder="Tambahkan keterangan (opsional)">{{ old('keterangan', $biayaGudang->keterangan) }}</textarea>
+                              placeholder="Add additional notes (optional)">{{ old('keterangan', $biayaGudang->keterangan) }}</textarea>
                     @error('keterangan')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
 
                 <div class="d-flex justify-content-end gap-2">
-                    <a href="{{ route('biaya-gudang.index') }}" class="btn btn-light">Batal</a>
+                    <a href="{{ route('biaya-gudang.index') }}" class="btn btn-light">Cancel</a>
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-1"></i> Update
+                        <i class="bi bi-save me-2"></i> Update Cost
                     </button>
                 </div>
             </form>
@@ -123,7 +124,7 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
-        // Format mata uang untuk input
+        // Currency formatting
         $('.currency-input').on('input', function() {
             let value = this.value.replace(/[^\d]/g, '');
             if (value) {
@@ -131,7 +132,6 @@
             }
         });
 
-        // Format mata uang saat focus out
         $('.currency-input').on('blur', function() {
             let value = this.value.replace(/[^\d]/g, '');
             if (value) {
@@ -139,12 +139,10 @@
             }
         });
 
-        // Format mata uang saat focus in
         $('.currency-input').on('focus', function() {
             this.value = this.value.replace(/[^\d]/g, '');
         });
 
-        // Submit form - convert formatted values back to numbers
         $('form').on('submit', function() {
             $('.currency-input').each(function() {
                 this.value = this.value.replace(/[^\d]/g, '');

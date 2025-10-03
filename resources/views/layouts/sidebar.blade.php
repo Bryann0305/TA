@@ -163,7 +163,7 @@
             @if($role === 'admin' || $role === 'gudang' || $role === 'manajer_produksi')
             <li class="nav-item">
                 <a href="{{ route('biaya-gudang.index') }}" class="nav-link {{ Request::routeIs('biaya-gudang.*') ? 'active' : '' }}">
-                    <i class="bi bi-cash-coin me-2"></i> Biaya Gudang
+                    <i class="bi bi-cash-coin me-2"></i> Storage Cost
                 </a>
             </li>
             @endif

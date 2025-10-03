@@ -4,7 +4,7 @@
 <div class="container">
     {{-- Header --}}
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="fw-bold">Purchase Orders</h2>
+        <h2>Purchase Orders</h2>
         <a href="{{ route('procurement.create') }}" class="btn btn-primary">
             <i class="fas fa-plus me-1"></i> New Purchase Order
         </a>
@@ -46,7 +46,7 @@
             <tbody>
                 @forelse ($orders as $order)
                 <tr>
-                    <td class="text-center"><strong>PO-{{ $order->Id_Pembelian }}</strong></td>
+                    <td class="text-center">PO-{{ $order->Id_Pembelian }}</td>
                     <td class="text-center">{{ $order->supplier->Nama_Supplier ?? '-' }}</td>
                     <td class="text-center">{{ $order->Tanggal_Pemesanan ? $order->Tanggal_Pemesanan->format('d M Y') : '-' }}</td>
                     <td class="text-center">{{ $order->Tanggal_Kedatangan ? $order->Tanggal_Kedatangan->format('d M Y') : '-' }}</td>
@@ -75,17 +75,17 @@
                         @if($allReceived)
                             {{-- Status Complete - tidak bisa diubah --}}
                             <div class="d-inline-block">
-                                <span class="badge bg-success px-3 py-2" style="font-size: 14px; font-weight: 600;">
+                                <span class="badge bg-success px-3 py-2" style="font-size: 14px;">
                                     ✅ Completed
                                 </span>
-                                <small class="text-muted d-block mt-1">Status tidak dapat diubah</small>
+                                <small class="text-muted d-block mt-1">Status cannot be changed</small>
                             </div>
                         @else
                             {{-- Status Pending atau Mixed - bisa diubah --}}
                             <form action="{{ route('procurement.updateReceivingStatus', $order->Id_Pembelian) }}" method="POST" class="receiving-status-form d-inline-block">
                                 @csrf
                                 @method('PATCH')
-                                <select name="receiving_status" class="form-select form-select-sm receiving-status-select" onchange="this.form.submit()" style="border: 2px solid #28a745 !important; border-radius: 8px !important; padding: 8px 16px !important; background-color: #f8f9fa !important; color: #212529 !important; font-weight: 600 !important; min-width: 140px !important; font-size: 14px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;">
+                                <select name="receiving_status" class="form-select form-select-sm receiving-status-select" onchange="this.form.submit()" style="border: 1px solid #28a745; border-radius: 8px; padding: 8px 16px; background-color: #f8f9fa; color: #212529; min-width: 140px; font-size: 14px;">
                                     <option value="Pending" {{ $allPending ? 'selected' : '' }}>⏳ Pending</option>
                                     <option value="Diterima" {{ $allReceived ? 'selected' : '' }}>✅ Completed</option>
                                 </select>
@@ -96,7 +96,6 @@
                             <small class="text-muted d-block mt-1">Mixed Status</small>
                         @endif
                     </td>
-
 
                     {{-- Actions --}}
                     <td class="text-center">
@@ -161,7 +160,7 @@
     #purchaseOrderTable thead th {
         background-color: #f8f9fa !important;
         border-bottom: 2px solid #dee2e6 !important;
-        font-weight: 600 !important;
+        font-weight: normal !important; /* hilangkan bold */
         padding: 12px 8px !important;
         vertical-align: middle !important;
         white-space: nowrap !important;
@@ -170,6 +169,7 @@
     }
     
     #purchaseOrderTable tbody td {
+        font-weight: normal !important; /* hilangkan bold */
         padding: 12px 8px !important;
         vertical-align: middle !important;
         border-bottom: 1px solid #dee2e6 !important;
@@ -178,116 +178,24 @@
     #purchaseOrderTable tbody tr:hover {
         background-color: #f8f9fa !important;
     }
-    
-    /* Force styling for receiving status dropdowns */
+
+    /* Dropdown style */
     .receiving-status-select {
-        border: 1px solid #dee2e6 !important;
-        border-radius: 0.375rem !important;
-        transition: all 0.15s ease-in-out !important;
-        background-color: #fff !important;
-        color: #212529 !important;
-        font-size: 0.875rem !important;
-        padding: 0.375rem 2.25rem 0.375rem 0.75rem !important;
-        min-width: 120px !important;
-        width: 100% !important;
+        font-weight: normal !important; /* hilangkan bold */
     }
-    
-    .receiving-status-select:focus {
-        border-color: #86b7fe !important;
-        outline: 0 !important;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
-    }
-    
-    .receiving-status-select:hover {
-        border-color: #adb5bd !important;
-    }
-    
-    .receiving-status-select:disabled {
-        background-color: #e9ecef !important;
-        opacity: 0.65 !important;
-    }
-    
-    .receiving-status-select.loading {
-        background-color: #f8f9fa !important;
-        border-color: #6c757d !important;
-    }
-    
-    .status-mixed {
-        color: #6c757d !important;
-        font-size: 0.75rem !important;
-    }
-    
-    /* Ensure form styling */
-    .receiving-status-form {
-        display: inline-block !important;
-        width: 100% !important;
-    }
-    
+
     /* Badge styling */
     .badge {
+        font-weight: normal !important; /* hilangkan bold */
         font-size: 0.75rem !important;
         padding: 0.5em 0.75em !important;
     }
-    
+
     /* Action buttons */
     .btn-sm {
+        font-weight: normal !important;
         padding: 0.375rem 0.5rem !important;
         font-size: 0.75rem !important;
-    }
-    
-    /* Column width constraints */
-    #purchaseOrderTable th:nth-child(1), /* PO ID */
-    #purchaseOrderTable td:nth-child(1) {
-        min-width: 80px !important;
-        max-width: 100px !important;
-    }
-    
-    #purchaseOrderTable th:nth-child(2), /* Supplier */
-    #purchaseOrderTable td:nth-child(2) {
-        min-width: 120px !important;
-        max-width: 150px !important;
-    }
-    
-    #purchaseOrderTable th:nth-child(3), /* Order Date */
-    #purchaseOrderTable td:nth-child(3) {
-        min-width: 100px !important;
-        max-width: 120px !important;
-    }
-    
-    #purchaseOrderTable th:nth-child(4), /* Arrival Date */
-    #purchaseOrderTable td:nth-child(4) {
-        min-width: 100px !important;
-        max-width: 120px !important;
-    }
-    
-    #purchaseOrderTable th:nth-child(5), /* Total Cost */
-    #purchaseOrderTable td:nth-child(5) {
-        min-width: 120px !important;
-        max-width: 150px !important;
-    }
-    
-    #purchaseOrderTable th:nth-child(6), /* Payment Method */
-    #purchaseOrderTable td:nth-child(6) {
-        min-width: 100px !important;
-        max-width: 120px !important;
-    }
-    
-    #purchaseOrderTable th:nth-child(7), /* Payment Status */
-    #purchaseOrderTable td:nth-child(7) {
-        min-width: 120px !important;
-        max-width: 140px !important;
-    }
-    
-    #purchaseOrderTable th:nth-child(8), /* Receiving Status */
-    #purchaseOrderTable td:nth-child(8) {
-        min-width: 140px !important;
-        max-width: 160px !important;
-    }
-    
-    #purchaseOrderTable th:nth-child(9), /* Actions */
-    #purchaseOrderTable td:nth-child(9) {
-        min-width: 180px !important;
-        max-width: 200px !important;
     }
 </style>
 @endpush
@@ -317,16 +225,11 @@
                 }
             }
         });
-        
-        // Add loading state to receiving status dropdowns (optional enhancement)
+
+        // Add loading state to receiving status dropdowns
         $(document).on('change', '.receiving-status-select', function() {
             const $select = $(this);
-            
-            // Show loading state
-            $select.prop('disabled', true);
-            $select.addClass('loading');
-            
-            // Add loading spinner
+            $select.prop('disabled', true).addClass('loading');
             $select.after('<span class="spinner-border spinner-border-sm ms-2" role="status"><span class="visually-hidden">Loading...</span></span>');
         });
     });

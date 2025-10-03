@@ -6,7 +6,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Add Category</h2>
         <a href="{{ route('category.index') }}" class="btn btn-secondary">
-            <i class="bi bi-arrow-left me-1"></i> Back
+             Back
         </a>
     </div>
 
@@ -36,9 +36,6 @@
             <button type="submit" class="btn btn-primary">
                 <i class="bi bi-save me-2"></i> Save Category
             </button>
-            <a href="{{ route('category.index') }}" class="btn btn-secondary">
-                <i class="bi bi-x me-2"></i> Cancel
-            </a>
         </div>
     </form>
 </div>

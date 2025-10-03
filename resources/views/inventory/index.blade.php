@@ -6,11 +6,15 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Warehouse Data</h2>
         <div class="d-flex gap-2">
-            <a href="{{ route('inventory.create') }}" class="btn btn-success">
-                <i class="fas fa-plus me-1"></i> Add Item
+            {{-- Add Item --}}
+            <a href="{{ route('inventory.create') }}" class="btn btn-success d-flex align-items-center">
+                <span>Add Item</span>
             </a>
-            <a href="{{ route('gudang.create') }}" class="btn btn-primary">
-                <i class="fas fa-plus me-1"></i> New Warehouse
+
+            {{-- New Warehouse --}}
+            <a href="{{ route('gudang.create') }}" class="btn btn-primary d-flex align-items-center">
+                <i class="fas fa-plus me-2"></i>
+                <span>New Warehouse</span>
             </a>
         </div>
     </div>
@@ -52,14 +56,16 @@
                         <td class="text-end">{{ number_format($totalBarang, 0, ',', '.') }}</td>
                         <td class="text-center">
                             <span class="badge 
-                                {{ $persentase >= 100 ? 'bg-danger' : ($persentase >= 75 ? 'bg-warning' : 'bg-success') }}">
+                                {{ $persentase >= 100 ? 'bg-danger' : ($persentase >= 75 ? 'bg-warning' : 'bg-success') }}"
+                                title="{{ $totalBarang }} / {{ $g->Kapasitas }}">
                                 {{ number_format($persentase, 0, ',', '.') }}%
                             </span>
                         </td>
                         <td class="text-center" style="white-space: nowrap;">
                             <div class="d-flex justify-content-center gap-1 flex-nowrap">
                                 {{-- View --}}
-                                <a href="{{ route('inventory.showGudang', $g->Id_Gudang) }}" class="btn btn-sm btn-info" title="View Inventory">
+                                <a href="{{ route('inventory.showGudang', $g->Id_Gudang) }}" 
+                                   class="btn btn-info" title="View Inventory">
                                     <i class="fas fa-eye"></i>
                                 </a>
                             </div>
@@ -96,7 +102,6 @@
         text-overflow: ellipsis !important;
         overflow: hidden !important;
         line-height: 1.2 !important;
-        height: auto !important;
         max-height: 50px !important;
     }
     
@@ -112,79 +117,13 @@
     
     /* Badge styling */
     .badge {
-        font-size: 0.75rem !important;
+        font-size: 0.8rem !important;
         padding: 0.5em 0.75em !important;
     }
-    
-    /* Action buttons */
-    .btn-sm {
-        padding: 0.375rem 0.5rem !important;
-        font-size: 0.75rem !important;
-    }
-    
-    /* Force single line headers */
-    #gudangTable thead th {
-        white-space: nowrap !important;
-        word-wrap: normal !important;
-        word-break: keep-all !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        line-height: 1.2 !important;
-        height: 50px !important;
-        max-height: 50px !important;
-    }
-    
-    /* Column width constraints */
-    #gudangTable th:nth-child(1), /* No */
-    #gudangTable td:nth-child(1) {
-        min-width: 40px !important;
-        max-width: 50px !important;
-        width: 40px !important;
-    }
-    
-    #gudangTable th:nth-child(2), /* Warehouse Name */
-    #gudangTable td:nth-child(2) {
-        min-width: 140px !important;
-        max-width: 160px !important;
-        width: 140px !important;
-    }
-    
-    #gudangTable th:nth-child(3), /* Location */
-    #gudangTable td:nth-child(3) {
-        min-width: 180px !important;
-        max-width: 180px !important;
-        width: 180px !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        white-space: nowrap !important;
-    }
-    
-    #gudangTable th:nth-child(4), /* Capacity */
-    #gudangTable td:nth-child(4) {
-        min-width: 100px !important;
-        max-width: 120px !important;
-        width: 100px !important;
-    }
-    
-    #gudangTable th:nth-child(5), /* Total Stock */
-    #gudangTable td:nth-child(5) {
-        min-width: 100px !important;
-        max-width: 120px !important;
-        width: 100px !important;
-    }
-    
-    #gudangTable th:nth-child(6), /* Filled (%) */
-    #gudangTable td:nth-child(6) {
-        min-width: 100px !important;
-        max-width: 120px !important;
-        width: 100px !important;
-    }
-    
-    #gudangTable th:nth-child(7), /* Actions */
-    #gudangTable td:nth-child(7) {
-        min-width: 120px !important;
-        max-width: 180px !important;
-        width: 120px !important;
+
+    /* Buttons (normal size, konsisten dengan halaman Customer) */
+    .btn i {
+        font-size: 0.9rem !important;
     }
 </style>
 @endpush
@@ -227,24 +166,6 @@
                 cell.innerHTML = i + 1;
             });
         }).draw();
-        
-        // Force column widths after DataTables initialization
-        setTimeout(function() {
-            $('#gudangTable th:nth-child(1)').css('width', '40px');
-            $('#gudangTable td:nth-child(1)').css('width', '40px');
-            $('#gudangTable th:nth-child(2)').css('width', '140px');
-            $('#gudangTable td:nth-child(2)').css('width', '140px');
-            $('#gudangTable th:nth-child(3)').css('width', '180px');
-            $('#gudangTable td:nth-child(3)').css('width', '180px');
-            $('#gudangTable th:nth-child(4)').css('width', '100px');
-            $('#gudangTable td:nth-child(4)').css('width', '100px');
-            $('#gudangTable th:nth-child(5)').css('width', '100px');
-            $('#gudangTable td:nth-child(5)').css('width', '100px');
-            $('#gudangTable th:nth-child(6)').css('width', '100px');
-            $('#gudangTable td:nth-child(6)').css('width', '100px');
-            $('#gudangTable th:nth-child(7)').css('width', '120px');
-            $('#gudangTable td:nth-child(7)').css('width', '120px');
-        }, 100);
     });
 </script>
 @endpush

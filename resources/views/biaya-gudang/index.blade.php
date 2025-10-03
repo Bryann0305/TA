@@ -4,13 +4,13 @@
 <div class="container">
     {{-- Header --}}
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Biaya Gudang</h2>
+        <h2>Warehouse Costs</h2>
         <a href="{{ route('biaya-gudang.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus me-1"></i> Tambah Biaya
+            <i class="fas fa-plus me-1"></i> Add Cost
         </a>
     </div>
 
-    <p class="text-muted mb-4">Kelola biaya sewa, listrik, dan air untuk setiap gudang.</p>
+    <p class="text-muted mb-4">Manage rental, electricity, and water costs for each warehouse.</p>
 
     {{-- Flash Message --}}
     @if(session('success'))
@@ -23,12 +23,12 @@
             <thead class="table-light">
                 <tr>
                     <th class="text-center" style="width: 60px;">No</th>
-                    <th class="text-center">Gudang</th>
-                    <th class="text-center">Tanggal Biaya</th>
-                    <th class="text-center">Biaya Sewa</th>
-                    <th class="text-center">Biaya Listrik</th>
-                    <th class="text-center">Biaya Air</th>
-                    <th class="text-center">Total Biaya</th>
+                    <th class="text-center">Warehouse</th>
+                    <th class="text-center">Cost Date</th>
+                    <th class="text-center">Rental Cost</th>
+                    <th class="text-center">Electricity Cost</th>
+                    <th class="text-center">Water Cost</th>
+                    <th class="text-center">Total Cost</th>
                     <th class="text-center" style="width: 120px;">Actions</th>
                 </tr>
             </thead>
@@ -91,7 +91,6 @@
         text-align: center !important;
     }
     
-    /* Ensure table headers don't wrap */
     .table thead th {
         white-space: nowrap !important;
         overflow: hidden;
@@ -100,7 +99,6 @@
         hyphens: none !important;
     }
     
-    /* Actions column styling */
     #biayaGudangTable td:last-child {
         white-space: nowrap !important;
         padding: 4px !important;

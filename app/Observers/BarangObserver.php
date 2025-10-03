@@ -30,17 +30,21 @@ class BarangObserver
 
         $D = $permintaanProduksi + $permintaanLangsung; // demand tahunan
 
-        // Ambil biaya pemesanan rata-rata
-        $S = DB::table('pembelian')->avg('Total_Biaya') ?? 50000;
+            // Biaya pemesanan per order: rata-rata input user (ongkos kirim) tahun berjalan
+            $tahun = date('Y');
+            $S = DB::table('pembelian')
+                ->whereYear('Tanggal_Pemesanan', $tahun)
+                ->avg('Biaya_Pengiriman') ?? 20000; // default jika belum ada data
 
-        // Ambil harga per unit terakhir
-        $hargaSatuan = DB::table('detail_pembelian')
-            ->where('bahan_baku_Id_Bahan', $b->Id_Bahan)
-            ->orderBy('Id_Detail', 'desc')
-            ->value(DB::raw('Harga_Keseluruhan / NULLIF(Jumlah,0)')) ?? 10000;
+        // Ambil total biaya gudang tahun berjalan
+        $tahun = date('Y');
+        $biayaGudangTahun = DB::table('biaya_gudang')
+            ->whereYear('tanggal_biaya', $tahun)
+            ->sum(DB::raw('biaya_sewa + biaya_listrik + biaya_air'));
 
-        // Biaya simpan (misal 10% dari harga)
-        $H = $hargaSatuan * 0.1;
+        // Hitung biaya simpan per unit per tahun 
+        $stokRataRata = DB::table('barang')->avg('Stok') ?: 1;
+        $H = $biayaGudangTahun / $stokRataRata;
 
         // Hitung EOQ
         $EOQ = ($H > 0) ? sqrt((2 * $D * $S) / $H) : 0;
