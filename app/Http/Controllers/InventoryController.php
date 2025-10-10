@@ -126,13 +126,11 @@ class InventoryController extends Controller
             'Jenis' => 'required|in:Bahan_Baku,Produk',
             'kategori_Id_Kategori' => 'required|exists:kategori,Id_Kategori',
             'gudang_Id_Gudang' => 'required|exists:gudang,Id_Gudang',
-            'EOQ' => 'nullable|numeric|min:0',
-            'ROP' => 'nullable|numeric|min:0',
             'Satuan' => 'required|in:Drum,Pil',
         ]);
 
-        $validated['EOQ'] = $validated['EOQ'] ?? 0;
-        $validated['ROP'] = $validated['ROP'] ?? 100;
+        $validated['EOQ'] = 0; // Nilai awal, observer akan update otomatis
+        $validated['ROP'] = 0; // Nilai awal, observer akan update otomatis
         $validated['Stok'] = 0; // Default stock untuk item baru
 
         $validated['Status'] = $this->getStatus($validated['Stok'], $validated['ROP']);

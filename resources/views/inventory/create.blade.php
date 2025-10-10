@@ -74,19 +74,6 @@
             </select>
         </div>
 
-
-        {{-- EOQ (Economic Order Quantity) --}}
-        <div class="mb-3">
-            <label class="form-label">EOQ (Economic Order Quantity)</label>
-            <input type="number" step="0.01" name="EOQ" class="form-control" min="0" value="0">
-        </div>
-
-        {{-- ROP (Reorder Point) --}}
-        <div class="mb-3">
-            <label class="form-label">ROP (Reorder Point)</label>
-            <input type="number" step="0.01" name="ROP" class="form-control" min="0" value="100">
-        </div>
-
         {{-- Action Buttons --}}
         <div class="d-flex gap-2">
             <button type="submit" class="btn btn-primary">
