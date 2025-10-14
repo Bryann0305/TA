@@ -45,13 +45,17 @@
             <tbody>
                 @foreach($items->where('Jenis', 'Produk') as $index => $item)
                     @php
+                        // Ambil ROP & EOQ
                         $reorder = $item->ROP ?? 50;
                         $eoq = $item->EOQ ?? 200;
-                        // Status badge
-                        $badge = 'bg-success';
-                        if ($item->Stok <= 0) $badge = 'bg-danger';
-                        elseif ($item->Stok <= $reorder) $badge = 'bg-warning';
-                        $statusText = $item->Stok <= 0 ? 'Out of Stock' : ($item->Stok <= $reorder ? 'Low Stock' : 'In Stock');
+
+                        // Tentukan warna badge berdasarkan nilai Status dari database
+                        $badge = match ($item->Status) {
+                            'Critical Low' => 'bg-danger',
+                            'Below Reorder Point' => 'bg-warning',
+                            'Out of Stock' => 'bg-danger',
+                            default => 'bg-success', // In Stock
+                        };
                     @endphp
                     <tr>
                         <td class="text-center">{{ $index + 1 }}</td>
@@ -67,7 +71,11 @@
                         <td class="text-end" data-bs-toggle="tooltip" title="{{ number_format($eoq, 0, ',', '.') }}">
                             {{ number_format($eoq, 0, ',', '.') }}
                         </td>
-                        <td class="text-center"><span class="badge {{ $badge }}">{{ $statusText }}</span></td>
+                        <td class="text-center">
+                            <span class="badge {{ $badge }}">
+                                {{ $item->Status ?? 'Unknown' }}
+                            </span>
+                        </td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-1 flex-nowrap">
                                 <a href="{{ route('inventory.show', $item->Id_Bahan) }}" class="btn btn-sm btn-info" title="View">
@@ -111,10 +119,12 @@
                     @php
                         $reorder = $item->ROP ?? 50;
                         $eoq = $item->EOQ ?? 200;
-                        $badge = 'bg-success';
-                        if ($item->Stok <= 0) $badge = 'bg-danger';
-                        elseif ($item->Stok <= $reorder) $badge = 'bg-warning';
-                        $statusText = $item->Stok <= 0 ? 'Out of Stock' : ($item->Stok <= $reorder ? 'Low Stock' : 'In Stock');
+                        $badge = match ($item->Status) {
+                            'Critical Low' => 'bg-danger',
+                            'Below Reorder Point' => 'bg-warning',
+                            'Out of Stock' => 'bg-danger',
+                            default => 'bg-success',
+                        };
                     @endphp
                     <tr>
                         <td class="text-center">{{ $index + 1 }}</td>
@@ -130,7 +140,11 @@
                         <td class="text-end" data-bs-toggle="tooltip" title="{{ number_format($eoq, 0, ',', '.') }}">
                             {{ number_format($eoq, 0, ',', '.') }}
                         </td>
-                        <td class="text-center"><span class="badge {{ $badge }}">{{ $statusText }}</span></td>
+                        <td class="text-center">
+                            <span class="badge {{ $badge }}">
+                                {{ $item->Status ?? 'Unknown' }}
+                            </span>
+                        </td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-1 flex-nowrap">
                                 <a href="{{ route('inventory.show', $item->Id_Bahan) }}" class="btn btn-sm btn-info" title="View">

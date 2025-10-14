@@ -9,20 +9,20 @@ use Illuminate\Http\Request;
 
 class InventoryController extends Controller
 {
-    // Daftar semua gudang
+    // Menampilkan semua gudang
     public function index()
     {
         $gudangs = Gudang::all();
         return view('inventory.index', compact('gudangs'));
     }
 
-    // Detail inventory per gudang
+    // Menampilkan detail per gudang
     public function showGudang(Request $request, $id)
     {
         $gudang = Gudang::with('inventories.kategori')->findOrFail($id);
         $items = $gudang->inventories();
 
-        // Filter search
+        // Filter pencarian
         if ($request->filled('search')) {
             $search = $request->search;
             $items = $items->where(function ($q) use ($search) {
@@ -45,7 +45,7 @@ class InventoryController extends Controller
 
         $items = $items->get();
 
-        // Hitung status otomatis
+        // Update status stok otomatis
         foreach ($items as $item) {
             $item->Status = $this->getStatus($item->Stok, $item->ROP);
         }
@@ -53,7 +53,7 @@ class InventoryController extends Controller
         return view('inventory.gudang_detail', compact('gudang', 'items'));
     }
 
-    // Tampilkan detail barang
+    // Detail barang tertentu
     public function show($id)
     {
         $item = Barang::with(['kategori', 'gudang'])->findOrFail($id);
@@ -99,7 +99,6 @@ class InventoryController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $this->validateRequest($request);
-
         $barang = Barang::findOrFail($id);
         $barang->update($validated);
 
@@ -118,7 +117,7 @@ class InventoryController extends Controller
                          ->with('success', 'Item berhasil dihapus!');
     }
 
-    // Validasi request & set status otomatis
+    // Validasi request & status awal
     private function validateRequest(Request $request)
     {
         $validated = $request->validate([
@@ -129,16 +128,17 @@ class InventoryController extends Controller
             'Satuan' => 'required|in:Drum,Pil',
         ]);
 
-        $validated['EOQ'] = 0; // Nilai awal, observer akan update otomatis
-        $validated['ROP'] = 0; // Nilai awal, observer akan update otomatis
-        $validated['Stok'] = 0; // Default stock untuk item baru
-
-        $validated['Status'] = $this->getStatus($validated['Stok'], $validated['ROP']);
+        // Nilai awal (akan dihitung otomatis lewat observer)
+        $validated['EOQ'] = 0;
+        $validated['ROP'] = 0;
+        $validated['Safety_Stock'] = 0;
+        $validated['Stok'] = 0;
+        $validated['Status'] = $this->getStatus(0, 0);
 
         return $validated;
     }
 
-    // Tentukan status stok
+    // Menentukan status stok
     private function getStatus($stok, $rop)
     {
         if ($stok <= $rop / 2) {
