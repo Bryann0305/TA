@@ -62,7 +62,9 @@ class InventoryController extends Controller
         $rop_kg = $item->ROP * $item->Berat;
         $eoq_kg = $item->EOQ * $item->Berat;
 
-        return view('inventory.show', compact('item', 'stok_kg', 'rop_kg', 'eoq_kg'));
+        $hpp = $item->HPP ?? 0;
+
+        return view('inventory.show', compact('item', 'stok_kg', 'rop_kg', 'eoq_kg', 'hpp'));
     }
 
     // Form tambah barang baru
@@ -133,6 +135,7 @@ class InventoryController extends Controller
         $validated['ROP'] = 0;
         $validated['Safety_Stock'] = 0;
         $validated['Stok'] = 0;
+        $validated['HPP'] = 0; 
         $validated['Status'] = $this->getStatus(0, 0);
 
         return $validated;

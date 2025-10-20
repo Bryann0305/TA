@@ -36,15 +36,15 @@
                 </tr>
                 <tr>
                     <th>Berat per Unit</th>
-                    <td>{{ $item->Berat ?? '0' }} Kg</td>
+                    <td>{{ $item->Berat ?? 0 }} Kg</td>
                 </tr>
                 <tr>
                     <th>Stok (Unit)</th>
-                    <td>{{ number_format($item->Stok) }}</td>
+                    <td>{{ number_format($item->Stok ?? 0) }}</td>
                 </tr>
                 <tr>
                     <th>Stok (Kg)</th>
-                    <td>{{ number_format($stok_kg, 2) }} Kg</td>
+                    <td>{{ number_format($stok_kg ?? 0, 2) }} Kg</td>
                 </tr>
                 <tr>
                     <th>EOQ (Unit)</th>
@@ -52,7 +52,7 @@
                 </tr>
                 <tr>
                     <th>EOQ (Kg)</th>
-                    <td>{{ number_format($eoq_kg, 2) }} Kg</td>
+                    <td>{{ number_format($eoq_kg ?? 0, 2) }} Kg</td>
                 </tr>
                 <tr>
                     <th>ROP (Unit)</th>
@@ -60,11 +60,21 @@
                 </tr>
                 <tr>
                     <th>ROP (Kg)</th>
-                    <td>{{ number_format($rop_kg, 2) }} Kg</td>
+                    <td>{{ number_format($rop_kg ?? 0, 2) }} Kg</td>
                 </tr>
                 <tr>
                     <th>Safety Stock</th>
                     <td>{{ number_format($item->Safety_Stock ?? 0) }}</td>
+                </tr>
+                <tr>
+                    <th>Harga Pokok Produksi (HPP)</th>
+                    <td>
+                        @if(!is_null($item->HPP) && $item->HPP > 0)
+                            Rp {{ number_format($item->HPP, 0, ',', '.') }}
+                        @else
+                            <span class="text-muted fst-italic">Belum ditentukan</span>
+                        @endif
+                    </td>
                 </tr>
                 <tr>
                     <th>Status</th>
