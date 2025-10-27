@@ -4,34 +4,30 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ReportsController extends Controller
 {
-    public function index()
+    /**
+     * Ambil semua data untuk laporan utama
+     */
+    private function getReportData()
     {
         $data = [];
 
         // =========================
-        // Inventory Reports
+        // INVENTORY REPORTS
         // =========================
         $barang = DB::table('barang')->get();
 
-        // Stock Value
-        $data['stockValue'] = $barang->sum(fn($b) => $b->Stok * $b->Berat);
-
-        // Items Below ROP
-        $data['itemsBelowROP'] = $barang->where('Stok', '<', 'ROP')->count();
-
-        // Critical Items (Stok < 50% ROP)
-        $data['criticalItems'] = $barang->filter(fn($b) => $b->Stok < ($b->ROP / 2))->count();
-
-        // Inventory Turns sederhana
-        $data['inventoryTurns'] = $data['itemsBelowROP'] ? round($data['stockValue'] / $data['itemsBelowROP'], 2) : 0;
+        $data['stockValue'] = $barang->sum(fn($b) => ($b->Stok ?? 0) * ($b->HPP ?? 0));
+        $data['itemsBelowROP'] = $barang->filter(fn($b) => (($b->Stok ?? 0) < ($b->ROP ?? 0)))->count();
+        $data['criticalItems'] = $barang->filter(fn($b) => (($b->Stok ?? 0) < (($b->ROP ?? 0) / 2)))->count();
 
         // Inventory by Category
         $categories = DB::table('barang')
             ->join('kategori', 'barang.kategori_Id_Kategori', '=', 'kategori.Id_Kategori')
-            ->select('kategori.Nama_Kategori as name', DB::raw('SUM(Stok * Berat) as value'))
+            ->select('kategori.Nama_Kategori as name', DB::raw('SUM(Stok * COALESCE(HPP, 0)) as value'))
             ->groupBy('kategori.Nama_Kategori')
             ->get();
 
@@ -39,67 +35,115 @@ class ReportsController extends Controller
         $data['categories'] = $categories->map(fn($cat) => [
             'name' => $cat->name,
             'value' => $cat->value,
-            'percentage' => $totalValue ? round(($cat->value / $totalValue) * 100, 2) : 0
+            'percentage' => $totalValue ? round(($cat->value / $totalValue) * 100, 2) : 0,
         ]);
 
-        // EOQ Summary (√(2DS/H))
+        // EOQ Summary
         $data['eoqSummary'] = $barang->map(fn($b) => [
-            'material' => $b->Nama_Bahan,
-            'demand' => $b->Stok * 12, // contoh annual demand
-            'qty' => $b->EOQ ?? round(sqrt(2 * ($b->Stok * 12) * 100 / max(0.1, $b->Stok * 0.1))), // EOQ formula contoh
-            'rop' => $b->ROP,
-            'holding' => $b->Stok * 0.1,
-            'orderCost' => 12 / max($b->EOQ ?? 1,1),
-            'total' => ($b->Stok * 0.1) + (12 / max($b->EOQ ?? 1,1))
+            'material' => $b->Nama_Bahan ?? $b->Nama_Barang ?? 'Unknown',
+            'demand' => ($b->Stok ?? 0) * 12,
+            'qty' => $b->EOQ ?? 0,
+            'rop' => $b->ROP ?? 0,
+            'total' => ($b->Stok ?? 0) * ($b->HPP ?? 0),
         ]);
 
         // =========================
-        // Production Reports
+        // PRODUCTION REPORTS
         // =========================
         $productions = DB::table('produksi')
             ->leftJoin('production_order', 'produksi.production_order_id', '=', 'production_order.id')
-            ->leftJoin('pesanan_produksi', 'produksi.pesanan_produksi_Id_Pesanan', '=', 'pesanan_produksi.Id_Pesanan')
             ->select(
                 'produksi.Id_Produksi',
                 'production_order.Nama_Produksi',
                 'produksi.Tanggal_Produksi',
-                'produksi.Hasil_Produksi',
-                'produksi.Status',
                 'produksi.Jumlah_Berhasil',
-                'pesanan_produksi.Nomor_Pesanan'
+                'produksi.Status'
             )
             ->get();
 
-        // Detail produksi per bahan
-        $productionDetails = DB::table('produksi_detail')
-            ->join('barang', 'produksi_detail.barang_id', '=', 'barang.Id_Bahan')
-            ->join('bill_of_material', 'produksi_detail.bill_of_material_id', '=', 'bill_of_material.Id_bill_of_material')
-            ->select(
-                'produksi_detail.id as detail_id',
-                'produksi_detail.produksi_id',
-                'bill_of_material.Nama_bill_of_material',
-                'barang.Nama_Bahan',
-                'produksi_detail.jumlah',
-                'produksi_detail.status'
-            )
-            ->get()
-            ->groupBy('produksi_id');
-
         $data['productions'] = $productions;
-        $data['productionDetails'] = $productionDetails;
+        $data['totalProductions'] = $productions->count();
+        $data['completedProductions'] = $productions->where('Status', 'Selesai')->count();
 
         // =========================
-        // Procurement Reports
+        // PROCUREMENT REPORTS
         // =========================
-        $purchases = DB::table('pembelian')->select(
-            'Id_Pembelian',
-            'Tanggal_Pemesanan',
-            'Total_Biaya',
-            'Metode_Pembayaran',
-            'Status_Pembayaran'
-        )->get();
+        $purchases = DB::table('pembelian')->get();
         $data['purchases'] = $purchases;
+        $data['totalPurchases'] = $purchases->sum('Total_Biaya') ?? 0;
+        $data['inventoryTurns'] = ($data['stockValue'] > 0)
+            ? round(($data['totalPurchases'] ?? 0) / ($data['stockValue'] ?: 1), 2)
+            : 0;
 
+        // =========================
+        // ORDER REPORTS
+        // =========================
+        if (DB::getSchemaBuilder()->hasTable('pesanan_produksi')) {
+            $orders = DB::table('pesanan_produksi as pp')
+                ->leftJoin('pelanggan as pl', 'pp.pelanggan_Id_Pelanggan', '=', 'pl.Id_Pelanggan')
+                ->select(
+                    'pp.Id_Pesanan as id',
+                    'pl.Nama_Pelanggan as customer_name',
+                    'pp.Tanggal_Pesanan as tanggal_order',
+                    'pp.Jumlah_Pesanan as total',
+                    'pp.Status as status'
+                )
+                ->get();
+            $data['orders'] = $orders;
+        } else {
+            $data['orders'] = collect();
+        }
+
+        // =========================
+        // WAREHOUSE REPORTS
+        // =========================
+        if (DB::getSchemaBuilder()->hasTable('gudang')) {
+            $warehouses = DB::table('gudang')->get();
+
+            $data['totalCapacity'] = $warehouses->sum('Kapasitas') ?? 0;
+            $data['usedCapacity'] = DB::table('barang')->sum('Stok') ?? 0;
+            $data['usageRate'] = $data['totalCapacity']
+                ? round(($data['usedCapacity'] / $data['totalCapacity']) * 100, 2)
+                : 0;
+
+            $data['storageCost'] = DB::table('biaya_gudang')
+                ->sum(DB::raw('COALESCE(biaya_sewa,0) + COALESCE(biaya_listrik,0) + COALESCE(biaya_air,0)')) ?? 0;
+
+            $data['avgCostPerItem'] = $barang->count()
+                ? round($data['storageCost'] / max(1, $barang->count()), 2)
+                : 0;
+        } else {
+            $data['totalCapacity'] = 0;
+            $data['usedCapacity'] = 0;
+            $data['usageRate'] = 0;
+            $data['storageCost'] = 0;
+            $data['avgCostPerItem'] = 0;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Menampilkan halaman laporan utama
+     */
+    public function index()
+    {
+        $data = $this->getReportData();
         return view('reports.index', compact('data'));
+    }
+
+    /**
+     * Export PDF berdasarkan tipe tab (inventory, production, procurement, order, warehouse)
+     */
+    public function export($type)
+    {
+        $data = $this->getReportData();
+
+        if (!in_array($type, ['inventory', 'production', 'procurement', 'order', 'warehouse'])) {
+            abort(404, 'Invalid report type');
+        }
+
+        $pdf = Pdf::loadView("reports.pdf.$type", compact('data'));
+        return $pdf->download("report_{$type}.pdf");
     }
 }

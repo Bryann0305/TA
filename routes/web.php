@@ -214,6 +214,8 @@ Route::middleware('Role:admin,gudang,pembelian,manajer_produksi')->group(functio
 
         // Reports & Settings
         Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');
+        Route::get('/reports/export/{type}', [ReportsController::class, 'export'])->name('reports.export');
+
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::middleware('Role:admin,pembelian,gudang,manajer_produksi')->post('/settings/update', [SettingsController::class, 'update'])->name('settings.update');
     });
