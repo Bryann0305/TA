@@ -29,7 +29,7 @@ class ProcurementController extends Controller
     public function create()
     {
     $suppliers = Supplier::all();
-    $barangs = Barang::whereRaw('LOWER(Jenis) = ?', ['bahan baku'])->get();
+    $barangs = Barang::where('Jenis', 'Bahan_Baku')->get();
     $gudangs = Gudang::all();
     return view('procurement.create', compact('suppliers', 'barangs', 'gudangs'));
     }
