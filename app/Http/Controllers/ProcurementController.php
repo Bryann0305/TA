@@ -28,10 +28,10 @@ class ProcurementController extends Controller
      */
     public function create()
     {
-        $suppliers = Supplier::all();
-        $barangs   = Barang::all();
-        $gudangs   = Gudang::all();
-        return view('procurement.create', compact('suppliers', 'barangs', 'gudangs'));
+    $suppliers = Supplier::all();
+    $barangs = Barang::whereRaw('LOWER(Jenis) = ?', ['bahan baku'])->get();
+    $gudangs = Gudang::all();
+    return view('procurement.create', compact('suppliers', 'barangs', 'gudangs'));
     }
 
     /**
