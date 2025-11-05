@@ -43,6 +43,10 @@
                     <td>{{ number_format($item->Stok ?? 0) }}</td>
                 </tr>
                 <tr>
+                    <th>Permintaan Tahunan</th>
+                    <td>{{ number_format($annualDemand ?? 0) }}</td>
+                </tr>
+                <tr>
                     <th>Stok (Kg)</th>
                     <td>{{ number_format($stok_kg ?? 0, 2) }} Kg</td>
                 </tr>

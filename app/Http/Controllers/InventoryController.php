@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Barang;
 use App\Models\Kategori;
 use App\Models\Gudang;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
 class InventoryController extends Controller
@@ -63,6 +64,25 @@ class InventoryController extends Controller
         $eoq_kg = $item->EOQ * $item->Berat;
 
         $hpp = $item->HPP ?? 0;
+
+        // Hitung Permintaan Tahunan (D) berdasarkan pesanan produksi dan pembelian untuk tahun berjalan
+        $tahun = date('Y');
+
+        // Permintaan dari pesanan produksi (detail_pesanan_produksi join ke pesanan_produksi.Tanggal_Pesanan)
+        $permintaanProduksi = DB::table('detail_pesanan_produksi as dp')
+            ->join('pesanan_produksi as pp', 'dp.pesanan_produksi_Id_Pesanan', '=', 'pp.Id_Pesanan')
+            ->where('dp.barang_Id_Bahan', $item->Id_Bahan)
+            ->whereYear('pp.Tanggal_Pesanan', $tahun)
+            ->sum('dp.Jumlah');
+
+        // Permintaan dari pembelian (apabila bahan dibeli langsung sebagai permintaan)
+        $permintaanPembelian = DB::table('detail_pembelian as dp')
+            ->join('pembelian as p', 'dp.pembelian_Id_Pembelian', '=', 'p.Id_Pembelian')
+            ->where('dp.bahan_baku_Id_Bahan', $item->Id_Bahan)
+            ->whereYear('p.Tanggal_Pemesanan', $tahun)
+            ->sum('dp.Jumlah');
+
+        $annualDemand = $permintaanProduksi + $permintaanPembelian;
 
         return view('inventory.show', compact('item', 'stok_kg', 'rop_kg', 'eoq_kg', 'hpp'));
     }

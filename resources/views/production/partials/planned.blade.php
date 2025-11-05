@@ -1,6 +1,8 @@
 {{-- resources/views/production/partials/planned.blade.php --}}
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h5 class="fw-bold text-primary"><i class="bi bi-clipboard-data me-2"></i> Planned Productions</h5>
+    <h5 class="fw-bold text-primary">
+        <i class="bi bi-clipboard-data me-2"></i> Planned Productions
+    </h5>
     <a href="{{ route('production.create') }}" class="btn btn-sm btn-primary">
         <i class="bi bi-plus-circle me-1"></i> New Production
     </a>
@@ -42,31 +44,39 @@
                         <i class="bi bi-list-ul me-1"></i> Lihat BOM Summary
                     </button>
 
+                    {{-- Daftar Produk dan Bahan --}}
                     <div class="collapse mt-3" id="bomSummaryPlanned{{ $prodId }}">
                         <ul class="list-unstyled border-start ps-3">
-                            @foreach($prod->details->groupBy('bill_of_material_id') as $bomId => $group)
+                            @foreach($prod->details as $detail)
                                 @php
-                                    $bom = $group->first()->billOfMaterial ?? null;
+                                    $barang = $detail->barang ?? null;
+                                    $bom = $detail->billOfMaterial ?? null;
                                     $rawMaterials = $bom ? $bom->barangs : collect();
-                                    $jumlahBahanBaku = $rawMaterials->count(); // Jumlah bahan baku yang berbeda dari BOM
                                     $quantityPesanan = optional($prod->pesananProduksi)->Jumlah_Pesanan ?? 1;
                                 @endphp
-                                <li class="mb-3">
-                                    <h6 class="fw-bold text-primary">{{ $bom->Nama_bill_of_material ?? 'BOM '.$bomId }}</h6>
-                                    <div class="small text-muted">
-                                        <div><strong>Produk:</strong> {{ $group->pluck('barang.Nama_Bahan')->filter()->join(', ') }}</div>
-                                        <div><strong>Jumlah per BOM:</strong> {{ $jumlahBahanBaku }} bahan baku</div>
-                                        <div><strong>Total kebutuhan:</strong> {{ $jumlahBahanBaku * $quantityPesanan }} unit</div>
-                                        <div class="mt-2">
-                                            <strong>Detail Bahan Baku:</strong>
-                                            <ul class="list-unstyled ms-3">
-                                                @foreach($rawMaterials as $material)
-                                                    <li>• {{ $material->Nama_Bahan }} ({{ $material->pivot->Jumlah_Bahan * $quantityPesanan }} {{ $material->Satuan }})</li>
-                                                @endforeach
+
+                                @if($barang && $bom)
+                                    <li class="mb-3">
+                                        <h6 class="fw-bold text-primary">
+                                            {{ $barang->Nama_Bahan ?? 'Produk Tanpa Nama' }}
+                                        </h6>
+                                        <div class="small text-muted">
+                                            <strong>BOM:</strong> {{ $bom->Nama_bill_of_material ?? 'Tidak diketahui' }}
+                                            <ul class="list-unstyled ms-3 mt-2">
+                                                @forelse($rawMaterials as $material)
+                                                    <li>
+                                                        → {{ $material->Nama_Bahan }} 
+                                                        ({{ $material->pivot->Jumlah_Bahan * $quantityPesanan }} {{ $material->Satuan }})
+                                                    </li>
+                                                @empty
+                                                    <li class="text-muted">Tidak ada bahan baku pada BOM ini.</li>
+                                                @endforelse
                                             </ul>
                                         </div>
-                                    </div>
-                                </li>
+                                    </li>
+                                @else
+                                    <li class="text-muted">Produk tidak memiliki BOM atau data bahan belum lengkap.</li>
+                                @endif
                             @endforeach
                         </ul>
                     </div>
@@ -78,18 +88,21 @@
             {{-- Footer --}}
             <div class="card-footer bg-white d-flex justify-content-end gap-1">
                 {{-- View --}}
-                <a href="{{ route('production.show', ['id' => $prodId, 'tab' => 'planned']) }}" class="btn btn-sm btn-info" title="View">
+                <a href="{{ route('production.show', ['id' => $prodId, 'tab' => 'planned']) }}" 
+                   class="btn btn-sm btn-info" title="View">
                     <i class="fas fa-eye"></i>
                 </a>
 
                 {{-- Edit --}}
-                <a href="{{ route('production.edit', $prodId) }}" class="btn btn-sm btn-warning" title="Edit">
+                <a href="{{ route('production.edit', $prodId) }}" 
+                   class="btn btn-sm btn-warning" title="Edit">
                     <i class="fas fa-edit"></i>
                 </a>
 
                 {{-- Approve --}}
                 @if($prod->Status === 'planned')
-                    <form action="{{ route('production.approve', $prodId) }}" method="POST" class="d-inline">
+                    <form action="{{ route('production.approve', $prodId) }}" 
+                          method="POST" class="d-inline">
                         @csrf
                         <button type="submit" class="btn btn-sm btn-success" title="Approve">
                             <i class="fas fa-check"></i>
@@ -98,8 +111,10 @@
                 @endif
 
                 {{-- Delete --}}
-                <form action="{{ route('production.destroy', $prodId) }}" method="POST"
-                      onsubmit="return confirm('Yakin ingin hapus produksi ini?')" class="d-inline">
+                <form action="{{ route('production.destroy', $prodId) }}" 
+                      method="POST"
+                      onsubmit="return confirm('Yakin ingin hapus produksi ini?')" 
+                      class="d-inline">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-sm btn-dark" title="Delete">
                         <i class="fas fa-trash-alt"></i>
