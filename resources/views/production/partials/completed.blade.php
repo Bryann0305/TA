@@ -10,7 +10,7 @@
         <div class="card border-0 shadow-lg mb-4">
             <div class="card-header bg-light d-flex justify-content-between align-items-center">
                 <h5 class="mb-0 fw-bold text-dark">
-                    {{ $prod->Nama_Produksi ?? 'Produksi #' . ($prod->Id_Produksi ?? $prod->id) }}
+                    {{ $prod->Nama_Produksi ?? 'Produksi #' . $prodId }}
                 </h5>
                 <span class="badge bg-success px-3 py-2">Completed</span>
             </div>
@@ -19,51 +19,68 @@
                 <p><strong>SPP:</strong> {{ $prod->pesananProduksi->Nomor_Pesanan ?? '-' }}</p>
                 <p><strong>Tanggal:</strong> {{ optional($prod->Tanggal_Produksi)->format('d M Y') ?? '-' }}</p>
 
-                @php
-                    // Ambil detail produk jadi dari ProduksiDetail: asumsi baris produk dibuat saat store dengan jumlah awal 0
-                    $produkDetail = optional($prod->details)->first(function($d){ return ($d->jumlah ?? 0) == 0 && !empty($d->bill_of_material_id); });
-                    if(!$produkDetail && optional($prod->details)->count()) { $produkDetail = $prod->details->first(); }
-                    $detailIdProduk = optional($produkDetail)->id;
-                    $namaProdukJadi = optional($produkDetail->barang ?? null)->Nama_Bahan ?? ($prod->Nama_Produksi ?? 'Produk Jadi');
-                    $jumlahPesananProduk = $prod->pesananProduksi->Jumlah_Pesanan ?? $pesananDetails->sum(function($d){ return $d->Jumlah ?? ($d->jumlah ?? 0); });
-                @endphp
-
-                @if($detailIdProduk)
+                {{-- Loop semua produk dalam produksi --}}
+                @if($prod->details && $prod->details->count())
                     <button class="btn btn-outline-primary btn-sm mt-2" type="button"
                             data-bs-toggle="collapse" data-bs-target="#inputHasil{{ $prodId }}">
-                        <i class="bi bi-box-seam me-1"></i> Input Hasil Produksi ({{ $namaProdukJadi }})
+                        <i class="bi bi-box-seam me-1"></i> Input Hasil Produksi
                     </button>
 
                     <div class="collapse mt-3" id="inputHasil{{ $prodId }}">
                         <form class="form-complete" data-prod-id="{{ $prodId }}">
                             @csrf
-                            <div class="card mb-2 border rounded">
-                                <div class="card-header bg-light fw-bold">{{ $namaProdukJadi }}</div>
-                                <div class="card-body">
-                                    <p><strong>Jumlah Dipesan:</strong> {{ $jumlahPesananProduk }}</p>
 
-                                    <div class="mb-2">
-                                        <label>Jumlah Berhasil</label>
-                                        <input type="number" name="hasil[{{ $detailIdProduk }}]" class="form-control hasil-input" min="0" value="0" data-max="{{ $jumlahPesananProduk }}" required>
+                            @foreach($prod->details as $detail)
+                                @php
+                                    $barang = $detail->barang ?? null;
+                                    $namaProdukJadi = $barang->Nama_Bahan ?? 'Produk Tidak Dikenal';
+                                    $jumlahPesananProduk = optional($prod->pesananProduksi)->Jumlah_Pesanan ?? 0;
+                                @endphp
+
+                                <div class="card mb-3 border rounded">
+                                    <div class="card-header bg-light fw-bold">
+                                        {{ $namaProdukJadi }}
                                     </div>
-                                    <div class="mb-2">
-                                        <label>Jumlah Gagal</label>
-                                        <input type="number" name="gagal[{{ $detailIdProduk }}][jumlah]" class="form-control gagal-input" min="0" value="0" data-max="{{ $jumlahPesananProduk }}">
-                                    </div>
-                                    <div class="mb-2">
-                                        <label>Keterangan</label>
-                                        <input type="text" name="gagal[{{ $detailIdProduk }}][keterangan]" class="form-control">
+                                    <div class="card-body">
+                                        <p><strong>Jumlah Dipesan:</strong> {{ $jumlahPesananProduk }}</p>
+
+                                        <div class="mb-2">
+                                            <label>Jumlah Berhasil</label>
+                                            <input type="number" 
+                                                name="hasil[{{ $detail->id }}]" 
+                                                class="form-control hasil-input" 
+                                                min="0" value="0" 
+                                                data-max="{{ $jumlahPesananProduk }}" 
+                                                required>
+                                        </div>
+
+                                        <div class="mb-2">
+                                            <label>Jumlah Gagal</label>
+                                            <input type="number" 
+                                                name="gagal[{{ $detail->id }}][jumlah]" 
+                                                class="form-control gagal-input" 
+                                                min="0" value="0" 
+                                                data-max="{{ $jumlahPesananProduk }}">
+                                        </div>
+
+                                        <div class="mb-2">
+                                            <label>Keterangan</label>
+                                            <input type="text" 
+                                                name="gagal[{{ $detail->id }}][keterangan]" 
+                                                class="form-control">
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            @endforeach
+
                             <button type="submit" class="btn btn-primary btn-sm mt-2">Simpan Hasil Produksi</button>
                         </form>
                     </div>
                 @else
-                    <p class="text-muted">Produk jadi untuk produksi ini belum terdaftar.</p>
+                    <p class="text-muted">Produksi ini belum memiliki produk detail untuk diinput hasilnya.</p>
                 @endif
 
-                {{-- Detail Informasi Hasil Produksi --}}
+                {{-- Detail hasil produksi --}}
                 @if($prod->Jumlah_Berhasil > 0 || $prod->Jumlah_Gagal > 0)
                     <button class="btn btn-outline-info btn-sm mt-2" type="button"
                             data-bs-toggle="collapse" data-bs-target="#detailHasil{{ $prodId }}">
@@ -90,7 +107,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 @if($prod->gagalProduksi && $prod->gagalProduksi->count() > 0)
                                     <div class="mt-3">
                                         <h6>Detail Gagal Produksi:</h6>
