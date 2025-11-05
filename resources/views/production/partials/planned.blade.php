@@ -15,6 +15,15 @@
         @php
             $pesananDetails = $prod->pesananProduksi->detail ?? collect();
             $prodId = $prod->Id_Produksi ?? $prod->id;
+            $tanggalProduksi = $prod->Tanggal_Produksi 
+                ? \Carbon\Carbon::parse($prod->Tanggal_Produksi)->format('d M Y') 
+                : null;
+            $tanggalMulai = optional($prod->penjadwalan)->Tanggal_Mulai 
+                ? \Carbon\Carbon::parse($prod->penjadwalan->Tanggal_Mulai)->format('d M Y') 
+                : null;
+            $tanggalSelesai = optional($prod->penjadwalan)->Tanggal_Selesai 
+                ? \Carbon\Carbon::parse($prod->penjadwalan->Tanggal_Selesai)->format('d M Y') 
+                : null;
         @endphp
 
         <div class="card border-0 shadow-lg mb-4">
@@ -29,22 +38,25 @@
             {{-- Body --}}
             <div class="card-body">
                 <p class="mb-1">
-                    <i class="bi bi-file-earmark-text me-2"></i> 
+                    <i class="bi bi-file-earmark-text me-2"></i>
                     <strong>SPP:</strong> {{ $prod->pesananProduksi->Nomor_Pesanan ?? '-' }}
                 </p>
+
+                {{-- Tanggal --}}
                 <p class="mb-2">
-                    <i class="bi bi-calendar-event me-2"></i> 
-                    <strong>Tanggal:</strong> {{ optional($prod->Tanggal_Produksi)->format('d M Y') ?? '-' }}
+                    <i class="bi bi-calendar-event me-2"></i>
+                    <strong>Tanggal Produksi:</strong> {{ $tanggalProduksi ?? '-' }} <br>
+                    <strong>Rencana Mulai:</strong> {{ $tanggalMulai ?? '-' }} <br>
+                    <strong>Rencana Selesai:</strong> {{ $tanggalSelesai ?? '-' }}
                 </p>
 
                 {{-- BOM Summary --}}
-                @if($pesananDetails->isNotEmpty())
+                @if($pesananDetails->isNotEmpty() && $prod->details->isNotEmpty())
                     <button class="btn btn-outline-primary btn-sm mt-2" type="button"
                             data-bs-toggle="collapse" data-bs-target="#bomSummaryPlanned{{ $prodId }}">
                         <i class="bi bi-list-ul me-1"></i> Lihat BOM Summary
                     </button>
 
-                    {{-- Daftar Produk dan Bahan --}}
                     <div class="collapse mt-3" id="bomSummaryPlanned{{ $prodId }}">
                         <ul class="list-unstyled border-start ps-3">
                             @foreach($prod->details as $detail)
@@ -57,7 +69,7 @@
 
                                 @if($barang && $bom)
                                     <li class="mb-3">
-                                        <h6 class="fw-bold text-primary">
+                                        <h6 class="fw-bold text-primary mb-1">
                                             {{ $barang->Nama_Bahan ?? 'Produk Tanpa Nama' }}
                                         </h6>
                                         <div class="small text-muted">
@@ -81,7 +93,7 @@
                         </ul>
                     </div>
                 @else
-                    <p class="text-muted">SPP ini belum memiliki produk yang valid untuk BOM summary.</p>
+                    <p class="text-muted mt-2">SPP ini belum memiliki produk yang valid untuk BOM summary.</p>
                 @endif
             </div>
 
