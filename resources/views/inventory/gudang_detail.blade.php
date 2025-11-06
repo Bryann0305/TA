@@ -18,88 +18,16 @@
         </div>
     </div>
 
-    <p class="text-muted mb-4">Manage your inventory with EOQ and Reorder Point calculations.</p>
+    <p class="text-muted mb-4">Manage your inventory with EOQ and Reorder Point calculations for raw materials.</p>
 
     {{-- Flash Message --}}
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    {{-- Finished Goods --}}
-    <h4 class="mb-3">Finished Goods (Produk)</h4>
-    <div class="table-responsive mb-5">
-        <table id="finishedGoodsTable" class="table table-bordered table-striped align-middle">
-            <thead class="table-light text-center">
-                <tr>
-                    <th>No</th>
-                    <th>Name</th>
-                    <th>Category</th>
-                    <th>Stock</th>
-                    <th>Satuan</th>
-                    <th>Reorder Point</th>
-                    <th>EOQ</th>
-                    <th>Status</th>
-                    <th style="width: 150px;">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($items->where('Jenis', 'Produk') as $index => $item)
-                    @php
-                        // Ambil ROP & EOQ
-                        $reorder = $item->ROP ?? 50;
-                        $eoq = $item->EOQ ?? 200;
-
-                        // Tentukan warna badge berdasarkan nilai Status dari database
-                        $badge = match ($item->Status) {
-                            'Critical Low' => 'bg-danger',
-                            'Below Reorder Point' => 'bg-warning',
-                            'Out of Stock' => 'bg-danger',
-                            default => 'bg-success', // In Stock
-                        };
-                    @endphp
-                    <tr>
-                        <td class="text-center">{{ $index + 1 }}</td>
-                        <td>{{ $item->Nama_Bahan }}</td>
-                        <td>{{ $item->kategori->Nama_Kategori ?? '-' }}</td>
-                        <td class="text-end" data-bs-toggle="tooltip" title="{{ number_format($item->Stok, 0, ',', '.') }}">
-                            {{ number_format($item->Stok, 0, ',', '.') }}
-                        </td>
-                        <td class="text-center">{{ $item->Satuan ?? '-' }}</td>
-                        <td class="text-end" data-bs-toggle="tooltip" title="{{ number_format($reorder, 0, ',', '.') }}">
-                            {{ number_format($reorder, 0, ',', '.') }}
-                        </td>
-                        <td class="text-end" data-bs-toggle="tooltip" title="{{ number_format($eoq, 0, ',', '.') }}">
-                            {{ number_format($eoq, 0, ',', '.') }}
-                        </td>
-                        <td class="text-center">
-                            <span class="badge {{ $badge }}">
-                                {{ $item->Status ?? 'Unknown' }}
-                            </span>
-                        </td>
-                        <td class="text-center">
-                            <div class="d-flex justify-content-center gap-1 flex-nowrap">
-                                <a href="{{ route('inventory.show', $item->Id_Bahan) }}" class="btn btn-sm btn-info" title="View">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="{{ route('inventory.edit', $item->Id_Bahan) }}" class="btn btn-sm btn-warning" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <form action="{{ route('inventory.destroy', $item->Id_Bahan) }}" method="POST" onsubmit="return confirm('Are you sure?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn btn-sm btn-dark" title="Delete"><i class="fas fa-trash-alt"></i></button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-
     {{-- Raw Materials --}}
     <h4 class="mb-3">Raw Materials (Bahan Baku)</h4>
-    <div class="table-responsive">
+    <div class="table-responsive mb-5">
         <table id="rawMaterialsTable" class="table table-bordered table-striped align-middle">
             <thead class="table-light text-center">
                 <tr>
@@ -117,8 +45,8 @@
             <tbody>
                 @foreach($items->where('Jenis', 'Bahan_Baku') as $index => $item)
                     @php
-                        $reorder = $item->ROP ?? 50;
-                        $eoq = $item->EOQ ?? 200;
+                        $reorder = $item->ROP ?? 0;
+                        $eoq = $item->EOQ ?? 0;
                         $badge = match ($item->Status) {
                             'Critical Low' => 'bg-danger',
                             'Below Reorder Point' => 'bg-warning',
@@ -147,12 +75,62 @@
                         </td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-1 flex-nowrap">
-                                <a href="{{ route('inventory.show', $item->Id_Bahan) }}" class="btn btn-sm btn-info" title="View">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="{{ route('inventory.edit', $item->Id_Bahan) }}" class="btn btn-sm btn-warning" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
+                                <a href="{{ route('inventory.show', $item->Id_Bahan) }}" class="btn btn-sm btn-info" title="View"><i class="fas fa-eye"></i></a>
+                                <a href="{{ route('inventory.edit', $item->Id_Bahan) }}" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a>
+                                <form action="{{ route('inventory.destroy', $item->Id_Bahan) }}" method="POST" onsubmit="return confirm('Are you sure?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-sm btn-dark" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+
+    {{-- Finished Goods --}}
+    <h4 class="mb-3">Finished Goods (Produk)</h4>
+    <div class="table-responsive">
+        <table id="finishedGoodsTable" class="table table-bordered table-striped align-middle">
+            <thead class="table-light text-center">
+                <tr>
+                    <th>No</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Stock</th>
+                    <th>Satuan</th>
+                    <th>Status</th>
+                    <th style="width: 150px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($items->where('Jenis', 'Produk') as $index => $item)
+                    @php
+                        $badge = match ($item->Status) {
+                            'Critical Low' => 'bg-danger',
+                            'Out of Stock' => 'bg-danger',
+                            default => 'bg-success',
+                        };
+                    @endphp
+                    <tr>
+                        <td class="text-center">{{ $index + 1 }}</td>
+                        <td>{{ $item->Nama_Bahan }}</td>
+                        <td>{{ $item->kategori->Nama_Kategori ?? '-' }}</td>
+                        <td class="text-end" data-bs-toggle="tooltip" title="{{ number_format($item->Stok, 0, ',', '.') }}">
+                            {{ number_format($item->Stok, 0, ',', '.') }}
+                        </td>
+                        <td class="text-center">{{ $item->Satuan ?? '-' }}</td>
+                        <td class="text-center">
+                            <span class="badge {{ $badge }}">
+                                {{ $item->Status ?? 'Unknown' }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-1 flex-nowrap">
+                                <a href="{{ route('inventory.show', $item->Id_Bahan) }}" class="btn btn-sm btn-info" title="View"><i class="fas fa-eye"></i></a>
+                                <a href="{{ route('inventory.edit', $item->Id_Bahan) }}" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a>
                                 <form action="{{ route('inventory.destroy', $item->Id_Bahan) }}" method="POST" onsubmit="return confirm('Are you sure?');">
                                     @csrf
                                     @method('DELETE')
@@ -171,8 +149,7 @@
 @push('scripts')
 <script>
     $(document).ready(function () {
-        // DataTables
-        $('#finishedGoodsTable, #rawMaterialsTable').DataTable({
+        $('#rawMaterialsTable, #finishedGoodsTable').DataTable({
             pageLength: 10,
             responsive: true,
             autoWidth: false,

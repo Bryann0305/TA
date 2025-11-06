@@ -34,10 +34,7 @@
                     <th>Satuan</th>
                     <td>{{ $item->Satuan ?? '-' }}</td>
                 </tr>
-                <tr>
-                    <th>Berat per Unit</th>
-                    <td>{{ $item->Berat ?? 0 }} Kg</td>
-                </tr>
+               
                 <tr>
                     <th>Stok (Unit)</th>
                     <td>{{ number_format($item->Stok ?? 0) }}</td>
@@ -47,24 +44,12 @@
                     <td>{{ number_format($annualDemand ?? 0) }}</td>
                 </tr>
                 <tr>
-                    <th>Stok (Kg)</th>
-                    <td>{{ number_format($stok_kg ?? 0, 2) }} Kg</td>
-                </tr>
-                <tr>
                     <th>EOQ (Unit)</th>
                     <td>{{ number_format($item->EOQ ?? 0) }}</td>
                 </tr>
                 <tr>
-                    <th>EOQ (Kg)</th>
-                    <td>{{ number_format($eoq_kg ?? 0, 2) }} Kg</td>
-                </tr>
-                <tr>
                     <th>ROP (Unit)</th>
                     <td>{{ number_format($item->ROP ?? 0) }}</td>
-                </tr>
-                <tr>
-                    <th>ROP (Kg)</th>
-                    <td>{{ number_format($rop_kg ?? 0, 2) }} Kg</td>
                 </tr>
                 <tr>
                     <th>Safety Stock</th>
@@ -84,15 +69,25 @@
                     <th>Status</th>
                     <td>
                         @php
-                            [$statusText, $badge] = match ($item->Status) {
-                                'Critical Low' => ['Critical Low', 'danger'],
-                                'Below Reorder Point' => ['Below Reorder Point', 'warning'],
-                                default => ['In Stock', 'success'],
+                            $stok = $item->Stok ?? 0;
+                            $rop = $item->ROP ?? 0;
+                            $safety = $item->Safety_Stock ?? 0;
+
+                            // Hitung status stok berdasarkan ROP + Safety Stock
+                            $statusText = match (true) {
+                                $stok == 0 => 'Out of Stock',
+                                $stok <= $safety => 'Critical Low',
+                                $stok < $rop => 'Below Reorder Point',
+                                default => 'In Stock',
+                            };
+
+                            $badge = match ($statusText) {
+                                'Out of Stock', 'Critical Low' => 'bg-danger',
+                                'Below Reorder Point' => 'bg-warning',
+                                'In Stock' => 'bg-success',
                             };
                         @endphp
-                        <span class="badge bg-{{ $badge }} px-3 py-2">
-                            {{ $statusText }}
-                        </span>
+                        <span class="badge {{ $badge }} px-3 py-2">{{ $statusText }}</span>
                     </td>
                 </tr>
             </table>
