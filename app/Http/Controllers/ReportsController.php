@@ -11,9 +11,10 @@ class ReportsController extends Controller
     /**
      * Ambil semua data untuk laporan utama
      */
-    private function getReportData()
+    private function getReportData($tahun = null)
     {
         $data = [];
+        $tahun = $tahun ?? date('Y'); // default ke tahun sekarang
 
         // =========================
         // INVENTORY REPORTS
@@ -48,7 +49,7 @@ class ReportsController extends Controller
         ]);
 
         // =========================
-        // PRODUCTION REPORTS
+        // PRODUCTION REPORTS (with YEAR FILTER)
         // =========================
         $productions = DB::table('produksi')
             ->leftJoin('production_order', 'produksi.production_order_id', '=', 'production_order.id')
@@ -59,16 +60,20 @@ class ReportsController extends Controller
                 'produksi.Jumlah_Berhasil',
                 'produksi.Status'
             )
+            ->whereYear('produksi.Tanggal_Produksi', $tahun)
             ->get();
 
         $data['productions'] = $productions;
         $data['totalProductions'] = $productions->count();
         $data['completedProductions'] = $productions->where('Status', 'Selesai')->count();
+        $data['tahun'] = $tahun;
 
         // =========================
         // PROCUREMENT REPORTS
         // =========================
-        $purchases = DB::table('pembelian')->get();
+        $purchases = DB::table('pembelian')
+            ->whereYear('Tanggal_Pemesanan', $tahun)
+            ->get();
         $data['purchases'] = $purchases;
         $data['totalPurchases'] = $purchases->sum('Total_Biaya') ?? 0;
         $data['inventoryTurns'] = ($data['stockValue'] > 0)
@@ -88,6 +93,7 @@ class ReportsController extends Controller
                     'pp.Jumlah_Pesanan as total',
                     'pp.Status as status'
                 )
+                ->whereYear('pp.Tanggal_Pesanan', $tahun)
                 ->get();
             $data['orders'] = $orders;
         } else {
@@ -107,6 +113,7 @@ class ReportsController extends Controller
                 : 0;
 
             $data['storageCost'] = DB::table('biaya_gudang')
+                ->whereYear('tanggal_biaya', $tahun)
                 ->sum(DB::raw('COALESCE(biaya_sewa,0) + COALESCE(biaya_listrik,0) + COALESCE(biaya_air,0)')) ?? 0;
 
             $data['avgCostPerItem'] = $barang->count()
@@ -126,24 +133,26 @@ class ReportsController extends Controller
     /**
      * Menampilkan halaman laporan utama
      */
-    public function index()
+    public function index(Request $request)
     {
-        $data = $this->getReportData();
+        $tahun = $request->get('tahun', date('Y'));
+        $data = $this->getReportData($tahun);
         return view('reports.index', compact('data'));
     }
 
     /**
      * Export PDF berdasarkan tipe tab (inventory, production, procurement, order, warehouse)
      */
-    public function export($type)
+    public function export($type, Request $request)
     {
-        $data = $this->getReportData();
+        $tahun = $request->get('tahun', date('Y'));
+        $data = $this->getReportData($tahun);
 
         if (!in_array($type, ['inventory', 'production', 'procurement', 'order', 'warehouse'])) {
             abort(404, 'Invalid report type');
         }
 
         $pdf = Pdf::loadView("reports.pdf.$type", compact('data'));
-        return $pdf->download("report_{$type}.pdf");
+        return $pdf->download("report_{$type}_{$tahun}.pdf");
     }
 }

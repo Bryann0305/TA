@@ -7,13 +7,7 @@
             <small class="text-success">▲ {{ $data['inventoryGrowth'] ?? 0 }}% from last month</small>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card shadow-sm p-3">
-            <h6>Items Below ROP</h6>
-            <h4 class="text-warning">{{ $data['itemsBelowROP'] }}</h4>
-            <small class="text-danger">Critical: {{ $data['criticalItems'] }} items need immediate order</small>
-        </div>
-    </div>
+  
     <div class="col-md-4">
         <div class="card shadow-sm p-3">
             <h6>Inventory Turns</h6>

@@ -16,55 +16,55 @@
 
     <div class="tab-content">
 
-        {{-- INVENTORY TAB --}}
+        {{-- ================= INVENTORY TAB ================= --}}
         <div class="tab-pane fade show active" id="inventory">
-            <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="fw-semibold">Inventory Report</h5>
                 <a href="{{ route('reports.export', ['type' => 'inventory']) }}" class="btn btn-danger btn-sm">
                     <i class="bi bi-file-earmark-pdf"></i> Export PDF
                 </a>
             </div>
 
-            <div class="row mb-3">
+            {{-- Summary Cards --}}
+            <div class="row g-3 align-items-stretch mb-4">
                 <div class="col-md-4">
-                    <div class="card shadow-sm p-3">
-                        <h6>Items Below ROP</h6>
-                        <h4 class="text-warning">{{ $data['itemsBelowROP'] }}</h4>
+                    <div class="card shadow-sm p-3 h-100">
+                        <h6 class="fw-semibold text-secondary mb-1">Items Below ROP</h6>
+                        <h4 class="text-warning fw-bold mb-0">{{ $data['itemsBelowROP'] }}</h4>
                         <small class="text-danger">Critical: {{ $data['criticalItems'] ?? 0 }} items need restock</small>
                     </div>
                 </div>
+
                 <div class="col-md-4">
-                    <div class="card shadow-sm p-3">
-                        <h6>Inventory Turns</h6>
-                        <h4 class="text-success">{{ $data['inventoryTurns'] ?? 0 }}</h4>
-                        <small>Efficiency indicator</small>
+                    <div class="card shadow-sm p-3 h-100">
+                        <h6 class="fw-semibold text-secondary mb-1">Total Categories</h6>
+                        <h4 class="fw-bold mb-0">{{ count($data['categories'] ?? []) }}</h4>
+                        <small class="text-muted">Inventory grouped by {{ count($data['categories'] ?? []) }} categories</small>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card shadow-sm p-3">
-                        <h6>Total Categories</h6>
-                        <h4>{{ count($data['categories'] ?? []) }}</h4>
-                    </div>
-                </div>
+
+              
             </div>
 
-            <div class="card mb-4">
-                <div class="card-header fw-semibold">Inventory Value by Category</div>
+            {{-- Inventory Value by Category --}}
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header fw-semibold bg-light">Inventory Value by Category</div>
                 <div class="card-body text-center">
                     <div class="row">
                         @foreach ($data['categories'] ?? [] as $cat)
                             <div class="col-md-3 mb-3">
                                 <strong>{{ $cat['name'] }}</strong><br>
                                 Rp {{ number_format($cat['value'], 0, ',', '.') }}<br>
-                                <small>{{ $cat['percentage'] }}% of total</small>
+                                <small class="text-muted">{{ $cat['percentage'] }}% of total</small>
                             </div>
                         @endforeach
                     </div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-header fw-semibold">EOQ Analysis Summary</div>
+            {{-- EOQ Analysis --}}
+            <div class="card shadow-sm">
+                <div class="card-header fw-semibold bg-light">EOQ Analysis Summary</div>
                 <div class="card-body table-responsive">
                     <table class="table table-bordered table-sm align-middle">
                         <thead class="table-dark text-center">
@@ -92,19 +92,19 @@
             </div>
         </div>
 
-        {{-- PRODUCTION TAB --}}
+        {{-- ================= PRODUCTION TAB ================= --}}
         <div class="tab-pane fade" id="production">
-            <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="fw-semibold">Production Report</h5>
                 <a href="{{ route('reports.export', ['type' => 'production']) }}" class="btn btn-danger btn-sm">
                     <i class="bi bi-file-earmark-pdf"></i> Export PDF
                 </a>
             </div>
 
-            <div class="card mb-4">
-                <div class="card-header fw-semibold">Production Summary</div>
+            <div class="card shadow-sm">
+                <div class="card-header fw-semibold bg-light">Production Summary</div>
                 <div class="card-body table-responsive">
-                    <table class="table table-bordered table-striped table-sm">
+                    <table class="table table-bordered table-striped table-sm align-middle">
                         <thead class="table-dark text-center">
                             <tr>
                                 <th>ID Produksi</th>
@@ -130,17 +130,17 @@
             </div>
         </div>
 
-        {{-- PROCUREMENT TAB --}}
+        {{-- ================= PROCUREMENT TAB ================= --}}
         <div class="tab-pane fade" id="procurement">
-            <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="fw-semibold">Procurement Report</h5>
                 <a href="{{ route('reports.export', ['type' => 'procurement']) }}" class="btn btn-danger btn-sm">
                     <i class="bi bi-file-earmark-pdf"></i> Export PDF
                 </a>
             </div>
 
-            <div class="card mb-4">
-                <div class="card-header fw-semibold">Purchase Orders</div>
+            <div class="card shadow-sm">
+                <div class="card-header fw-semibold bg-light">Purchase Orders</div>
                 <div class="card-body table-responsive">
                     <table class="table table-bordered table-sm align-middle">
                         <thead class="table-dark text-center">
@@ -168,19 +168,19 @@
             </div>
         </div>
 
-        {{-- ORDER TAB --}}
+        {{-- ================= ORDER TAB ================= --}}
         <div class="tab-pane fade" id="order">
-            <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="fw-semibold">Orders Report</h5>
                 <a href="{{ route('reports.export', ['type' => 'orders']) }}" class="btn btn-danger btn-sm">
                     <i class="bi bi-file-earmark-pdf"></i> Export PDF
                 </a>
             </div>
 
-            <div class="card mb-4">
-                <div class="card-header fw-semibold">Customer Orders</div>
+            <div class="card shadow-sm">
+                <div class="card-header fw-semibold bg-light">Customer Orders</div>
                 <div class="card-body table-responsive">
-                    <table class="table table-bordered table-striped table-sm">
+                    <table class="table table-bordered table-striped table-sm align-middle">
                         <thead class="table-dark text-center">
                             <tr>
                                 <th>ID Order</th>
@@ -206,35 +206,45 @@
             </div>
         </div>
 
-        {{-- WAREHOUSE TAB --}}
+        {{-- ================= WAREHOUSE TAB ================= --}}
         <div class="tab-pane fade" id="warehouse">
-            <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="fw-semibold">Warehouse Report</h5>
                 <a href="{{ route('reports.export', ['type' => 'warehouse']) }}" class="btn btn-danger btn-sm">
                     <i class="bi bi-file-earmark-pdf"></i> Export PDF
                 </a>
             </div>
 
-            <div class="card mb-4">
-                <div class="card-header fw-semibold">Warehouse Utilization</div>
-                <div class="card-body">
-                    <p>Total Capacity: <strong>{{ $data['totalCapacity'] ?? 0 }} m³</strong></p>
-                    <p>Used: <strong>{{ $data['usedCapacity'] ?? 0 }} m³ ({{ $data['usageRate'] ?? 0 }}%)</strong></p>
-                    <div class="progress" style="height: 20px;">
-                        <div class="progress-bar bg-success" style="width: {{ $data['usageRate'] ?? 0 }}%"></div>
+            <div class="row g-3 align-items-stretch mb-4">
+                <div class="col-md-6">
+                    <div class="card shadow-sm p-3 h-100">
+                        <h6 class="fw-semibold text-secondary mb-1">Warehouse Utilization</h6>
+                        <p class="mb-1">Total Capacity: <strong>{{ $data['totalCapacity'] ?? 0 }} m³</strong></p>
+                        <p class="mb-2">Used: <strong>{{ $data['usedCapacity'] ?? 0 }} m³ ({{ $data['usageRate'] ?? 0 }}%)</strong></p>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar bg-success" style="width: {{ $data['usageRate'] ?? 0 }}%"></div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="card">
-                <div class="card-header fw-semibold">Storage Cost Overview</div>
-                <div class="card-body">
-                    <p>Total Cost: Rp {{ number_format($data['storageCost'], 0, ',', '.') }}</p>
-                    <p>Average per Item: Rp {{ number_format($data['avgCostPerItem'] ?? 0, 0, ',', '.') }}</p>
+                <div class="col-md-6">
+                    <div class="card shadow-sm p-3 h-100">
+                        <h6 class="fw-semibold text-secondary mb-1">Storage Cost Overview</h6>
+                        <p>Total Cost: <strong>Rp {{ number_format($data['storageCost'], 0, ',', '.') }}</strong></p>
+                        <p>Average per Item: <strong>Rp {{ number_format($data['avgCostPerItem'] ?? 0, 0, ',', '.') }}</strong></p>
+                    </div>
                 </div>
             </div>
         </div>
 
     </div>
 </div>
+
+{{-- Optional Styling --}}
+<style>
+    .card {
+        min-height: 160px;
+        border-radius: 12px;
+    }
+</style>
 @endsection
