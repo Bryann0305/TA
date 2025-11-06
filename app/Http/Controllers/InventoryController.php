@@ -75,7 +75,8 @@ class InventoryController extends Controller
             ->whereYear('pp.Tanggal_Pesanan', $tahun)
             ->sum('dp.Jumlah');
 
-        // Permintaan dari pembelian (apabila bahan dibeli langsung sebagai permintaan)
+        // Permintaan dari pembelian (apabila bahan dibeli
+        //  langsung sebagai permintaan)
         $permintaanPembelian = DB::table('detail_pembelian as dp')
             ->join('pembelian as p', 'dp.pembelian_Id_Pembelian', '=', 'p.Id_Pembelian')
             ->where('dp.bahan_baku_Id_Bahan', $item->Id_Bahan)
